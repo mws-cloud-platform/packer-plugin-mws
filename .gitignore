@@ -1,5 +1,5 @@
 main
-packer-plugin-scaffolding
+packer-plugin-mws
 **/packer_log*.txt
 **/git_*test.pkr.hcl
 crash.log
