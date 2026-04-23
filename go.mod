@@ -1,4 +1,4 @@
-module github.com/hashicorp/packer-plugin-scaffolding
+module github.com/mws-cloud-platform/packer-plugin-mws
 
 go 1.24.12
 

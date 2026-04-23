@@ -7,22 +7,16 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hashicorp/packer-plugin-scaffolding/builder/scaffolding"
-	scaffoldingData "github.com/hashicorp/packer-plugin-scaffolding/datasource/scaffolding"
-	scaffoldingPP "github.com/hashicorp/packer-plugin-scaffolding/post-processor/scaffolding"
-	scaffoldingProv "github.com/hashicorp/packer-plugin-scaffolding/provisioner/scaffolding"
-	scaffoldingVersion "github.com/hashicorp/packer-plugin-scaffolding/version"
-
 	"github.com/hashicorp/packer-plugin-sdk/plugin"
+
+	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
+	"github.com/mws-cloud-platform/packer-plugin-mws/version"
 )
 
 func main() {
 	pps := plugin.NewSet()
-	pps.RegisterBuilder("my-builder", new(scaffolding.Builder))
-	pps.RegisterProvisioner("my-provisioner", new(scaffoldingProv.Provisioner))
-	pps.RegisterPostProcessor("my-post-processor", new(scaffoldingPP.PostProcessor))
-	pps.RegisterDatasource("my-datasource", new(scaffoldingData.Datasource))
-	pps.SetVersion(scaffoldingVersion.PluginVersion)
+	pps.RegisterBuilder(plugin.DEFAULT_NAME, new(mws.Builder))
+	pps.SetVersion(version.PluginVersion)
 	err := pps.Run()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())

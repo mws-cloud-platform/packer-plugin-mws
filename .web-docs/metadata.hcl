@@ -5,20 +5,15 @@
 # This metadata.hcl file and the adjacent `components` docs directory should
 # be kept in a `.web-docs` directory at the root of your plugin repository.
 integration {
-  name = "Integration Template"
-  description = "This is an integration template"
-  identifier = "packer/hashicorp/scaffolding"
+  name = "MWS Cloud Platform"
+  description = "The mws plugin can be used with HashiCorp Packer to create custom images on MWS Cloud Platform."
+  identifier = "packer/mws-cloud-platform/mws"
   flags = [
     # Remove if the plugin does not conform to the HCP Packer requirements.
     #
     # Please refer to our docs if you want your plugin to be compatible with
     # HCP Packer: https://developer.hashicorp.com/packer/docs/plugins/creation/hcp-support
     "hcp-ready",
-    # This signals that the plugin is unmaintained and will eventually not be
-    # working with a future version of Packer.
-    #
-    # On the integrations, this will end-up as an icon on the plugin's main card.
-    "archived",
   ]
   docs {
     # If you'd prefer not to publish docs on HashiCorp websites, you can
@@ -31,30 +26,15 @@ integration {
     # repository to the correct location.
     readme_location = "./README.md"
     # `external_url` allows us to link back to your plugin repo.
-    external_url = "https://github.com/hashicorp/integration-template"
+    external_url = "https://github.com/mws-cloud-platform/packer-plugin-mws"
   }
   license {
     type = "MPL-2.0"
-    url = "https://github.com/hashicorp/integration-template/blob/main/LICENSE.md"
+    url = "https://github.com/mws-cloud-platform/packer-plugin-mws/blob/main/LICENSE.md"
   }
   component {
     type = "builder"
-    name = "Component Name (e.g HappyCloud EBS)"
-    slug = "name"
-  }
-  component {
-    type = "provisioner"
-    name = "Component Name (e.g HappyCloud Shell)"
-    slug = "name"
-  }
-  component {
-    type = "post-processor"
-    name = "Component Name"
-    slug = "name"
-  }
-  component {
-    type = "data-source"
-    name = "Component Name"
-    slug = "name"
+    name = "MWS Cloud Platform"
+    slug = "mws"
   }
 }

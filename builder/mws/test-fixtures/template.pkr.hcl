@@ -1,13 +1,12 @@
 # Copyright IBM Corp. 2020, 2025
 # SPDX-License-Identifier: MPL-2.0
 
-source "scaffolding-my-builder" "basic-example" {
-  mock = "mock-config"
+source "mws" "basic-example" {
 }
 
 build {
   sources = [
-    "source.scaffolding-my-builder.basic-example"
+    "source.mws.basic-example"
   ]
 
   provisioner "shell-local" {

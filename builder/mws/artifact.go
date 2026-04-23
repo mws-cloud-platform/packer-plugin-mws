@@ -1,12 +1,9 @@
 // Copyright IBM Corp. 2020, 2025
 // SPDX-License-Identifier: MPL-2.0
 
-package scaffolding
+package mws
 
-// packersdk.Artifact implementation
 type Artifact struct {
-	// StateData should store data such as GeneratedData
-	// to be shared with post-processors
 	StateData map[string]interface{}
 }
 

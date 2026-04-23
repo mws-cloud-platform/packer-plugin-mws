@@ -1,17 +1,18 @@
+Type: `mws`
+Artifact BuilderId: `packer.mws`
+
+<!--
   Include a short description about the builder. This is a good place
   to call out what the builder does, and any requirements for the given
   builder environment. See https://www.packer.io/docs/builder/null
 -->
 
-The scaffolding builder is used to create endless Packer plugins using
-a consistent plugin structure.
+The `mws` Packer builder is able to create [images](https://mws.ru/docs/cloud-platform/compute/general/images-overview.html) for use with [MWS Cloud Platform Compute](https://mws.ru/docs/cloud-platform/compute/general/whatis-compute.html) based on existing images.
 
 
 <!-- Builder Configuration Fields -->
 
 **Required**
-
-- `mock` (string) - The name of the mock to use for the Scaffolding API.
 
 
 <!--
@@ -24,10 +25,6 @@ a consistent plugin structure.
 
 **Optional**
 
-- `mock_api_url` (string) - The Scaffolding API endpoint to connect to.
-  Defaults to https://example.com
-
-
 
 <!--
   A basic example on the usage of the builder. Multiple examples
@@ -38,11 +35,10 @@ a consistent plugin structure.
 
 
 ```hcl
- source "scaffolding" "example" {
-   mock = "bird"
+ source "mws" "example" {
  }
 
  build {
-   sources = ["source.scaffolding.example"]
+   sources = ["source.mws.example"]
  }
 ```

@@ -1,11 +1,4 @@
-<!--
-  Include a short overview about the plugin.
-
-  This document is a great location for creating a table of contents for each
-  of the components the plugin may provide. This document should load automatically
-  when navigating to the docs directory for a plugin.
-
--->
+The MWS Cloud Platform plugin lets you create custom images for use within MWS Cloud Platform Compute.
 
 ### Installation
 
@@ -15,8 +8,7 @@ To install this plugin, copy and paste this code into your Packer configuration,
 packer {
   required_plugins {
     name = {
-      # source represents the GitHub URI to the plugin repository without the `packer-plugin-` prefix.
-      source  = "github.com/organization/name"
+      source  = "github.com/mws-cloud-platform/mws"
       version = ">=0.0.1"
     }
   }
@@ -26,30 +18,11 @@ packer {
 Alternatively, you can use `packer plugins install` to manage installation of this plugin.
 
 ```sh
-$ packer plugins install github.com/organization/plugin-name
+$ packer plugins install github.com/mws-cloud-platform/mws
 ```
 
 ### Components
 
-The Scaffolding plugin is intended as a starting point for creating Packer plugins
-
 #### Builders
 
-- [builder](/packer/integrations/hashicorp/scaffolding/latest/components/builder/builder-name) - The scaffolding builder is used to create endless Packer
-  plugins using a consistent plugin structure.
-
-#### Provisioners
-
-- [provisioner](/packer/integrations/hashicorp/scaffolding/latest/components/provisioner/provisioner-name) - The scaffolding provisioner is used to provisioner
-  Packer builds.
-
-#### Post-processors
-
-- [post-processor](/packer/integrations/hashicorp/scaffolding/latest/components/post-processor/postprocessor-name) - The scaffolding post-processor is used to
-  export scaffolding builds.
-
-#### Data Sources
-
-- [data source](/packer/integrations/hashicorp/scaffolding/latest/components/datasource/datasource-name) - The scaffolding data source is used to
-  export scaffolding data.
-
+- [mws](/packer/integrations/hashicorp/mws/latest/components/builder/mws) - The mws builder creates images from existing ones, by launching an instance, provisioning it, then exporting it as a reusable image.
