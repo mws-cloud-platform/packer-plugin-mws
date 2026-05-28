@@ -1,4 +1,3 @@
-Type: `mws`
 Artifact BuilderId: `packer.mws`
 
 <!--

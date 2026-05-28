@@ -8,9 +8,9 @@ To install this plugin, copy and paste this code into your Packer configuration,
 ```hcl
 packer {
   required_plugins {
-    name = {
+    mws = {
       source  = "github.com/mws-cloud-platform/mws"
-      version = ">=0.0.1"
+      version = ">= 0.1.0"
     }
   }
 }

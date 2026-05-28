@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright 2026 MTS Web Services, LLC.
 # SPDX-License-Identifier: MPL-2.0
 
 # Details on using this Integration template can be found at https://github.com/hashicorp/integration-template
