@@ -1,32 +1,47 @@
-// Copyright IBM Corp. 2020, 2025
+// Copyright 2026 MTS Web Services, LLC.
 // SPDX-License-Identifier: MPL-2.0
 
 package mws
 
+import (
+	"context"
+	"fmt"
+
+	computemodel "go.mws.cloud/go-sdk/service/compute/model"
+)
+
 type Artifact struct {
-	StateData map[string]interface{}
+	// StateData should store data such as GeneratedData
+	// to be shared with post-processors
+	StateData map[string]any
+
+	driver Driver
+	image  *computemodel.ImageOptionalResponse
 }
 
 func (*Artifact) BuilderId() string {
 	return BuilderId
 }
 
-func (a *Artifact) Files() []string {
+func (*Artifact) Files() []string {
 	return []string{}
 }
 
-func (*Artifact) Id() string {
-	return ""
+func (a *Artifact) Id() string {
+	return a.image.GetMetadata().GetId().ID()
 }
 
 func (a *Artifact) String() string {
-	return ""
+	return "A disk image was created: " + a.Id()
 }
 
-func (a *Artifact) State(name string) interface{} {
+func (a *Artifact) State(name string) any {
 	return a.StateData[name]
 }
 
 func (a *Artifact) Destroy() error {
-	return nil
+	if a.driver == nil {
+		return fmt.Errorf("driver is not provided in artifact: %w", errUnexpected)
+	}
+	return a.driver.DeleteImage(context.Background(), string(a.image.GetMetadata().GetId().ResourceName()))
 }

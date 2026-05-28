@@ -7,3 +7,9 @@ crash.log
 dist/*
 .docs/*
 docs.zip
+
+# VSCode
+.vscode/
+
+# macOS
+.DS_Store

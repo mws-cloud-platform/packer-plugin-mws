@@ -20,7 +20,7 @@ Then, run [`packer init`](https://www.packer.io/docs/commands/init).
 packer {
   required_plugins {
     mws = {
-      version = ">= 1.2.5"
+      version = ">= 0.1.0"
       source  = "github.com/mws-cloud-platform/mws"
     }
   }

@@ -1,12 +1,146 @@
-// Copyright IBM Corp. 2020, 2025
+// Copyright 2026 MTS Web Services, LLC.
 // SPDX-License-Identifier: MPL-2.0
 
+//go:generate packer-sdc struct-markdown
 //go:generate packer-sdc mapstructure-to-hcl2 -type Config
 
 package mws
 
-import "github.com/hashicorp/packer-plugin-sdk/common"
+import (
+	"cmp"
+	"errors"
+	"fmt"
+	"time"
+
+	"github.com/hashicorp/packer-plugin-sdk/common"
+	"github.com/hashicorp/packer-plugin-sdk/communicator"
+	"github.com/hashicorp/packer-plugin-sdk/template/config"
+	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
+	"go.mws.cloud/go-sdk/mws"
+	"go.mws.cloud/go-sdk/pkg/apimodels/cidraddress"
+	"go.mws.cloud/go-sdk/pkg/apimodels/units/bytesize"
+	"go.mws.cloud/util-toolset/pkg/utils/consterr"
+)
+
+const (
+	DefaultSSHUsername    = "packer"
+	DefaultVMType         = "gen-2-8"
+	DefaultDiskType       = "nbs-pl2"
+	DefaultDiskSize       = "10 GB"
+	DefaultDiskIOPS       = int64(1000)
+	DefaultSubnetCidr     = "192.168.0.0/16"
+	DefaultCleanupTimeout = "1h"
+)
 
 type Config struct {
 	common.PackerConfig `mapstructure:",squash"`
+	Communicator        communicator.Config `mapstructure:",squash"`
+
+	// The project identifier where resources will be created.
+	Project string `mapstructure:"project" required:"true"`
+	// The zone in which the VM will be created (defaults to "ru-central1-a")
+	Zone string `mapstructure:"zone" required:"false"`
+
+	// MWS Cloud Platform API base endpoint (defaults to "https://api.mwsapis.ru").
+	// Can be specified using the `MWS_BASE_ENDPOINT` environment variable.
+	BaseEndpoint string `mapstructure:"base_endpoint" required:"false"`
+	// Path to the service account authorized key file used for authentication.
+	// Has no effect if IAM token is set.
+	// Can be specified using the `MWS_SERVICE_ACCOUNT_AUTHORIZED_KEY_PATH` environment variable.
+	ServiceAccountAuthorizedKeyPath string `mapstructure:"service_account_authorized_key_path" required:"false"`
+	// IAM token used for authentication.
+	// Can be specified using the `MWS_TOKEN` environment variable.
+	Token string `mapstructure:"token" required:"false"`
+
+	// Name for the temporary build VM (defaults to "packer-{{uuid}}-vm").
+	VirtualMachineName string `mapstructure:"virtual_machine_name" required:"false"`
+	// The VM type (defaults to "gen-2-8").
+	VmType string `mapstructure:"vm_type" required:"false"`
+
+	// Name for the resulting image (defaults to "packer-{{uuid}}-image").
+	ImageName string `mapstructure:"image_name" required:"false"`
+	// Description for the resulting image. (defaults to "Image created by Packer").
+	ImageDescription string `mapstructure:"image_description" required:"false"`
+
+	// Name for the disk (defaults to "packer-{{uuid}}-disk").
+	DiskName string `mapstructure:"disk_name" required:"false"`
+	// Type of disk to create (defaults to "nbs-pl2").
+	DiskType string `mapstructure:"disk_type" required:"false"`
+	// DiskSize of the disk (defaults to "10 GB").
+	DiskSize string `mapstructure:"disk_size" required:"false"`
+	// IOPS for the disk (defaults to 1000).
+	IOPS int64 `mapstructure:"iops" required:"false"`
+	// Project ID where the source image/snapshot exists (defaults to the `project`).
+	SourceProject string `mapstructure:"source_project" required:"false"`
+	// ID of an existing image to use as a base (required unless using `source_snapshot`).
+	SourceImage string `mapstructure:"source_image" required:"false"`
+	// ID of an existing snapshot to use as a base (required unless using `source_image`).
+	SourceSnapshot string `mapstructure:"source_snapshot" required:"false"`
+
+	// Name for the network (defaults to "packer-{{uuid}}-network").
+	// If specified, Packer will use existing network.
+	NetworkName string `mapstructure:"network_name" required:"false"`
+	// Name for the subnet (defaults to "packer-{{uuid}}-subnet").
+	// If specified, Packer will use existing subnet.
+	SubnetName string `mapstructure:"subnet_name" required:"false"`
+	// Subnet CIDR (defaults to "192.168.0.0/16").
+	SubnetCidr string `mapstructure:"subnet_cidr" required:"false"`
+	// External address name (defaults to "packer-{{uuid}}-external-address").
+	ExternalAddressName string `mapstructure:"external_address_name" required:"false"`
+
+	// Timeout for cleanup of create virtual machine step (defaults to "1h").
+	CleanupTimeout string `mapstructure:"cleanup_timeout" required:"false"`
+
+	ctx interpolate.Context
+}
+
+func (c *Config) Prepare(raws ...any) error {
+	err := config.Decode(c, &config.DecodeOpts{
+		PluginType:         BuilderId,
+		Interpolate:        true,
+		InterpolateContext: &c.ctx,
+	}, raws...)
+	if err != nil {
+		return err
+	}
+
+	c.Communicator.SSHUsername = cmp.Or(c.Communicator.SSHUsername, DefaultSSHUsername)
+	err = errors.Join(c.Communicator.Prepare(&c.ctx)...)
+
+	if c.Project == "" {
+		err = errors.Join(err, consterr.Error("project is not provided"))
+	}
+
+	c.Zone = cmp.Or(c.Zone, mws.DefaultZone)
+
+	c.VmType = cmp.Or(c.VmType, DefaultVMType)
+
+	if (c.SourceImage == "") == (c.SourceSnapshot == "") {
+		err = errors.Join(err, consterr.Error("exactly one of source_image or source_snapshot must be provided"))
+	}
+	c.DiskType = cmp.Or(c.DiskType, DefaultDiskType)
+	c.IOPS = cmp.Or(c.IOPS, DefaultDiskIOPS)
+	c.DiskSize = cmp.Or(c.DiskSize, DefaultDiskSize)
+	if _, parseErr := bytesize.ParseString(c.DiskSize); parseErr != nil {
+		err = errors.Join(err, fmt.Errorf("parse disk size: %w", parseErr))
+	}
+	c.SourceProject = cmp.Or(c.SourceProject, c.Project)
+
+	c.SubnetCidr = cmp.Or(c.SubnetCidr, DefaultSubnetCidr)
+	if _, parseErr := cidraddress.ParseCIDR4AddressString(c.SubnetCidr); parseErr != nil {
+		err = errors.Join(err, fmt.Errorf("parse subnet CIDR: %w", parseErr))
+	}
+
+	if c.SubnetName != "" && c.NetworkName == "" {
+		err = errors.Join(err, consterr.Error("when subnet_name is provided, network_name must be provided"))
+	}
+
+	c.ImageDescription = cmp.Or(c.ImageDescription, "Image created by Packer")
+
+	c.CleanupTimeout = cmp.Or(c.CleanupTimeout, DefaultCleanupTimeout)
+	if _, parseErr := time.ParseDuration(c.CleanupTimeout); parseErr != nil {
+		err = errors.Join(err, fmt.Errorf("parse cleanup timeout: %w", parseErr))
+	}
+
+	return err
 }
