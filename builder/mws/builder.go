@@ -76,7 +76,6 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			},
 		),
 		&StepCreateVirtualMachine{
-			Debug:         b.config.PackerDebug,
 			GeneratedData: generatedData,
 		},
 		&communicator.StepConnect{

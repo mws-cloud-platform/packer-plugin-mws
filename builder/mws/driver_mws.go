@@ -55,6 +55,7 @@ func NewDriverMWS(ctx context.Context, c driverMWSConfig) (Driver, error) {
 	if err != nil {
 		return nil, fmt.Errorf("load sdk config: %w", err)
 	}
+
 	config.Project = c.project
 	if c.baseEndpoint != "" {
 		config.BaseEndpoint = c.baseEndpoint
