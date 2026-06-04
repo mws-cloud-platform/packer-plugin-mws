@@ -20,7 +20,7 @@ source "mws" "example" {
 
   disk_type = "nbs-pl2"
   disk_size = "10 GB"
-  iops      = 1000
+  disk_iops = 1000
 
   source_project = "mws-ubuntu"
   source_image   = "mws-ubuntu-2404-lts-v20250529"

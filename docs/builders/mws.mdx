@@ -11,11 +11,50 @@ Artifact BuilderId: `packer.mws`
 
 The `mws` Packer builder is able to create [images](https://mws.ru/docs/cloud-platform/compute/general/images-overview.html) for use with [MWS Cloud Platform Compute](https://mws.ru/docs/cloud-platform/compute/general/whatis-compute.html) based on existing images.
 
+## Authentication
+
+Builder supports authentication using:
+
+- Service Account Authorized Key File
+- IAM Token
+- Instance Metadata Service
+
+### Authentication using Service Account Authorized Key File
+
+To authenticate as a service account, you can set the path to its [authorized
+key](https://mws.ru/docs/cloud-platform/iam/keys.html#authkey) using either the
+`service_account_authorized_key_path` configuration field or the
+`MWS_SERVICE_ACCOUNT_AUTHORIZED_KEY_PATH` environment variable.
+
+### Authentication using IAM Token
+
+To authenticate using an [IAM
+token](https://mws.ru/docs/cloud-platform/iam/sa-get-access-token.html), you can
+set the `token` configuration field or the `MWS_TOKEN` environment variable.
+
+### Authentication using Instance Metadata Service
+
+If none of the listed authentication methods is used, builder will try to detect
+if the current environment is a Compute VM with an [attached service
+account](https://mws.ru/docs/cloud-platform/compute/general/vm-add-change-delete-sa.html)
+by performing a request to the [instance metadata
+service](https://mws.ru/docs/cloud-platform/compute/general/vm-metadata-overview.html).
+If the request succeeds, builder will use credentials from the metadata service
+for authentication.
+
+## Configuration Reference
+
+Configuration options are organized below into two categories: required and
+optional. Within each category, the available options are alphabetized and
+described.
+
+In addition to the options listed here, a
+[communicator](https://developer.hashicorp.com/packer/docs/communicators) can be
+configured for this builder.
 
 <!-- Builder Configuration Fields -->
 
 **Required**
-
 
 <!--
   Optional Configuration Fields
@@ -25,22 +64,31 @@ The `mws` Packer builder is able to create [images](https://mws.ru/docs/cloud-pl
   noted in the description of the field
 -->
 
+@include 'builder/mws/Config-required.mdx'
+
 **Optional**
 
+@include 'builder/mws/Config-not-required.mdx'
 
 <!--
   A basic example on the usage of the builder. Multiple examples
   can be provided to highlight various build configurations.
 
 -->
+
 ### Example Usage
 
-
 ```hcl
- source "mws" "example" {
- }
+source "mws" "example" {
+  project = "your-project"
 
- build {
-   sources = ["source.mws.example"]
- }
+  service_account_authorized_key_path = "/path/to/your/service_account_authorized_key.dms"
+
+  source_project = "mws-ubuntu"
+  source_image   = "mws-ubuntu-2404-lts-v20250529"
+}
+
+build {
+  sources = ["source.mws.example"]
+}
 ```

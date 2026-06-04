@@ -79,7 +79,7 @@ type FlatConfig struct {
 	DiskName                        *string           `mapstructure:"disk_name" required:"false" cty:"disk_name" hcl:"disk_name"`
 	DiskType                        *string           `mapstructure:"disk_type" required:"false" cty:"disk_type" hcl:"disk_type"`
 	DiskSize                        *string           `mapstructure:"disk_size" required:"false" cty:"disk_size" hcl:"disk_size"`
-	IOPS                            *int64            `mapstructure:"iops" required:"false" cty:"iops" hcl:"iops"`
+	DiskIOPS                        *int64            `mapstructure:"disk_iops" required:"false" cty:"disk_iops" hcl:"disk_iops"`
 	SourceProject                   *string           `mapstructure:"source_project" required:"false" cty:"source_project" hcl:"source_project"`
 	SourceImage                     *string           `mapstructure:"source_image" required:"false" cty:"source_image" hcl:"source_image"`
 	SourceSnapshot                  *string           `mapstructure:"source_snapshot" required:"false" cty:"source_snapshot" hcl:"source_snapshot"`
@@ -171,7 +171,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"disk_name":                           &hcldec.AttrSpec{Name: "disk_name", Type: cty.String, Required: false},
 		"disk_type":                           &hcldec.AttrSpec{Name: "disk_type", Type: cty.String, Required: false},
 		"disk_size":                           &hcldec.AttrSpec{Name: "disk_size", Type: cty.String, Required: false},
-		"iops":                                &hcldec.AttrSpec{Name: "iops", Type: cty.Number, Required: false},
+		"disk_iops":                           &hcldec.AttrSpec{Name: "disk_iops", Type: cty.Number, Required: false},
 		"source_project":                      &hcldec.AttrSpec{Name: "source_project", Type: cty.String, Required: false},
 		"source_image":                        &hcldec.AttrSpec{Name: "source_image", Type: cty.String, Required: false},
 		"source_snapshot":                     &hcldec.AttrSpec{Name: "source_snapshot", Type: cty.String, Required: false},
