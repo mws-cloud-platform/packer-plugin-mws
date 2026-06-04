@@ -47,7 +47,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 		DiskName:    diskName,
 		DiskType:    config.DiskType,
 		Size:        bytesize.MustParseString(config.DiskSize),
-		Iops:        config.IOPS,
+		Iops:        config.DiskIOPS,
 		ImageRef:    imageRef,
 		SnapshotRef: snapshotRef,
 		Zone:        config.Zone,

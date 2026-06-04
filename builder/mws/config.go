@@ -66,10 +66,10 @@ type Config struct {
 	DiskName string `mapstructure:"disk_name" required:"false"`
 	// Type of disk to create (defaults to "nbs-pl2").
 	DiskType string `mapstructure:"disk_type" required:"false"`
-	// DiskSize of the disk (defaults to "10 GB").
+	// Size of the disk (defaults to "10 GB").
 	DiskSize string `mapstructure:"disk_size" required:"false"`
 	// IOPS for the disk (defaults to 1000).
-	IOPS int64 `mapstructure:"iops" required:"false"`
+	DiskIOPS int64 `mapstructure:"disk_iops" required:"false"`
 	// Project ID where the source image/snapshot exists (defaults to the `project`).
 	SourceProject string `mapstructure:"source_project" required:"false"`
 	// ID of an existing image to use as a base (required unless using `source_snapshot`).
@@ -119,7 +119,7 @@ func (c *Config) Prepare(raws ...any) error {
 		err = errors.Join(err, consterr.Error("exactly one of source_image or source_snapshot must be provided"))
 	}
 	c.DiskType = cmp.Or(c.DiskType, DefaultDiskType)
-	c.IOPS = cmp.Or(c.IOPS, DefaultDiskIOPS)
+	c.DiskIOPS = cmp.Or(c.DiskIOPS, DefaultDiskIOPS)
 	c.DiskSize = cmp.Or(c.DiskSize, DefaultDiskSize)
 	if _, parseErr := bytesize.ParseString(c.DiskSize); parseErr != nil {
 		err = errors.Join(err, fmt.Errorf("parse disk size: %w", parseErr))
