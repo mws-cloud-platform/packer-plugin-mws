@@ -9,8 +9,8 @@ import (
 )
 
 func actionHaltWithError(state multistep.StateBag, err error) multistep.StepAction {
-	ui := state.Get(uiKey).(packersdk.Ui)
-	state.Put(errorKey, err)
+	ui := state.Get(UiKey).(packersdk.Ui)
+	state.Put(ErrorKey, err)
 	ui.Error(err.Error())
 	return multistep.ActionHalt
 }

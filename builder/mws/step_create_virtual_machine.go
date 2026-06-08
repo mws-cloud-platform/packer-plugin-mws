@@ -5,6 +5,7 @@ package mws
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
@@ -16,15 +17,19 @@ import (
 	vpcref "go.mws.cloud/go-sdk/service/resources/references/vpc"
 )
 
+const (
+	FirewallRuleName = "access-from-internet-ssh"
+)
+
 type StepCreateVirtualMachine struct {
 	GeneratedData *packerbuilderdata.GeneratedData
 }
 
 func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	config := state.Get(configKey).(*Config)
-	driver := state.Get(driverKey).(Driver)
-	prefix := state.Get(uuidPrefixKey).(string)
-	ui := state.Get(uiKey).(packer.Ui)
+	config := state.Get(ConfigKey).(*Config)
+	driver := state.Get(DriverKey).(Driver)
+	prefix := state.Get(UuidPrefixKey).(string)
+	ui := state.Get(UiKey).(packer.Ui)
 
 	var (
 		imageRef    *computeref.ImageRef
@@ -53,14 +58,14 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 		Zone:        config.Zone,
 	})
 	if err != nil {
-		return actionHaltWithError(state, err)
+		return actionHaltWithError(state, fmt.Errorf("create disk %q: %w", diskName, err))
 	}
 
 	ui.Sayf("Disk %q created", diskName)
-	state.Put(diskNameKey, diskName)
+	state.Put(DiskNameKey, diskName)
 
 	diskRef := new(computeref.NewDiskRef(config.Project, diskName))
-	state.Put(diskRefKey, diskRef)
+	state.Put(DiskRefKey, diskRef)
 
 	externalAddressName := config.ExternalAddressName
 	if externalAddressName == "" {
@@ -71,12 +76,12 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 		ExternalAddressName: externalAddressName,
 	})
 	if err != nil {
-		return actionHaltWithError(state, err)
+		return actionHaltWithError(state, fmt.Errorf("create external-address %q: %w", externalAddressName, err))
 	}
 
 	ui.Sayf("External Address %q created", externalAddressName)
-	state.Put(externalAddressNameKey, externalAddressName)
-	state.Put(instanceIpKey, externalAddress)
+	state.Put(ExternalAddressNameKey, externalAddressName)
+	state.Put(InstanceIpKey, externalAddress)
 	externalAddressRef := new(vpcref.NewExternalAddressRef(config.Project, externalAddressName))
 
 	networkName := config.NetworkName
@@ -87,12 +92,12 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 			NetworkName: networkName,
 		})
 		if err != nil {
-			return actionHaltWithError(state, err)
+			return actionHaltWithError(state, fmt.Errorf("create network %q: %w", networkName, err))
 		}
 
 		ui.Sayf("Network %q created", networkName)
 	}
-	state.Put(networkNameKey, networkName)
+	state.Put(NetworkNameKey, networkName)
 
 	subnetName := config.SubnetName
 	if subnetName == "" {
@@ -104,12 +109,12 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 			SubnetCidr:  cidraddress.MustParseCIDR4AddressString(config.SubnetCidr),
 		})
 		if err != nil {
-			return actionHaltWithError(state, err)
+			return actionHaltWithError(state, fmt.Errorf("create subnet %q: %w", subnetName, err))
 		}
 
 		ui.Sayf("Subnet %q created", subnetName)
 	}
-	state.Put(subnetNameKey, subnetName)
+	state.Put(SubnetNameKey, subnetName)
 	subnetRef := new(vpcref.NewSubnetRef(config.Project, networkName, subnetName))
 
 	virtualMachineName := config.VirtualMachineName
@@ -128,29 +133,28 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 		SubnetRef:          subnetRef,
 	})
 	if err != nil {
-		return actionHaltWithError(state, err)
+		return actionHaltWithError(state, fmt.Errorf("create vm %q: %w", virtualMachineName, err))
 	}
 
 	ui.Sayf("Virtual Machine %q created", virtualMachineName)
-	state.Put(virtualMachineNameKey, virtualMachineName)
+	state.Put(VirtualMachineNameKey, virtualMachineName)
 
-	firewallRuleName := "access-from-internet-ssh"
 	ui.Sayf("Creating firewall rule...")
 	err = driver.CreateFirewallRule(ctx, CreateFirewallRuleParams{
 		NetworkName:                   networkName,
-		FirewallRuleName:              firewallRuleName,
+		FirewallRuleName:              FirewallRuleName,
 		VirtualMachineInternalAddress: internalAddress,
 	})
 	if err != nil {
-		return actionHaltWithError(state, err)
+		return actionHaltWithError(state, fmt.Errorf("create firewall rule %q: %w", FirewallRuleName, err))
 	}
 
-	ui.Sayf("Firewall Rule %q created", firewallRuleName)
-	state.Put(firewallRuleNameKey, firewallRuleName)
+	ui.Sayf("Firewall Rule %q created", FirewallRuleName)
+	state.Put(FirewallRuleNameKey, FirewallRuleName)
 
 	// instance_id is the generic term used so that users can have access to the
 	// instance id inside of the provisioners, used in step_provision.
-	state.Put(instanceIdKey, virtualMachineName)
+	state.Put(InstanceIdKey, virtualMachineName)
 
 	s.GeneratedData.Put("SourceProject", config.SourceProject)
 	s.GeneratedData.Put("SourceImageName", config.SourceImage)
@@ -160,9 +164,9 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 }
 
 func (s *StepCreateVirtualMachine) Cleanup(state multistep.StateBag) {
-	config := state.Get(configKey).(*Config)
-	driver := state.Get(driverKey).(Driver)
-	ui := state.Get(uiKey).(packer.Ui)
+	config := state.Get(ConfigKey).(*Config)
+	driver := state.Get(DriverKey).(Driver)
+	ui := state.Get(UiKey).(packer.Ui)
 
 	cleanupTimeout, _ := time.ParseDuration(config.CleanupTimeout)
 	ctx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
@@ -176,22 +180,22 @@ func (s *StepCreateVirtualMachine) Cleanup(state multistep.StateBag) {
 		virtualMachineName  string
 		firewallRuleName    string
 	)
-	if name, ok := state.GetOk(diskNameKey); ok {
+	if name, ok := state.GetOk(DiskNameKey); ok {
 		diskName = name.(string)
 	}
-	if name, ok := state.GetOk(externalAddressNameKey); ok {
+	if name, ok := state.GetOk(ExternalAddressNameKey); ok {
 		externalAddressName = name.(string)
 	}
-	if name, ok := state.GetOk(networkNameKey); ok {
+	if name, ok := state.GetOk(NetworkNameKey); ok {
 		networkName = name.(string)
 	}
-	if name, ok := state.GetOk(subnetNameKey); ok {
+	if name, ok := state.GetOk(SubnetNameKey); ok {
 		subnetName = name.(string)
 	}
-	if name, ok := state.GetOk(virtualMachineNameKey); ok {
+	if name, ok := state.GetOk(VirtualMachineNameKey); ok {
 		virtualMachineName = name.(string)
 	}
-	if name, ok := state.GetOk(firewallRuleNameKey); ok {
+	if name, ok := state.GetOk(FirewallRuleNameKey); ok {
 		firewallRuleName = name.(string)
 	}
 
