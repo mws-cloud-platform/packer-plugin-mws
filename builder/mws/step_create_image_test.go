@@ -1,14 +1,13 @@
 package mws_test
 
 import (
-	"bytes"
 	"context"
+	"path"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
-	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/packerbuilderdata"
-	"github.com/stretchr/testify/require"
 
 	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
 	mock_mws "github.com/mws-cloud-platform/packer-plugin-mws/builder/mws/mock"
@@ -16,141 +15,111 @@ import (
 	resmodels "go.mws.cloud/go-sdk/pkg/resources/models"
 	commonmodel "go.mws.cloud/go-sdk/service/common/model"
 	computemodel "go.mws.cloud/go-sdk/service/compute/model"
+	computeref "go.mws.cloud/go-sdk/service/resources/references/compute"
+	"go.mws.cloud/util-toolset/pkg/testing/golden"
 	"go.uber.org/mock/gomock"
 )
 
-func TestStepCreateImage_Run_Success(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+func TestStepCreateImage(t *testing.T) {
+	expectedDir := golden.NewDir(t, golden.WithPath(path.Join("testdata", t.Name())), golden.WithRecreateOnUpdate())
 
-	expectedImage := &computemodel.ImageOptionalResponse{
+	expectedTestImage := &computemodel.ImageOptionalResponse{
 		Metadata: optional.NewOptionalNil(commonmodel.CommonTypedResourceMetadataOptionalResponse{
 			Id:          new(resmodels.NewAnyResourceID(testImageName)),
 			Description: optional.NewOptional(testImageDescription),
 		}),
 	}
 
-	driver := mock_mws.NewMockDriver(ctrl)
-	driver.EXPECT().
-		CreateImage(gomock.Any(), mws.CreateImageParams{
-			ImageName:        testImageName,
-			ImageDescription: testImageDescription,
-			DiskRef:          testDiskRef,
-		}).
-		Return(expectedImage, nil).
-		Times(1)
-
-	config := &mws.Config{
-		Project:          testProjectName,
-		SourceImage:      testSourceImage,
-		ImageName:        testImageName,
-		ImageDescription: testImageDescription,
-	}
-	config.SetDefaults()
-	require.NoError(t, config.Validate())
-
-	state := new(multistep.BasicStateBag)
-	state.Put(mws.ConfigKey, config)
-	state.Put(mws.DriverKey, driver)
-	state.Put(mws.UuidPrefixKey, packerPrefix)
-	state.Put(mws.DiskRefKey, testDiskRef)
-
-	var writer bytes.Buffer
-	ui := &packer.BasicUi{
-		Writer: &writer,
-	}
-	state.Put(mws.UiKey, ui)
-
-	step := &mws.StepCreateImage{
-		GeneratedData: &packerbuilderdata.GeneratedData{State: state},
-	}
-
-	requireActionContinue(t, state, step.Run(context.Background(), state))
-
-	requireStateGet(t, state, mws.ImageKey, expectedImage)
-	requireGeneratedDataGet(t, state, "ImageName", testImageName)
-	requireOutput(t, writer.String())
-}
-
-func TestStepCreateImage_Run_WithDefaultImageName(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	expectedImage := &computemodel.ImageOptionalResponse{
+	expectedDefaultImage := &computemodel.ImageOptionalResponse{
 		Metadata: optional.NewOptionalNil(commonmodel.CommonTypedResourceMetadataOptionalResponse{
 			Id:          new(resmodels.NewAnyResourceID(defaultImageName)),
-			Description: optional.NewOptional(testImageDescription),
+			Description: optional.NewOptional(mws.DefaultImageDescription),
 		}),
 	}
 
-	driver := mock_mws.NewMockDriver(ctrl)
-	driver.EXPECT().
-		CreateImage(gomock.Any(), mws.CreateImageParams{
-			ImageName:        defaultImageName,
-			ImageDescription: testImageDescription,
-			DiskRef:          testDiskRef,
-		}).
-		Return(expectedImage, nil).
-		Times(1)
+	expectedDiskRef := new(computeref.NewDiskRef(testProjectName, testDiskName))
 
-	config := &mws.Config{
-		Project:          testProjectName,
-		SourceImage:      testSourceImage,
-		ImageDescription: testImageDescription,
+	for _, tt := range []struct {
+		name              string
+		config            *mws.Config
+		expectedImageName string
+		expectedImage     *computemodel.ImageOptionalResponse
+		customPreparation func(multistep.StateBag, *mock_mws.MockDriverMockRecorder)
+	}{
+		{
+			name: "success_set_name",
+			config: &mws.Config{
+				Project:          testProjectName,
+				SourceImage:      testSourceImage,
+				ImageName:        testImageName,
+				ImageDescription: testImageDescription,
+			},
+			expectedImageName: testImageName,
+			expectedImage:     expectedTestImage,
+			customPreparation: func(state multistep.StateBag, driver *mock_mws.MockDriverMockRecorder) {
+				state.Put(mws.DiskRefKey, expectedDiskRef)
+
+				driver.CreateImage(gomock.Any(), mws.CreateImageParams{
+					ImageName:        testImageName,
+					ImageDescription: testImageDescription,
+					DiskRef:          expectedDiskRef,
+				}).
+					Return(expectedTestImage, nil).
+					Times(1)
+			},
+		},
+		{
+			name: "success_default_name",
+			config: &mws.Config{
+				Project:     testProjectName,
+				SourceImage: testSourceImage,
+			},
+			expectedImageName: defaultImageName,
+			expectedImage:     expectedDefaultImage,
+			customPreparation: func(state multistep.StateBag, driver *mock_mws.MockDriverMockRecorder) {
+				state.Put(mws.DiskRefKey, expectedDiskRef)
+
+				driver.CreateImage(gomock.Any(), mws.CreateImageParams{
+					ImageName:        defaultImageName,
+					ImageDescription: mws.DefaultImageDescription,
+					DiskRef:          expectedDiskRef,
+				}).
+					Return(expectedDefaultImage, nil).
+					Times(1)
+			},
+		},
+		{
+			name: "error_missing_disk_ref",
+			config: &mws.Config{
+				Project:     testProjectName,
+				SourceImage: testSourceImage,
+			},
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			driver := mock_mws.NewMockDriver(ctrl)
+			writer, state := prepareState(t, tt.config, driver)
+			state.Put(mws.VirtualMachineNameKey, defaultVirtualMachineName)
+			if tt.customPreparation != nil {
+				tt.customPreparation(state, driver.EXPECT())
+			}
+
+			step := &mws.StepCreateImage{
+				GeneratedData: &packerbuilderdata.GeneratedData{State: state},
+			}
+
+			action := step.Run(context.Background(), state)
+			if strings.HasPrefix(tt.name, "error_") {
+				requireActionHalt(t, state, action)
+			} else {
+				requireActionContinue(t, state, action)
+				requireStateGet(t, state, mws.ImageKey, tt.expectedImage)
+				requireGeneratedDataGet(t, state, "ImageName", tt.expectedImageName)
+			}
+			expectedDir.String(t, tt.name+".out", writer.String())
+		})
 	}
-	config.SetDefaults()
-	require.NoError(t, config.Validate())
-
-	state := new(multistep.BasicStateBag)
-	state.Put(mws.ConfigKey, config)
-	state.Put(mws.DriverKey, driver)
-	state.Put(mws.UuidPrefixKey, packerPrefix)
-	state.Put(mws.DiskRefKey, testDiskRef)
-
-	var writer bytes.Buffer
-	ui := &packer.BasicUi{
-		Writer: &writer,
-	}
-	state.Put(mws.UiKey, ui)
-
-	step := &mws.StepCreateImage{
-		GeneratedData: &packerbuilderdata.GeneratedData{State: state},
-	}
-
-	requireActionContinue(t, state, step.Run(context.Background(), state))
-	requireStateGet(t, state, mws.ImageKey, expectedImage)
-	requireGeneratedDataGet(t, state, "ImageName", defaultImageName)
-	requireOutput(t, writer.String())
-}
-
-func TestStepCreateImage_Run_missingDiskRef(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	driver := mock_mws.NewMockDriver(ctrl)
-
-	config := &mws.Config{
-		Project:     testProjectName,
-		SourceImage: testSourceImage,
-	}
-	config.SetDefaults()
-	require.NoError(t, config.Validate())
-
-	state := new(multistep.BasicStateBag)
-	state.Put(mws.ConfigKey, config)
-	state.Put(mws.DriverKey, driver)
-	state.Put(mws.UuidPrefixKey, packerPrefix)
-
-	var writer bytes.Buffer
-	ui := &packer.BasicUi{
-		Writer: &writer,
-	}
-	state.Put(mws.UiKey, ui)
-
-	step := &mws.StepCreateImage{
-		GeneratedData: &packerbuilderdata.GeneratedData{State: state},
-	}
-
-	requireActionHalt(t, state, step.Run(context.Background(), state))
-	requireOutput(t, writer.String())
 }

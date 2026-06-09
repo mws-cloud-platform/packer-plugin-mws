@@ -8,8 +8,6 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
 	"github.com/stretchr/testify/require"
-	computeref "go.mws.cloud/go-sdk/service/resources/references/compute"
-	"go.mws.cloud/util-toolset/pkg/testing/golden"
 )
 
 const (
@@ -34,10 +32,6 @@ const (
 	defaultSubnetName          = packerPrefix + "subnet"
 	defaultVirtualMachineName  = packerPrefix + "vm"
 	defaultImageName           = packerPrefix + "image"
-)
-
-var (
-	testDiskRef = new(computeref.NewDiskRef(testProjectName, testDiskName))
 )
 
 func requireGeneratedDataGet(t *testing.T, state multistep.StateBag, key string, expected any) {
@@ -65,11 +59,6 @@ func requireActionContinue(t *testing.T, state multistep.StateBag, action multis
 func requireActionHalt(t *testing.T, state multistep.StateBag, action multistep.StepAction) {
 	require.Equal(t, multistep.ActionHalt, action, "Expected action to be ActionHalt")
 	require.NotNil(t, state.Get(mws.ErrorKey), "Expected error to be stored in state")
-}
-
-func requireOutput(t *testing.T, output string) {
-	expectedDir := golden.NewDir(t)
-	expectedDir.String(t, t.Name()+".out", output)
 }
 
 func prepareState(t *testing.T, config *mws.Config, driver mws.Driver) (*bytes.Buffer, multistep.StateBag) {
