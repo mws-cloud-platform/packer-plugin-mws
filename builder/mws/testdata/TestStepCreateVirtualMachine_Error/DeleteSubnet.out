@@ -1,0 +1,19 @@
+Creating disk...
+Disk "packer-disk" created
+Creating external address...
+External Address "packer-external-address" created
+Creating network...
+Network "packer-network" created
+Creating subnet...
+Subnet "packer-subnet" created
+Creating virtual machine...
+Virtual Machine "packer-vm" created
+Creating firewall rule...
+Firewall Rule "access-from-internet-ssh" created
+Firewall Rule "access-from-internet-ssh" deleted
+Virtual Machine "packer-vm" deleted
+Error deleting subnet "packer-subnet" in network "packer-network". Please delete it manually.
+Error: test error.
+Network "packer-network" deleted
+External address "packer-external-address" deleted
+Disk "packer-disk" deleted

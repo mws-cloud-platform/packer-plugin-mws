@@ -1,6 +1,0 @@
-Disk "packer-disk" created
-External Address "packer-external-address" created
-Network "packer-network" created
-Subnet "packer-subnet" created
-Virtual Machine "packer-vm" created
-Firewall Rule "access-from-internet-ssh" created

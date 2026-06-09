@@ -1,9 +1,11 @@
 package mws_test
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
 	"github.com/stretchr/testify/require"
 	computeref "go.mws.cloud/go-sdk/service/resources/references/compute"
@@ -11,26 +13,26 @@ import (
 )
 
 const (
-	packerPrefix         = "packer-"
-	testProjectName      = "test-project"
-	testDiskName         = "test-disk"
-	testExternalAddr     = "test-external-address"
-	testNetworkName      = "test-network"
-	testSubnetName       = "test-subnet"
-	testVmName           = "test-vm"
-	testImageName        = "test-image"
-	testImageDescription = "Test image description"
-	testSubnetCidr       = "192.168.0.0/16"
-	testInternalAddress  = "192.168.0.10"
-	testExternalAddress  = "10.20.30.40"
-	testSSHPublicKey     = "test-public-key"
-	testSourceImage      = "test-source-image"
+	packerPrefix            = "packer-"
+	testProjectName         = "test-project"
+	testDiskName            = "test-disk"
+	testExternalAddressName = "test-external-address"
+	testNetworkName         = "test-network"
+	testSubnetName          = "test-subnet"
+	testVirtualMachineName  = "test-vm"
+	testImageName           = "test-image"
+	testImageDescription    = "Test image description"
+	testSubnetCidr          = "192.168.0.0/16"
+	testInternalAddress     = "192.168.0.10"
+	testExternalAddress     = "10.20.30.40"
+	testSSHPublicKey        = "test-public-key"
+	testSourceImage         = "test-source-image"
 
 	defaultDiskName            = packerPrefix + "disk"
 	defaultExternalAddressName = packerPrefix + "external-address"
 	defaultNetworkName         = packerPrefix + "network"
 	defaultSubnetName          = packerPrefix + "subnet"
-	defaultVmName              = packerPrefix + "vm"
+	defaultVirtualMachineName  = packerPrefix + "vm"
 	defaultImageName           = packerPrefix + "image"
 )
 
@@ -68,4 +70,22 @@ func requireActionHalt(t *testing.T, state multistep.StateBag, action multistep.
 func requireOutput(t *testing.T, output string) {
 	expectedDir := golden.NewDir(t)
 	expectedDir.String(t, t.Name()+".out", output)
+}
+
+func prepareState(t *testing.T, config *mws.Config, driver mws.Driver) (*bytes.Buffer, multistep.StateBag) {
+	state := new(multistep.BasicStateBag)
+
+	config.SetDefaults()
+	require.NoError(t, config.Validate())
+	config.Communicator.SSHPublicKey = []byte(testSSHPublicKey)
+	state.Put(mws.ConfigKey, config)
+	state.Put(mws.DriverKey, driver)
+	state.Put(mws.UuidPrefixKey, packerPrefix)
+	writer := new(bytes.Buffer)
+	ui := &packer.BasicUi{
+		Writer: writer,
+	}
+	state.Put(mws.UiKey, ui)
+
+	return writer, state
 }
