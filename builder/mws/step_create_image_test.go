@@ -3,14 +3,13 @@ package mws_test
 import (
 	"context"
 	"path"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packerbuilderdata"
 
 	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
-	mock_mws "github.com/mws-cloud-platform/packer-plugin-mws/builder/mws/mock"
+	mockmws "github.com/mws-cloud-platform/packer-plugin-mws/builder/mws/mock"
 	"go.mws.cloud/go-sdk/pkg/optional"
 	resmodels "go.mws.cloud/go-sdk/pkg/resources/models"
 	commonmodel "go.mws.cloud/go-sdk/service/common/model"
@@ -44,7 +43,8 @@ func TestStepCreateImage(t *testing.T) {
 		config            *mws.Config
 		expectedImageName string
 		expectedImage     *computemodel.ImageOptionalResponse
-		customPreparation func(multistep.StateBag, *mock_mws.MockDriverMockRecorder)
+		expectedError     bool
+		customPreparation func(multistep.StateBag, *mockmws.MockDriverMockRecorder)
 	}{
 		{
 			name: "success_set_name",
@@ -56,7 +56,7 @@ func TestStepCreateImage(t *testing.T) {
 			},
 			expectedImageName: testImageName,
 			expectedImage:     expectedTestImage,
-			customPreparation: func(state multistep.StateBag, driver *mock_mws.MockDriverMockRecorder) {
+			customPreparation: func(state multistep.StateBag, driver *mockmws.MockDriverMockRecorder) {
 				state.Put(mws.DiskRefKey, expectedDiskRef)
 
 				driver.CreateImage(gomock.Any(), mws.CreateImageParams{
@@ -76,7 +76,7 @@ func TestStepCreateImage(t *testing.T) {
 			},
 			expectedImageName: defaultImageName,
 			expectedImage:     expectedDefaultImage,
-			customPreparation: func(state multistep.StateBag, driver *mock_mws.MockDriverMockRecorder) {
+			customPreparation: func(state multistep.StateBag, driver *mockmws.MockDriverMockRecorder) {
 				state.Put(mws.DiskRefKey, expectedDiskRef)
 
 				driver.CreateImage(gomock.Any(), mws.CreateImageParams{
@@ -94,13 +94,14 @@ func TestStepCreateImage(t *testing.T) {
 				Project:     testProjectName,
 				SourceImage: testSourceImage,
 			},
+			expectedError: true,
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			driver := mock_mws.NewMockDriver(ctrl)
+			driver := mockmws.NewMockDriver(ctrl)
 			writer, state := prepareState(t, tt.config, driver)
 			state.Put(mws.VirtualMachineNameKey, defaultVirtualMachineName)
 			if tt.customPreparation != nil {
@@ -112,7 +113,7 @@ func TestStepCreateImage(t *testing.T) {
 			}
 
 			action := step.Run(context.Background(), state)
-			if strings.HasPrefix(tt.name, "error_") {
+			if tt.expectedError {
 				requireActionHalt(t, state, action)
 			} else {
 				requireActionContinue(t, state, action)

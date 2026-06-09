@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/packerbuilderdata"
 
 	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
-	mock_mws "github.com/mws-cloud-platform/packer-plugin-mws/builder/mws/mock"
+	mockmws "github.com/mws-cloud-platform/packer-plugin-mws/builder/mws/mock"
 	"go.mws.cloud/go-sdk/pkg/apimodels/cidraddress"
 	"go.mws.cloud/go-sdk/pkg/apimodels/units/bytesize"
 	computeref "go.mws.cloud/go-sdk/service/resources/references/compute"
@@ -59,7 +59,7 @@ func TestStepCreateVirtualMachine_Success(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			driver := mock_mws.NewMockDriver(ctrl)
+			driver := mockmws.NewMockDriver(ctrl)
 			writer, state := prepareState(t, tt.config, driver)
 
 			expectedDiskName := cmp.Or(tt.config.DiskName, defaultDiskName)
@@ -182,7 +182,7 @@ func TestStepCreateVirtualMachine_Error(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			driver := mock_mws.NewMockDriver(ctrl)
+			driver := mockmws.NewMockDriver(ctrl)
 
 			writer, state := prepareState(t,
 				&mws.Config{
