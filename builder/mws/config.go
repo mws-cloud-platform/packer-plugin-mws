@@ -36,7 +36,7 @@ const (
 
 type Config struct {
 	common.PackerConfig `mapstructure:",squash"`
-	Communicator        communicator.Config `mapstructure:",squash"`
+	Communicator        communicator.Config `mapstructure:",squash" json:"-"`
 
 	// The project identifier where resources will be created.
 	Project string `mapstructure:"project" required:"true"`
