@@ -4,6 +4,7 @@
 package mws
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"time"
@@ -43,10 +44,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 		snapshotRef = new(computeref.NewSnapshotRef(config.SourceProject, config.SourceSnapshot))
 	}
 
-	diskName := config.DiskName
-	if diskName == "" {
-		diskName = prefix + "disk"
-	}
+	diskName := cmp.Or(config.DiskName, prefix+"disk")
 	ui.Sayf("Creating disk...")
 	err := driver.CreateDisk(ctx, CreateDiskParams{
 		DiskName:    diskName,
@@ -67,10 +65,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	diskRef := new(computeref.NewDiskRef(config.Project, diskName))
 	state.Put(DiskRefKey, diskRef)
 
-	externalAddressName := config.ExternalAddressName
-	if externalAddressName == "" {
-		externalAddressName = prefix + "external-address"
-	}
+	externalAddressName := cmp.Or(config.ExternalAddressName, prefix+"external-address")
 	ui.Sayf("Creating external address...")
 	externalAddress, err := driver.CreateExternalAddress(ctx, CreateExternalAddressParams{
 		ExternalAddressName: externalAddressName,
@@ -84,9 +79,8 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	state.Put(InstanceIpKey, externalAddress)
 	externalAddressRef := new(vpcref.NewExternalAddressRef(config.Project, externalAddressName))
 
-	networkName := config.NetworkName
+	networkName := cmp.Or(config.NetworkName, prefix+"network")
 	if config.NetworkName == "" {
-		networkName = prefix + "network"
 		ui.Sayf("Creating network...")
 		err = driver.CreateNetwork(ctx, CreateNetworkParams{
 			NetworkName: networkName,
@@ -99,9 +93,8 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	}
 	state.Put(NetworkNameKey, networkName)
 
-	subnetName := config.SubnetName
-	if subnetName == "" {
-		subnetName = prefix + "subnet"
+	subnetName := cmp.Or(config.SubnetName, prefix+"subnet")
+	if config.SubnetName == "" {
 		ui.Sayf("Creating subnet...")
 		err = driver.CreateSubnet(ctx, CreateSubnetParams{
 			NetworkName: networkName,
@@ -117,10 +110,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	state.Put(SubnetNameKey, subnetName)
 	subnetRef := new(vpcref.NewSubnetRef(config.Project, networkName, subnetName))
 
-	virtualMachineName := config.VirtualMachineName
-	if virtualMachineName == "" {
-		virtualMachineName = prefix + "vm"
-	}
+	virtualMachineName := cmp.Or(config.VirtualMachineName, prefix+"vm")
 	ui.Sayf("Creating virtual machine...")
 	internalAddress, err := driver.CreateVirtualMachine(ctx, CreateVirtualMachineParams{
 		VirtualMachineName: virtualMachineName,

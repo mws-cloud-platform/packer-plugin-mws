@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"path"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/packer-plugin-sdk/packerbuilderdata"
@@ -21,6 +20,7 @@ import (
 )
 
 func TestStepCreateVirtualMachine_Success(t *testing.T) {
+	t.Parallel()
 	expectedDir := golden.NewDir(t, golden.WithPath(path.Join("testdata", t.Name())), golden.WithRecreateOnUpdate())
 
 	for _, tt := range []struct {
@@ -162,23 +162,57 @@ func TestStepCreateVirtualMachine_Success(t *testing.T) {
 }
 
 func TestStepCreateVirtualMachine_Error(t *testing.T) {
+	t.Parallel()
 	expectedDir := golden.NewDir(t, golden.WithPath(path.Join("testdata", t.Name())), golden.WithRecreateOnUpdate())
 
-	for _, testName := range []string{
-		"CreateDisk",
-		"CreateExternalAddress",
-		"CreateNetwork",
-		"CreateSubnet",
-		"CreateVirtualMachine",
-		"CreateFirewallRule",
-		"DeleteFirewallRule",
-		"DeleteVirtualMachine",
-		"DeleteSubnet",
-		"DeleteNetwork",
-		"DeleteExternalAddress",
-		"DeleteDisk",
+	for _, tt := range []struct {
+		name               string
+		expectedActionHalt bool
+	}{
+		{
+			name:               "CreateDisk",
+			expectedActionHalt: true,
+		},
+		{
+			name:               "CreateExternalAddress",
+			expectedActionHalt: true,
+		},
+		{
+			name:               "CreateNetwork",
+			expectedActionHalt: true,
+		},
+		{
+			name:               "CreateSubnet",
+			expectedActionHalt: true,
+		},
+		{
+			name:               "CreateVirtualMachine",
+			expectedActionHalt: true,
+		},
+		{
+			name:               "CreateFirewallRule",
+			expectedActionHalt: true,
+		},
+		{
+			name: "DeleteFirewallRule",
+		},
+		{
+			name: "DeleteVirtualMachine",
+		},
+		{
+			name: "DeleteSubnet",
+		},
+		{
+			name: "DeleteNetwork",
+		},
+		{
+			name: "DeleteExternalAddress",
+		},
+		{
+			name: "DeleteDisk",
+		},
 	} {
-		t.Run(testName, func(t *testing.T) {
+		t.Run(tt.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
@@ -192,46 +226,46 @@ func TestStepCreateVirtualMachine_Error(t *testing.T) {
 				driver,
 			)
 
-			expectedErrors := map[string]error{testName: errors.New("test error")}
+			expectedErrors := map[string]error{tt.name: errors.New("test error")}
 			func() {
 				driver.EXPECT().CreateDisk(gomock.Any(), gomock.Any()).
 					Return(expectedErrors["CreateDisk"]).Times(1)
-				if testName == "CreateDisk" {
+				if tt.name == "CreateDisk" {
 					return
 				}
 				driver.EXPECT().DeleteDisk(gomock.Any(), gomock.Any()).
 					Return(expectedErrors["DeleteDisk"]).Times(1)
 				driver.EXPECT().CreateExternalAddress(gomock.Any(), gomock.Any()).
 					Return(testExternalAddress, expectedErrors["CreateExternalAddress"]).Times(1)
-				if testName == "CreateExternalAddress" {
+				if tt.name == "CreateExternalAddress" {
 					return
 				}
 				driver.EXPECT().DeleteExternalAddress(gomock.Any(), gomock.Any()).
 					Return(expectedErrors["DeleteExternalAddress"]).Times(1)
 				driver.EXPECT().CreateNetwork(gomock.Any(), gomock.Any()).
 					Return(expectedErrors["CreateNetwork"]).Times(1)
-				if testName == "CreateNetwork" {
+				if tt.name == "CreateNetwork" {
 					return
 				}
 				driver.EXPECT().DeleteNetwork(gomock.Any(), gomock.Any()).
 					Return(expectedErrors["DeleteNetwork"]).Times(1)
 				driver.EXPECT().CreateSubnet(gomock.Any(), gomock.Any()).
 					Return(expectedErrors["CreateSubnet"]).Times(1)
-				if testName == "CreateSubnet" {
+				if tt.name == "CreateSubnet" {
 					return
 				}
 				driver.EXPECT().DeleteSubnet(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(expectedErrors["DeleteSubnet"]).Times(1)
 				driver.EXPECT().CreateVirtualMachine(gomock.Any(), gomock.Any()).
 					Return(testInternalAddress, expectedErrors["CreateVirtualMachine"]).Times(1)
-				if testName == "CreateVirtualMachine" {
+				if tt.name == "CreateVirtualMachine" {
 					return
 				}
 				driver.EXPECT().DeleteVirtualMachine(gomock.Any(), gomock.Any()).
 					Return(expectedErrors["DeleteVirtualMachine"]).Times(1)
 				driver.EXPECT().CreateFirewallRule(gomock.Any(), gomock.Any()).
 					Return(expectedErrors["CreateFirewallRule"]).Times(1)
-				if testName == "CreateFirewallRule" {
+				if tt.name == "CreateFirewallRule" {
 					return
 				}
 				driver.EXPECT().DeleteFirewallRule(gomock.Any(), gomock.Any(), gomock.Any()).
@@ -243,13 +277,13 @@ func TestStepCreateVirtualMachine_Error(t *testing.T) {
 			}
 
 			action := step.Run(context.Background(), state)
-			if strings.HasPrefix(testName, "Create") {
+			if tt.expectedActionHalt {
 				requireActionHalt(t, state, action)
 			} else {
 				requireActionContinue(t, state, action)
 			}
 			step.Cleanup(state)
-			expectedDir.String(t, testName+".out", writer.String())
+			expectedDir.String(t, tt.name+".out", writer.String())
 		})
 	}
 }

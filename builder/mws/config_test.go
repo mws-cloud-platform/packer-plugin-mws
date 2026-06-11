@@ -9,6 +9,7 @@ import (
 )
 
 func TestConfig_Prepare(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		raws    []any

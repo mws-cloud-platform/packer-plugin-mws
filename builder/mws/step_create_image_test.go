@@ -20,6 +20,7 @@ import (
 )
 
 func TestStepCreateImage(t *testing.T) {
+	t.Parallel()
 	expectedDir := golden.NewDir(t, golden.WithPath(path.Join("testdata", t.Name())), golden.WithRecreateOnUpdate())
 
 	expectedTestImage := &computemodel.ImageOptionalResponse{
