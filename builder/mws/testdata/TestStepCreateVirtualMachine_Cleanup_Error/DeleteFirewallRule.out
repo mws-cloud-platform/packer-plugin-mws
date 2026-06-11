@@ -1,0 +1,7 @@
+Error deleting firewall rule "access-from-internet-ssh" in network "packer-network". Please delete it manually.
+Error: test error.
+Virtual Machine "packer-vm" deleted
+Subnet "packer-subnet" deleted
+Network "packer-network" deleted
+External address "packer-external-address" deleted
+Disk "packer-disk" deleted

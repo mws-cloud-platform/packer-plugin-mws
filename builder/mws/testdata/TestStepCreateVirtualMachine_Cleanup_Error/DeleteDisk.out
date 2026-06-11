@@ -1,0 +1,7 @@
+Firewall Rule "access-from-internet-ssh" deleted
+Virtual Machine "packer-vm" deleted
+Subnet "packer-subnet" deleted
+Network "packer-network" deleted
+External address "packer-external-address" deleted
+Error deleting disk "packer-disk". Please delete it manually.
+Error: test error.
