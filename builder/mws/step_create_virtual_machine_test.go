@@ -61,8 +61,6 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-
 			driver := mockmws.NewMockDriver(ctrl)
 			writer, state := prepareState(t, tt.config, driver)
 
@@ -200,8 +198,6 @@ func TestStepCreateVirtualMachine_Cleanup_Success(t *testing.T) {
 		} {
 			t.Run(tt.name, func(t *testing.T) {
 				ctrl := gomock.NewController(t)
-				defer ctrl.Finish()
-
 				driver := mockmws.NewMockDriver(ctrl)
 				writer, state := prepareState(t, tt.config, driver)
 
@@ -274,8 +270,6 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 	} {
 		t.Run(testName, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-
 			driver := mockmws.NewMockDriver(ctrl)
 
 			writer, state := prepareState(t,
@@ -381,8 +375,6 @@ func TestStepCreateVirtualMachine_Cleanup_Error(t *testing.T) {
 	} {
 		t.Run(testName, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-
 			driver := mockmws.NewMockDriver(ctrl)
 
 			writer, state := prepareState(t,

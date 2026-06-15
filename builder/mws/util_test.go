@@ -23,7 +23,6 @@ const (
 	testVirtualMachineName  = "test-vm"
 	testImageName           = "test-image"
 	testImageDescription    = "Test image description"
-	testSubnetCidr          = "192.168.0.0/16"
 	testInternalAddress     = "192.168.0.10"
 	testExternalAddress     = "10.20.30.40"
 	testSSHPublicKey        = "test-public-key"

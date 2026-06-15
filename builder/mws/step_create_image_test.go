@@ -103,8 +103,6 @@ func TestStepCreateImage(t *testing.T) {
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-
 			driver := mockmws.NewMockDriver(ctrl)
 			writer, state := prepareState(t, tt.config, driver)
 			state.Put(mws.VirtualMachineNameKey, defaultVirtualMachineName)

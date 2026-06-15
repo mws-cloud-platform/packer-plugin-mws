@@ -4,6 +4,7 @@
 package mws
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 
@@ -23,10 +24,7 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 	prefix := state.Get(UuidPrefixKey).(string)
 	ui := state.Get(UiKey).(packer.Ui)
 
-	imageName := config.ImageName
-	if imageName == "" {
-		imageName = prefix + "image"
-	}
+	imageName := cmp.Or(config.ImageName, prefix+"image")
 
 	ui.Sayf("Creating image %q from virtual machine %q...", imageName, state.Get(VirtualMachineNameKey))
 

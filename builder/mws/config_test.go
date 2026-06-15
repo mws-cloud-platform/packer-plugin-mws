@@ -1,12 +1,13 @@
 // Copyright 2026 MTS Web Services, LLC.
 // SPDX-License-Identifier: MPL-2.0
 
-package mws
+package mws_test
 
 import (
 	"path"
 	"testing"
 
+	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
 	"github.com/stretchr/testify/require"
 	"go.mws.cloud/util-toolset/pkg/testing/golden"
 )
@@ -144,7 +145,7 @@ func TestConfig_Prepare(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &Config{}
+			c := &mws.Config{}
 			err := c.Prepare(tt.raws...)
 
 			if tt.wantErr {

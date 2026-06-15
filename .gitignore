@@ -9,6 +9,12 @@ dist/*
 .docs/*
 docs.zip
 
+# IntelliJ IDEA
+.idea
+*.iml
+*.ipr
+*.iws
+
 # VSCode
 .vscode/
 
