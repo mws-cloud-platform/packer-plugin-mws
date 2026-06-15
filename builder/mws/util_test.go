@@ -1,3 +1,6 @@
+// Copyright 2026 MTS Web Services, LLC.
+// SPDX-License-Identifier: MPL-2.0
+
 package mws_test
 
 import (
@@ -42,13 +45,13 @@ func requireGeneratedDataGet(t *testing.T, state multistep.StateBag, key string,
 	require.True(t, ok, "Expected generated_data to be of type map[string]any, got %T", genDataResult)
 
 	actual, ok := genDataMap[key]
-	require.True(t, ok, "Expected `%s` to be stored in generated data", key)
+	require.True(t, ok, "Expected %q to be stored in generated data", key)
 	require.Equal(t, expected, actual)
 }
 
 func requireStateGet(t *testing.T, state multistep.StateBag, key string, expected any) {
 	actual, ok := state.GetOk(key)
-	require.True(t, ok, "Expected `%s` to be stored in state", key)
+	require.True(t, ok, "Expected %q to be stored in state", key)
 	require.Equal(t, expected, actual)
 }
 
