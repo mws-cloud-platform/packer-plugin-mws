@@ -3,10 +3,17 @@ packer-plugin-mws
 **/packer_log*.txt
 **/git_*test.pkr.hcl
 crash.log
+*.pem
 
 dist/*
 .docs/*
 docs.zip
+
+# IntelliJ IDEA
+.idea
+*.iml
+*.ipr
+*.iws
 
 # VSCode
 .vscode/

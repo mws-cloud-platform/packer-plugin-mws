@@ -4,6 +4,7 @@
 package mws
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 
@@ -18,22 +19,18 @@ type StepCreateImage struct {
 }
 
 func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	config := state.Get(configKey).(*Config)
-	driver := state.Get(driverKey).(Driver)
-	prefix := state.Get(uuidPrefixKey).(string)
+	config := state.Get(ConfigKey).(*Config)
+	driver := state.Get(DriverKey).(Driver)
+	prefix := state.Get(UuidPrefixKey).(string)
+	ui := state.Get(UiKey).(packer.Ui)
 
-	ui := state.Get(uiKey).(packer.Ui)
+	imageName := cmp.Or(config.ImageName, prefix+"image")
 
-	ui.Say("Creating image from virtual machine...")
+	ui.Sayf("Creating image %q from virtual machine %q...", imageName, state.Get(VirtualMachineNameKey))
 
-	diskRef, ok := state.Get(diskRefKey).(*computeref.DiskRef)
+	diskRef, ok := state.Get(DiskRefKey).(*computeref.DiskRef)
 	if !ok || diskRef == nil {
 		return actionHaltWithError(state, fmt.Errorf("disk ref not found in state: %w", errUnexpected))
-	}
-
-	imageName := config.ImageName
-	if imageName == "" {
-		imageName = prefix + "image"
 	}
 
 	image, err := driver.CreateImage(ctx, CreateImageParams{
@@ -45,9 +42,9 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 		return actionHaltWithError(state, fmt.Errorf("create image: %w", err))
 	}
 
-	ui.Sayf("Created image %q", imageName)
+	ui.Sayf("Image %q created", imageName)
 
-	state.Put(imageKey, image)
+	state.Put(ImageKey, image)
 
 	s.GeneratedData.Put("ImageName", imageName)
 

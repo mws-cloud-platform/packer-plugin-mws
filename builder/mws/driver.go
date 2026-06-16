@@ -13,6 +13,8 @@ import (
 	vpcref "go.mws.cloud/go-sdk/service/resources/references/vpc"
 )
 
+//go:generate mockgen -typed -destination=mock/driver_mock.go . Driver
+
 type Driver interface {
 	CreateDisk(context.Context, CreateDiskParams) error
 	CreateExternalAddress(context.Context, CreateExternalAddressParams) (string, error)

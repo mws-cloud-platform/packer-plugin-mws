@@ -57,11 +57,11 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 	}
 
 	state := new(multistep.BasicStateBag)
-	state.Put(configKey, &b.config)
-	state.Put(driverKey, driver)
-	state.Put(hookKey, hook)
-	state.Put(uiKey, ui)
-	state.Put(uuidPrefixKey, fmt.Sprintf("packer-%s-", uuid.NewString()))
+	state.Put(ConfigKey, &b.config)
+	state.Put(DriverKey, driver)
+	state.Put(HookKey, hook)
+	state.Put(UiKey, ui)
+	state.Put(UuidPrefixKey, fmt.Sprintf("packer-%s-", uuid.NewString()))
 	generatedData := &packerbuilderdata.GeneratedData{State: state}
 
 	steps := []multistep.Step{
@@ -96,11 +96,11 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 	b.runner = commonsteps.NewRunner(steps, b.config.PackerConfig, ui)
 	b.runner.Run(ctx, state)
 
-	if err, ok := state.GetOk(errorKey); ok {
+	if err, ok := state.GetOk(ErrorKey); ok {
 		return nil, err.(error)
 	}
 
-	v, ok := state.GetOk(imageKey)
+	v, ok := state.GetOk(ImageKey)
 	if !ok {
 		return nil, fmt.Errorf("image not found in state: %w", errUnexpected)
 	}
@@ -110,7 +110,7 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 	}
 
 	return &Artifact{
-		StateData: map[string]any{"generated_data": state.Get(generatedDataKey)},
+		StateData: map[string]any{"generated_data": state.Get(GeneratedDataKey)},
 		driver:    driver,
 		image:     image,
 	}, nil

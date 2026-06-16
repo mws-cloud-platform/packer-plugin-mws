@@ -5,12 +5,12 @@ package mws
 
 import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
-	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
+	"github.com/hashicorp/packer-plugin-sdk/packer"
 )
 
 func actionHaltWithError(state multistep.StateBag, err error) multistep.StepAction {
-	ui := state.Get(uiKey).(packersdk.Ui)
-	state.Put(errorKey, err)
+	ui := state.Get(UiKey).(packer.Ui)
+	state.Put(ErrorKey, err)
 	ui.Error(err.Error())
 	return multistep.ActionHalt
 }

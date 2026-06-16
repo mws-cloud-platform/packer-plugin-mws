@@ -23,18 +23,20 @@ import (
 )
 
 const (
-	DefaultSSHUsername    = "packer"
-	DefaultVMType         = "gen-2-8"
-	DefaultDiskType       = "nbs-pl2"
-	DefaultDiskSize       = "10 GB"
-	DefaultDiskIOPS       = int64(1000)
-	DefaultSubnetCidr     = "192.168.0.0/16"
-	DefaultCleanupTimeout = "1h"
+	DefaultSSHUsername      = "packer"
+	DefaultZone             = mws.DefaultZone
+	DefaultVMType           = "gen-2-8"
+	DefaultDiskType         = "nbs-pl2"
+	DefaultDiskSize         = "10 GB"
+	DefaultDiskIOPS         = int64(1000)
+	DefaultSubnetCidr       = "192.168.0.0/16"
+	DefaultImageDescription = "Image created by Packer"
+	DefaultCleanupTimeout   = "1h"
 )
 
 type Config struct {
 	common.PackerConfig `mapstructure:",squash"`
-	Communicator        communicator.Config `mapstructure:",squash"`
+	Communicator        communicator.Config `mapstructure:",squash" json:"-"`
 
 	// The project identifier where resources will be created.
 	Project string `mapstructure:"project" required:"true"`
@@ -95,52 +97,50 @@ type Config struct {
 }
 
 func (c *Config) Prepare(raws ...any) error {
-	err := config.Decode(c, &config.DecodeOpts{
+	if err := config.Decode(c, &config.DecodeOpts{
 		PluginType:         BuilderId,
 		Interpolate:        true,
 		InterpolateContext: &c.ctx,
-	}, raws...)
-	if err != nil {
+	}, raws...); err != nil {
 		return err
 	}
 
+	c.SetDefaults()
+	return c.Validate()
+}
+
+func (c *Config) SetDefaults() {
 	c.Communicator.SSHUsername = cmp.Or(c.Communicator.SSHUsername, DefaultSSHUsername)
-	err = errors.Join(c.Communicator.Prepare(&c.ctx)...)
-
-	if c.Project == "" {
-		err = errors.Join(err, consterr.Error("project is not provided"))
-	}
-
-	c.Zone = cmp.Or(c.Zone, mws.DefaultZone)
-
+	c.Zone = cmp.Or(c.Zone, DefaultZone)
 	c.VmType = cmp.Or(c.VmType, DefaultVMType)
-
-	if (c.SourceImage == "") == (c.SourceSnapshot == "") {
-		err = errors.Join(err, consterr.Error("exactly one of source_image or source_snapshot must be provided"))
-	}
 	c.DiskType = cmp.Or(c.DiskType, DefaultDiskType)
 	c.DiskIOPS = cmp.Or(c.DiskIOPS, DefaultDiskIOPS)
 	c.DiskSize = cmp.Or(c.DiskSize, DefaultDiskSize)
+	c.SourceProject = cmp.Or(c.SourceProject, c.Project)
+	c.SubnetCidr = cmp.Or(c.SubnetCidr, DefaultSubnetCidr)
+	c.ImageDescription = cmp.Or(c.ImageDescription, DefaultImageDescription)
+	c.CleanupTimeout = cmp.Or(c.CleanupTimeout, DefaultCleanupTimeout)
+}
+
+func (c *Config) Validate() error {
+	err := errors.Join(c.Communicator.Prepare(&c.ctx)...)
+	if c.Project == "" {
+		err = errors.Join(err, consterr.Error("project is not provided"))
+	}
+	if (c.SourceImage == "") == (c.SourceSnapshot == "") {
+		err = errors.Join(err, consterr.Error("exactly one of source_image or source_snapshot must be provided"))
+	}
 	if _, parseErr := bytesize.ParseString(c.DiskSize); parseErr != nil {
 		err = errors.Join(err, fmt.Errorf("parse disk size: %w", parseErr))
 	}
-	c.SourceProject = cmp.Or(c.SourceProject, c.Project)
-
-	c.SubnetCidr = cmp.Or(c.SubnetCidr, DefaultSubnetCidr)
 	if _, parseErr := cidraddress.ParseCIDR4AddressString(c.SubnetCidr); parseErr != nil {
 		err = errors.Join(err, fmt.Errorf("parse subnet CIDR: %w", parseErr))
 	}
-
 	if c.SubnetName != "" && c.NetworkName == "" {
 		err = errors.Join(err, consterr.Error("when subnet_name is provided, network_name must be provided"))
 	}
-
-	c.ImageDescription = cmp.Or(c.ImageDescription, "Image created by Packer")
-
-	c.CleanupTimeout = cmp.Or(c.CleanupTimeout, DefaultCleanupTimeout)
 	if _, parseErr := time.ParseDuration(c.CleanupTimeout); parseErr != nil {
 		err = errors.Join(err, fmt.Errorf("parse cleanup timeout: %w", parseErr))
 	}
-
 	return err
 }

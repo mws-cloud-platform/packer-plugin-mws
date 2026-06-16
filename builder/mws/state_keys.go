@@ -4,24 +4,24 @@
 package mws
 
 const (
-	configKey     = "config"
-	driverKey     = "driver"
-	hookKey       = "hook"
-	uiKey         = "ui"
-	uuidPrefixKey = "uuid_prefix"
-	errorKey      = "error"
+	ConfigKey     = "config"
+	DriverKey     = "driver"
+	HookKey       = "hook"
+	UiKey         = "ui"
+	UuidPrefixKey = "uuid_prefix"
+	ErrorKey      = "error"
 
-	diskNameKey            = "disk_name"
-	externalAddressNameKey = "external_address_name"
-	networkNameKey         = "network_name"
-	subnetNameKey          = "subnet_name"
-	virtualMachineNameKey  = "virtual_machine_name"
-	firewallRuleNameKey    = "firewall_rule_name"
+	DiskNameKey            = "disk_name"
+	ExternalAddressNameKey = "external_address_name"
+	NetworkNameKey         = "network_name"
+	SubnetNameKey          = "subnet_name"
+	VirtualMachineNameKey  = "virtual_machine_name"
+	FirewallRuleNameKey    = "firewall_rule_name"
 
-	diskRefKey       = "disk_ref"
-	imageKey         = "image"
-	generatedDataKey = "generated_data"
+	DiskRefKey       = "disk_ref"
+	ImageKey         = "image"
+	GeneratedDataKey = "generated_data"
 
-	instanceIpKey = "instance_ip"
-	instanceIdKey = "instance_id"
+	InstanceIpKey = "instance_ip"
+	InstanceIdKey = "instance_id"
 )
