@@ -118,6 +118,8 @@ configured for this builder.
 
 - `cleanup_timeout` (string) - Timeout for cleanup of create virtual machine step (defaults to "1h").
 
+- `use_external_address` (bool) - Use External Address for connection to virtual machine from internet (defaults to "false").
+
 <!-- End of code generated from the comments of the Config struct in builder/mws/config.go; -->
 
 

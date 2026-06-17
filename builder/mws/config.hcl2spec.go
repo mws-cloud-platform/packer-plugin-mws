@@ -88,6 +88,7 @@ type FlatConfig struct {
 	SubnetCidr                      *string           `mapstructure:"subnet_cidr" required:"false" cty:"subnet_cidr" hcl:"subnet_cidr"`
 	ExternalAddressName             *string           `mapstructure:"external_address_name" required:"false" cty:"external_address_name" hcl:"external_address_name"`
 	CleanupTimeout                  *string           `mapstructure:"cleanup_timeout" required:"false" cty:"cleanup_timeout" hcl:"cleanup_timeout"`
+	UseExternalAddress              *bool             `mapstructure:"use_external_address" required:"false" cty:"use_external_address" hcl:"use_external_address"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -180,6 +181,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"subnet_cidr":                         &hcldec.AttrSpec{Name: "subnet_cidr", Type: cty.String, Required: false},
 		"external_address_name":               &hcldec.AttrSpec{Name: "external_address_name", Type: cty.String, Required: false},
 		"cleanup_timeout":                     &hcldec.AttrSpec{Name: "cleanup_timeout", Type: cty.String, Required: false},
+		"use_external_address":                &hcldec.AttrSpec{Name: "use_external_address", Type: cty.Bool, Required: false},
 	}
 	return s
 }

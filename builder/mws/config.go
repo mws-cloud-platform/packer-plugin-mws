@@ -93,6 +93,9 @@ type Config struct {
 	// Timeout for cleanup of create virtual machine step (defaults to "1h").
 	CleanupTimeout string `mapstructure:"cleanup_timeout" required:"false"`
 
+	// Use External Address for connection to virtual machine from internet (defaults to "false").
+	UseExternalAddress bool `mapstructure:"use_external_address" required:"false"`
+
 	ctx interpolate.Context
 }
 
@@ -141,6 +144,12 @@ func (c *Config) Validate() error {
 	}
 	if _, parseErr := time.ParseDuration(c.CleanupTimeout); parseErr != nil {
 		err = errors.Join(err, fmt.Errorf("parse cleanup timeout: %w", parseErr))
+	}
+	if !c.UseExternalAddress && c.SubnetName == "" {
+		err = errors.Join(err, consterr.Error("when use_external_address is false, subnet_name must be provided"))
+	}
+	if !c.UseExternalAddress && c.ExternalAddressName != "" {
+		err = errors.Join(err, consterr.Error("when use_external_address is false, external_address_name must not be provided"))
 	}
 	return err
 }

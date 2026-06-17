@@ -23,8 +23,9 @@ func TestConfig_Prepare(t *testing.T) {
 			name: "valid_basic_config_with_source_image",
 			raws: []any{
 				map[string]any{
-					"project":      "test-project",
-					"source_image": "test-image",
+					"project":              "test-project",
+					"source_image":         "test-image",
+					"use_external_address": true,
 				},
 			},
 			wantErr: false,
@@ -33,8 +34,9 @@ func TestConfig_Prepare(t *testing.T) {
 			name: "valid_basic_config_with_source_snapshot",
 			raws: []any{
 				map[string]any{
-					"project":         "test-project",
-					"source_snapshot": "test-snapshot",
+					"project":              "test-project",
+					"source_snapshot":      "test-snapshot",
+					"use_external_address": true,
 				},
 			},
 			wantErr: false,
@@ -62,15 +64,55 @@ func TestConfig_Prepare(t *testing.T) {
 					"subnet_cidr":                         "10.0.0.0/8",
 					"external_address_name":               "test-external-address",
 					"cleanup_timeout":                     "2h",
+					"use_external_address":                true,
 				},
 			},
 			wantErr: false,
 		},
 		{
+			name: "valid_config_with_use_external_address_false_and_defaults",
+			raws: []any{
+				map[string]any{
+					"project":              "test-project",
+					"source_image":         "test-image",
+					"network_name":         "test-network",
+					"subnet_name":          "test-subnet",
+					"use_external_address": false,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "use_external_address_false_without_subnet_error",
+			raws: []any{
+				map[string]any{
+					"project":              "test-project",
+					"source_image":         "test-image",
+					"use_external_address": false,
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "use_external_address_false_with_external_address_error",
+			raws: []any{
+				map[string]any{
+					"project":               "test-project",
+					"source_image":          "test-image",
+					"network_name":          "test-network",
+					"subnet_name":           "test-subnet",
+					"external_address_name": "test-external-address",
+					"use_external_address":  false,
+				},
+			},
+			wantErr: true,
+		},
+		{
 			name: "missing_project_error",
 			raws: []any{
 				map[string]any{
-					"source_image": "test-image",
+					"source_image":         "test-image",
+					"use_external_address": true,
 				},
 			},
 			wantErr: true,
@@ -79,9 +121,10 @@ func TestConfig_Prepare(t *testing.T) {
 			name: "both_source_fields_error",
 			raws: []any{
 				map[string]any{
-					"project":         "test-project",
-					"source_image":    "test-image",
-					"source_snapshot": "test-snapshot",
+					"project":              "test-project",
+					"source_image":         "test-image",
+					"source_snapshot":      "test-snapshot",
+					"use_external_address": true,
 				},
 			},
 			wantErr: true,
@@ -90,7 +133,8 @@ func TestConfig_Prepare(t *testing.T) {
 			name: "no_source_fields_error",
 			raws: []any{
 				map[string]any{
-					"project": "test-project",
+					"project":              "test-project",
+					"use_external_address": true,
 				},
 			},
 			wantErr: true,
@@ -99,9 +143,10 @@ func TestConfig_Prepare(t *testing.T) {
 			name: "invalid_disk_size_error",
 			raws: []any{
 				map[string]any{
-					"project":      "test-project",
-					"source_image": "test-image",
-					"disk_size":    "invalid-size",
+					"project":              "test-project",
+					"source_image":         "test-image",
+					"disk_size":            "invalid-size",
+					"use_external_address": true,
 				},
 			},
 			wantErr: true,
@@ -110,9 +155,10 @@ func TestConfig_Prepare(t *testing.T) {
 			name: "invalid_subnet_CIDR_error",
 			raws: []any{
 				map[string]any{
-					"project":      "test-project",
-					"source_image": "test-image",
-					"subnet_cidr":  "invalid-cidr",
+					"project":              "test-project",
+					"source_image":         "test-image",
+					"subnet_cidr":          "invalid-cidr",
+					"use_external_address": true,
 				},
 			},
 			wantErr: true,
@@ -121,9 +167,10 @@ func TestConfig_Prepare(t *testing.T) {
 			name: "subnet_without_network_error",
 			raws: []any{
 				map[string]any{
-					"project":      "test-project",
-					"source_image": "test-image",
-					"subnet_name":  "test-subnet",
+					"project":              "test-project",
+					"source_image":         "test-image",
+					"subnet_name":          "test-subnet",
+					"use_external_address": true,
 				},
 			},
 			wantErr: true,
@@ -132,9 +179,10 @@ func TestConfig_Prepare(t *testing.T) {
 			name: "invalid_cleanup_timeout_error",
 			raws: []any{
 				map[string]any{
-					"project":         "test-project",
-					"source_snapshot": "test-snapshot",
-					"cleanup_timeout": "invalid-duration",
+					"project":              "test-project",
+					"source_snapshot":      "test-snapshot",
+					"cleanup_timeout":      "invalid-duration",
+					"use_external_address": true,
 				},
 			},
 			wantErr: true,

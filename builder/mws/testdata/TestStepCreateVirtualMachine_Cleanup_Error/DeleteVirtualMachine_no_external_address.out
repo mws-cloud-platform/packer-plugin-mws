@@ -1,0 +1,3 @@
+Error deleting virtual machine "packer-vm". Please delete it manually.
+Error: test error.
+Disk "packer-disk" deleted
