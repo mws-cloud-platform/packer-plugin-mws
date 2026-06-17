@@ -87,14 +87,14 @@ type Config struct {
 	SubnetName string `mapstructure:"subnet_name" required:"false"`
 	// Subnet CIDR (defaults to "192.168.0.0/16").
 	SubnetCidr string `mapstructure:"subnet_cidr" required:"false"`
+	// Use external address for connection to virtual machine from internet (defaults to "false").
+	UseExternalAddress bool `mapstructure:"use_external_address" required:"false"`
 	// External address name (defaults to "packer-{{uuid}}-external-address").
+	// Can be specified only if external address usage is enabled.
 	ExternalAddressName string `mapstructure:"external_address_name" required:"false"`
 
 	// Timeout for cleanup of create virtual machine step (defaults to "1h").
 	CleanupTimeout string `mapstructure:"cleanup_timeout" required:"false"`
-
-	// Use External Address for connection to virtual machine from internet (defaults to "false").
-	UseExternalAddress bool `mapstructure:"use_external_address" required:"false"`
 
 	ctx interpolate.Context
 }

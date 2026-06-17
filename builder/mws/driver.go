@@ -13,7 +13,7 @@ import (
 	vpcref "go.mws.cloud/go-sdk/service/resources/references/vpc"
 )
 
-//go:generate mockgen -typed -destination=mock/driver_mock.go . Driver
+//go:generate go run go.uber.org/mock/mockgen@v0.6.0 -typed -destination=mock/driver_mock.go . Driver
 
 type Driver interface {
 	CreateDisk(context.Context, CreateDiskParams) error
