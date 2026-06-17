@@ -87,7 +87,10 @@ type Config struct {
 	SubnetName string `mapstructure:"subnet_name" required:"false"`
 	// Subnet CIDR (defaults to "192.168.0.0/16").
 	SubnetCidr string `mapstructure:"subnet_cidr" required:"false"`
+	// Use external address for connection to virtual machine from internet (defaults to "false").
+	UseExternalAddress bool `mapstructure:"use_external_address" required:"false"`
 	// External address name (defaults to "packer-{{uuid}}-external-address").
+	// Can be specified only if external address usage is enabled.
 	ExternalAddressName string `mapstructure:"external_address_name" required:"false"`
 
 	// Timeout for cleanup of create virtual machine step (defaults to "1h").
@@ -141,6 +144,12 @@ func (c *Config) Validate() error {
 	}
 	if _, parseErr := time.ParseDuration(c.CleanupTimeout); parseErr != nil {
 		err = errors.Join(err, fmt.Errorf("parse cleanup timeout: %w", parseErr))
+	}
+	if !c.UseExternalAddress && c.SubnetName == "" {
+		err = errors.Join(err, consterr.Error("when use_external_address is false, subnet_name must be provided"))
+	}
+	if !c.UseExternalAddress && c.ExternalAddressName != "" {
+		err = errors.Join(err, consterr.Error("when use_external_address is false, external_address_name must not be provided"))
 	}
 	return err
 }

@@ -114,7 +114,10 @@ configured for this builder.
 
 - `subnet_cidr` (string) - Subnet CIDR (defaults to "192.168.0.0/16").
 
+- `use_external_address` (bool) - Use external address for connection to virtual machine from internet (defaults to "false").
+
 - `external_address_name` (string) - External address name (defaults to "packer-{{uuid}}-external-address").
+  Can be specified only if external address usage is enabled.
 
 - `cleanup_timeout` (string) - Timeout for cleanup of create virtual machine step (defaults to "1h").
 

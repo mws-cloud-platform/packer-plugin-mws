@@ -24,6 +24,8 @@ source "mws" "example" {
 
   source_project = "mws-ubuntu"
   source_image   = "mws-ubuntu-2404-lts-v20250529"
+
+  use_external_address = true
 }
 
 build {

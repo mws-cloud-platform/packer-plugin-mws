@@ -54,6 +54,11 @@ func requireStateGet(t *testing.T, state multistep.StateBag, key string, expecte
 	require.Equal(t, expected, actual)
 }
 
+func requireStateNotSet(t *testing.T, state multistep.StateBag, key string) {
+	_, ok := state.GetOk(key)
+	require.False(t, ok, "Expected %q not to be stored in state", key)
+}
+
 func requireActionContinue(t *testing.T, state multistep.StateBag, action multistep.StepAction) {
 	require.Equal(t, multistep.ActionContinue, action, "Expected action to be ActionContinue, error: %v", state.Get(mws.ErrorKey))
 }

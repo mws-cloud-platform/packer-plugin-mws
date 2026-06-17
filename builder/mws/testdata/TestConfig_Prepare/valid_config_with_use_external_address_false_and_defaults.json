@@ -21,12 +21,12 @@
  "DiskSize": "10 GB",
  "DiskIOPS": 1000,
  "SourceProject": "test-project",
- "SourceImage": "",
- "SourceSnapshot": "test-snapshot",
- "NetworkName": "",
- "SubnetName": "",
+ "SourceImage": "test-image",
+ "SourceSnapshot": "",
+ "NetworkName": "test-network",
+ "SubnetName": "test-subnet",
  "SubnetCidr": "192.168.0.0/16",
  "ExternalAddressName": "",
  "CleanupTimeout": "1h",
- "UseExternalAddress": true
+ "UseExternalAddress": false
 }

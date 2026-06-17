@@ -53,10 +53,36 @@ func TestStepCreateImage(t *testing.T) {
 		{
 			name: "success_set_name",
 			config: &mws.Config{
-				Project:          testProjectName,
-				SourceImage:      testSourceImage,
-				ImageName:        testImageName,
-				ImageDescription: testImageDescription,
+				Project:            testProjectName,
+				SourceImage:        testSourceImage,
+				ImageName:          testImageName,
+				ImageDescription:   testImageDescription,
+				UseExternalAddress: true,
+			},
+			expectedImageName: testImageName,
+			expectedImage:     expectedTestImage,
+			customPreparation: func(state multistep.StateBag, driver *mockmws.MockDriverMockRecorder) {
+				state.Put(mws.DiskRefKey, expectedDiskRef)
+
+				driver.CreateImage(gomock.Any(), mws.CreateImageParams{
+					ImageName:        testImageName,
+					ImageDescription: testImageDescription,
+					DiskRef:          expectedDiskRef,
+				}).
+					Return(expectedTestImage, nil).
+					Times(1)
+			},
+		},
+		{
+			name: "success_set_name_no_external_address",
+			config: &mws.Config{
+				Project:            testProjectName,
+				SourceImage:        testSourceImage,
+				ImageName:          testImageName,
+				ImageDescription:   testImageDescription,
+				NetworkName:        testNetworkName,
+				SubnetName:         testSubnetName,
+				UseExternalAddress: false,
 			},
 			expectedImageName: testImageName,
 			expectedImage:     expectedTestImage,
@@ -75,8 +101,32 @@ func TestStepCreateImage(t *testing.T) {
 		{
 			name: "success_default_name",
 			config: &mws.Config{
-				Project:     testProjectName,
-				SourceImage: testSourceImage,
+				Project:            testProjectName,
+				SourceImage:        testSourceImage,
+				UseExternalAddress: true,
+			},
+			expectedImageName: defaultImageName,
+			expectedImage:     expectedDefaultImage,
+			customPreparation: func(state multistep.StateBag, driver *mockmws.MockDriverMockRecorder) {
+				state.Put(mws.DiskRefKey, expectedDiskRef)
+
+				driver.CreateImage(gomock.Any(), mws.CreateImageParams{
+					ImageName:        defaultImageName,
+					ImageDescription: mws.DefaultImageDescription,
+					DiskRef:          expectedDiskRef,
+				}).
+					Return(expectedDefaultImage, nil).
+					Times(1)
+			},
+		},
+		{
+			name: "success_default_name_no_external_address",
+			config: &mws.Config{
+				Project:            testProjectName,
+				SourceImage:        testSourceImage,
+				NetworkName:        testNetworkName,
+				SubnetName:         testSubnetName,
+				UseExternalAddress: false,
 			},
 			expectedImageName: defaultImageName,
 			expectedImage:     expectedDefaultImage,
@@ -95,8 +145,9 @@ func TestStepCreateImage(t *testing.T) {
 		{
 			name: "error_missing_disk_ref",
 			config: &mws.Config{
-				Project:     testProjectName,
-				SourceImage: testSourceImage,
+				Project:            testProjectName,
+				SourceImage:        testSourceImage,
+				UseExternalAddress: true,
 			},
 			expectedError: true,
 		},

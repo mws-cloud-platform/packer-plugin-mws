@@ -211,6 +211,17 @@ func (d *driverMWS) CreateSubnet(ctx context.Context, params CreateSubnetParams)
 func (d *driverMWS) CreateVirtualMachine(ctx context.Context, params CreateVirtualMachineParams) (string, error) {
 	userData := fmt.Sprintf(sshScript, params.SSHUsername, params.SSHPublicKey)
 
+	var oneToOneNat *computemodel.ComputeOneToOneNatSpecRequest
+	if params.ExternalAddressRef != nil {
+		oneToOneNat = &computemodel.ComputeOneToOneNatSpecRequest{
+			External: computemodel.ComputeOneToOneNatSpecExternalRequest{
+				Address: computemodel.OneToOneNatAddressSpecOrRefRequest{
+					Ref: params.ExternalAddressRef,
+				},
+			},
+		}
+	}
+
 	req := computeclient.UpsertVirtualMachineRequest{
 		VirtualMachine: params.VirtualMachineName,
 		Body: computemodel.VirtualMachineRequest{
@@ -255,13 +266,7 @@ func (d *driverMWS) CreateVirtualMachine(ctx context.Context, params CreateVirtu
 											Subnet: *params.SubnetRef,
 										},
 									},
-									OneToOneNat: &computemodel.ComputeOneToOneNatSpecRequest{
-										External: computemodel.ComputeOneToOneNatSpecExternalRequest{
-											Address: computemodel.OneToOneNatAddressSpecOrRefRequest{
-												Ref: params.ExternalAddressRef,
-											},
-										},
-									},
+									OneToOneNat: oneToOneNat,
 								},
 							},
 						},

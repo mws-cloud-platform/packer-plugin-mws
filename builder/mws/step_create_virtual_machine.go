@@ -33,8 +33,9 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	ui := state.Get(UiKey).(packer.Ui)
 
 	var (
-		imageRef    *computeref.ImageRef
-		snapshotRef *computeref.SnapshotRef
+		imageRef           *computeref.ImageRef
+		snapshotRef        *computeref.SnapshotRef
+		externalAddressRef *vpcref.ExternalAddressRef
 	)
 
 	if config.SourceImage != "" {
@@ -65,19 +66,21 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	diskRef := new(computeref.NewDiskRef(config.Project, diskName))
 	state.Put(DiskRefKey, diskRef)
 
-	externalAddressName := cmp.Or(config.ExternalAddressName, prefix+"external-address")
-	ui.Sayf("Creating external address...")
-	externalAddress, err := driver.CreateExternalAddress(ctx, CreateExternalAddressParams{
-		ExternalAddressName: externalAddressName,
-	})
-	if err != nil {
-		return actionHaltWithError(state, fmt.Errorf("create external-address %q: %w", externalAddressName, err))
-	}
+	if config.UseExternalAddress {
+		externalAddressName := cmp.Or(config.ExternalAddressName, prefix+"external-address")
+		ui.Sayf("Creating external address...")
+		externalAddress, err := driver.CreateExternalAddress(ctx, CreateExternalAddressParams{
+			ExternalAddressName: externalAddressName,
+		})
+		if err != nil {
+			return actionHaltWithError(state, fmt.Errorf("create external-address %q: %w", externalAddressName, err))
+		}
 
-	ui.Sayf("External Address %q created", externalAddressName)
-	state.Put(ExternalAddressNameKey, externalAddressName)
-	state.Put(InstanceIpKey, externalAddress)
-	externalAddressRef := new(vpcref.NewExternalAddressRef(config.Project, externalAddressName))
+		ui.Sayf("External Address %q created", externalAddressName)
+		state.Put(ExternalAddressNameKey, externalAddressName)
+		state.Put(InstanceIpKey, externalAddress)
+		externalAddressRef = new(vpcref.NewExternalAddressRef(config.Project, externalAddressName))
+	}
 
 	networkName := cmp.Or(config.NetworkName, prefix+"network")
 	if config.NetworkName == "" {
@@ -129,18 +132,22 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	ui.Sayf("Virtual Machine %q created", virtualMachineName)
 	state.Put(VirtualMachineNameKey, virtualMachineName)
 
-	ui.Sayf("Creating firewall rule...")
-	err = driver.CreateFirewallRule(ctx, CreateFirewallRuleParams{
-		NetworkName:                   networkName,
-		FirewallRuleName:              FirewallRuleName,
-		VirtualMachineInternalAddress: internalAddress,
-	})
-	if err != nil {
-		return actionHaltWithError(state, fmt.Errorf("create firewall rule %q: %w", FirewallRuleName, err))
-	}
+	if config.UseExternalAddress {
+		ui.Sayf("Creating firewall rule...")
+		err = driver.CreateFirewallRule(ctx, CreateFirewallRuleParams{
+			NetworkName:                   networkName,
+			FirewallRuleName:              FirewallRuleName,
+			VirtualMachineInternalAddress: internalAddress,
+		})
+		if err != nil {
+			return actionHaltWithError(state, fmt.Errorf("create firewall rule %q: %w", FirewallRuleName, err))
+		}
 
-	ui.Sayf("Firewall Rule %q created", FirewallRuleName)
-	state.Put(FirewallRuleNameKey, FirewallRuleName)
+		ui.Sayf("Firewall Rule %q created", FirewallRuleName)
+		state.Put(FirewallRuleNameKey, FirewallRuleName)
+	} else {
+		state.Put(InstanceIpKey, internalAddress)
+	}
 
 	// instance_id is the generic term used so that users can have access to the
 	// instance id inside of the provisioners, used in step_provision.

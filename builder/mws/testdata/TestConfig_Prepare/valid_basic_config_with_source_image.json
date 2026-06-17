@@ -27,5 +27,6 @@
  "SubnetName": "",
  "SubnetCidr": "192.168.0.0/16",
  "ExternalAddressName": "",
- "CleanupTimeout": "1h"
+ "CleanupTimeout": "1h",
+ "UseExternalAddress": true
 }
