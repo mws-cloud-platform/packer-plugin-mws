@@ -232,7 +232,7 @@ func (d *driverMWS) CreateVirtualMachine(ctx context.Context, params CreateVirtu
 			},
 			Spec: computemodel.VirtualMachineSpecRequest{
 				Zone:   params.Zone,
-				VmType: computeref.NewVmTypeRef(params.VmType),
+				VmType: computeref.NewVmTypeRef(params.VMType),
 				Hardware: &computemodel.HardwareSpecRequest{
 					Power: new(computemodel.HardwareSpecPowerRequest_ON),
 				},

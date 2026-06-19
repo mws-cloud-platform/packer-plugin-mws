@@ -25,5 +25,4 @@ $ packer plugins install github.com/mws-cloud-platform/mws
 ### Components
 
 #### Builders
-
-- [mws](/packer/integrations/hashicorp/mws/latest/components/builder/mws) - The mws builder creates images from existing ones, by launching an instance, provisioning it, then exporting it as a reusable image.
+- [mws](https://github.com/mws-cloud-platform/packer-plugin-mws/blob/main/.web-docs/components/builder/mws/README.md) - The mws builder creates images from existing ones, by launching an instance, provisioning it, then exporting it as a reusable image.

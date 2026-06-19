@@ -142,7 +142,7 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 			driver.EXPECT().
 				CreateVirtualMachine(gomock.Any(), mws.CreateVirtualMachineParams{
 					VirtualMachineName: expectedVirtualMachineName,
-					VmType:             mws.DefaultVMType,
+					VMType:             mws.DefaultVMType,
 					Zone:               mws.DefaultZone,
 					SSHUsername:        mws.DefaultSSHUsername,
 					SSHPublicKey:       testSSHPublicKey,
@@ -168,21 +168,24 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 			}
 
 			requireActionContinue(t, state, step.Run(context.Background(), state))
-			requireStateGet(t, state, mws.DiskNameKey, expectedDiskName)
-			requireStateGet(t, state, mws.NetworkNameKey, expectedNetworkName)
-			requireStateGet(t, state, mws.SubnetNameKey, expectedSubnetName)
-			requireStateGet(t, state, mws.VirtualMachineNameKey, expectedVirtualMachineName)
-			requireStateGet(t, state, mws.InstanceIdKey, expectedVirtualMachineName)
-			requireStateGet(t, state, mws.DiskRefKey, expectedDiskRef)
+			requireStateGets(t, state,
+				map[string]any{
+					mws.DiskNameKey:           expectedDiskName,
+					mws.NetworkNameKey:        expectedNetworkName,
+					mws.SubnetNameKey:         expectedSubnetName,
+					mws.VirtualMachineNameKey: expectedVirtualMachineName,
+					mws.InstanceIDKey:         expectedVirtualMachineName,
+					mws.DiskRefKey:            expectedDiskRef,
+				})
 			requireGeneratedDataGet(t, state, "SourceProject", tt.config.Project)
 			requireGeneratedDataGet(t, state, "SourceImageName", testSourceImage)
 
 			if tt.config.UseExternalAddress {
 				requireStateGet(t, state, mws.ExternalAddressNameKey, expectedExternalAddressName)
 				requireStateGet(t, state, mws.FirewallRuleNameKey, expectedFirewallRuleName)
-				requireStateGet(t, state, mws.InstanceIpKey, testExternalAddress)
+				requireStateGet(t, state, mws.InstanceIPKey, testExternalAddress)
 			} else {
-				requireStateGet(t, state, mws.InstanceIpKey, testInternalAddress)
+				requireStateGet(t, state, mws.InstanceIPKey, testInternalAddress)
 				requireStateNotSet(t, state, mws.ExternalAddressNameKey)
 				requireStateNotSet(t, state, mws.FirewallRuleNameKey)
 			}
@@ -438,12 +441,14 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 			expectedDiskRef := new(computeref.NewDiskRef(tt.config.Project, expectedDiskName))
 
 			expectedErrors := map[string]error{tt.errorStep: errors.New("test error")}
+			requireStateKV := make(map[string]any)
 			func() {
 				driver.EXPECT().CreateDisk(gomock.Any(), gomock.Any()).
 					Return(expectedErrors["CreateDisk"]).Times(1)
 				if tt.errorStep == "CreateDisk" {
 					return
 				}
+				requireStateKV[mws.DiskNameKey] = expectedDiskName
 
 				if tt.config.UseExternalAddress {
 					driver.EXPECT().CreateExternalAddress(gomock.Any(), gomock.Any()).
@@ -451,16 +456,21 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 					if tt.errorStep == "CreateExternalAddress" {
 						return
 					}
+					requireStateKV[mws.ExternalAddressNameKey] = expectedExternalAddressName
+
 					driver.EXPECT().CreateNetwork(gomock.Any(), gomock.Any()).
 						Return(expectedErrors["CreateNetwork"]).Times(1)
 					if tt.errorStep == "CreateNetwork" {
 						return
 					}
+					requireStateKV[mws.NetworkNameKey] = expectedNetworkName
+
 					driver.EXPECT().CreateSubnet(gomock.Any(), gomock.Any()).
 						Return(expectedErrors["CreateSubnet"]).Times(1)
 					if tt.errorStep == "CreateSubnet" {
 						return
 					}
+					requireStateKV[mws.SubnetNameKey] = expectedSubnetName
 				}
 
 				driver.EXPECT().CreateVirtualMachine(gomock.Any(), gomock.Any()).
@@ -468,11 +478,23 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 				if tt.errorStep == "CreateVirtualMachine" {
 					return
 				}
+				requireStateKV[mws.VirtualMachineNameKey] = expectedVirtualMachineName
 
 				if tt.config.UseExternalAddress {
 					driver.EXPECT().CreateFirewallRule(gomock.Any(), gomock.Any()).
 						Return(expectedErrors["CreateFirewallRule"]).Times(1)
 				}
+				if tt.errorStep == "CreateFirewallRule" {
+					return
+				}
+				if tt.config.UseExternalAddress {
+					requireStateKV[mws.FirewallRuleNameKey] = expectedFirewallRuleName
+					requireStateKV[mws.InstanceIPKey] = testExternalAddress
+				} else {
+					requireStateKV[mws.InstanceIPKey] = testInternalAddress
+				}
+				requireStateKV[mws.InstanceIDKey] = expectedVirtualMachineName
+				requireStateKV[mws.DiskRefKey] = expectedDiskRef
 			}()
 
 			step := &mws.StepCreateVirtualMachine{
@@ -480,45 +502,7 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 			}
 
 			requireActionHalt(t, state, step.Run(context.Background(), state))
-
-			func() {
-				if tt.errorStep == "CreateDisk" {
-					return
-				}
-				requireStateGet(t, state, mws.DiskNameKey, expectedDiskName)
-				if tt.errorStep == "CreateExternalAddress" {
-					return
-				}
-				if tt.config.UseExternalAddress {
-					requireStateGet(t, state, mws.ExternalAddressNameKey, expectedExternalAddressName)
-				}
-				if tt.errorStep == "CreateNetwork" {
-					return
-				}
-				requireStateGet(t, state, mws.NetworkNameKey, expectedNetworkName)
-				if tt.errorStep == "CreateSubnet" {
-					return
-				}
-				requireStateGet(t, state, mws.SubnetNameKey, expectedSubnetName)
-				if tt.errorStep == "CreateVirtualMachine" {
-					return
-				}
-				requireStateGet(t, state, mws.VirtualMachineNameKey, expectedVirtualMachineName)
-				if tt.errorStep == "CreateFirewallRule" {
-					return
-				}
-				if tt.config.UseExternalAddress {
-					requireStateGet(t, state, mws.FirewallRuleNameKey, expectedFirewallRuleName)
-				}
-
-				requireStateGet(t, state, mws.DiskRefKey, expectedDiskRef)
-				if tt.config.UseExternalAddress {
-					requireStateGet(t, state, mws.InstanceIpKey, testExternalAddress)
-				} else {
-					requireStateGet(t, state, mws.InstanceIpKey, testInternalAddress)
-				}
-				requireStateGet(t, state, mws.InstanceIdKey, expectedVirtualMachineName)
-			}()
+			requireStateGets(t, state, requireStateKV)
 
 			expectedDir.String(t, tt.name+".out", writer.String())
 		})

@@ -9,8 +9,15 @@ import (
 )
 
 func actionHaltWithError(state multistep.StateBag, err error) multistep.StepAction {
-	ui := state.Get(UiKey).(packer.Ui)
+	ui := state.Get(UIKey).(packer.Ui)
 	state.Put(ErrorKey, err)
 	ui.Error(err.Error())
 	return multistep.ActionHalt
+}
+
+func stateGetOkString(state multistep.StateBag, key string) string {
+	if val, ok := state.GetOk(key); ok {
+		return val.(string)
+	}
+	return ""
 }

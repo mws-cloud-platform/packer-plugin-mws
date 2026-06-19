@@ -29,8 +29,8 @@ type StepCreateVirtualMachine struct {
 func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	config := state.Get(ConfigKey).(*Config)
 	driver := state.Get(DriverKey).(Driver)
-	prefix := state.Get(UuidPrefixKey).(string)
-	ui := state.Get(UiKey).(packer.Ui)
+	prefix := state.Get(UUIDPrefixKey).(string)
+	ui := state.Get(UIKey).(packer.Ui)
 
 	var (
 		imageRef           *computeref.ImageRef
@@ -47,7 +47,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 
 	diskName := cmp.Or(config.DiskName, prefix+"disk")
 	ui.Sayf("Creating disk...")
-	err := driver.CreateDisk(ctx, CreateDiskParams{
+	if err := driver.CreateDisk(ctx, CreateDiskParams{
 		DiskName:    diskName,
 		DiskType:    config.DiskType,
 		Size:        bytesize.MustParseString(config.DiskSize),
@@ -55,8 +55,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 		ImageRef:    imageRef,
 		SnapshotRef: snapshotRef,
 		Zone:        config.Zone,
-	})
-	if err != nil {
+	}); err != nil {
 		return actionHaltWithError(state, fmt.Errorf("create disk %q: %w", diskName, err))
 	}
 
@@ -78,17 +77,16 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 
 		ui.Sayf("External Address %q created", externalAddressName)
 		state.Put(ExternalAddressNameKey, externalAddressName)
-		state.Put(InstanceIpKey, externalAddress)
+		state.Put(InstanceIPKey, externalAddress)
 		externalAddressRef = new(vpcref.NewExternalAddressRef(config.Project, externalAddressName))
 	}
 
 	networkName := cmp.Or(config.NetworkName, prefix+"network")
 	if config.NetworkName == "" {
 		ui.Sayf("Creating network...")
-		err = driver.CreateNetwork(ctx, CreateNetworkParams{
+		if err := driver.CreateNetwork(ctx, CreateNetworkParams{
 			NetworkName: networkName,
-		})
-		if err != nil {
+		}); err != nil {
 			return actionHaltWithError(state, fmt.Errorf("create network %q: %w", networkName, err))
 		}
 
@@ -99,12 +97,11 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	subnetName := cmp.Or(config.SubnetName, prefix+"subnet")
 	if config.SubnetName == "" {
 		ui.Sayf("Creating subnet...")
-		err = driver.CreateSubnet(ctx, CreateSubnetParams{
+		if err := driver.CreateSubnet(ctx, CreateSubnetParams{
 			NetworkName: networkName,
 			SubnetName:  subnetName,
 			SubnetCidr:  cidraddress.MustParseCIDR4AddressString(config.SubnetCidr),
-		})
-		if err != nil {
+		}); err != nil {
 			return actionHaltWithError(state, fmt.Errorf("create subnet %q: %w", subnetName, err))
 		}
 
@@ -117,7 +114,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	ui.Sayf("Creating virtual machine...")
 	internalAddress, err := driver.CreateVirtualMachine(ctx, CreateVirtualMachineParams{
 		VirtualMachineName: virtualMachineName,
-		VmType:             config.VmType,
+		VMType:             config.VMType,
 		Zone:               config.Zone,
 		SSHUsername:        config.Communicator.SSHUsername,
 		SSHPublicKey:       string(config.Communicator.SSHPublicKey),
@@ -146,12 +143,12 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 		ui.Sayf("Firewall Rule %q created", FirewallRuleName)
 		state.Put(FirewallRuleNameKey, FirewallRuleName)
 	} else {
-		state.Put(InstanceIpKey, internalAddress)
+		state.Put(InstanceIPKey, internalAddress)
 	}
 
 	// instance_id is the generic term used so that users can have access to the
 	// instance id inside of the provisioners, used in step_provision.
-	state.Put(InstanceIdKey, virtualMachineName)
+	state.Put(InstanceIDKey, virtualMachineName)
 
 	s.GeneratedData.Put("SourceProject", config.SourceProject)
 	s.GeneratedData.Put("SourceImageName", config.SourceImage)
@@ -163,38 +160,18 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 func (s *StepCreateVirtualMachine) Cleanup(state multistep.StateBag) {
 	config := state.Get(ConfigKey).(*Config)
 	driver := state.Get(DriverKey).(Driver)
-	ui := state.Get(UiKey).(packer.Ui)
+	ui := state.Get(UIKey).(packer.Ui)
 
 	cleanupTimeout, _ := time.ParseDuration(config.CleanupTimeout)
 	ctx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
 	defer cancel()
 
-	var (
-		diskName            string
-		externalAddressName string
-		networkName         string
-		subnetName          string
-		virtualMachineName  string
-		firewallRuleName    string
-	)
-	if name, ok := state.GetOk(DiskNameKey); ok {
-		diskName = name.(string)
-	}
-	if name, ok := state.GetOk(ExternalAddressNameKey); ok {
-		externalAddressName = name.(string)
-	}
-	if name, ok := state.GetOk(NetworkNameKey); ok {
-		networkName = name.(string)
-	}
-	if name, ok := state.GetOk(SubnetNameKey); ok {
-		subnetName = name.(string)
-	}
-	if name, ok := state.GetOk(VirtualMachineNameKey); ok {
-		virtualMachineName = name.(string)
-	}
-	if name, ok := state.GetOk(FirewallRuleNameKey); ok {
-		firewallRuleName = name.(string)
-	}
+	diskName := stateGetOkString(state, DiskNameKey)
+	externalAddressName := stateGetOkString(state, ExternalAddressNameKey)
+	networkName := stateGetOkString(state, NetworkNameKey)
+	subnetName := stateGetOkString(state, SubnetNameKey)
+	virtualMachineName := stateGetOkString(state, VirtualMachineNameKey)
+	firewallRuleName := stateGetOkString(state, FirewallRuleNameKey)
 
 	if firewallRuleName != "" {
 		if err := driver.DeleteFirewallRule(ctx, networkName, firewallRuleName); err != nil {

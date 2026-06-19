@@ -19,6 +19,7 @@ type Artifact struct {
 	image  *computemodel.ImageOptionalResponse
 }
 
+//nolint:revive // Can not change packer interface
 func (*Artifact) BuilderId() string {
 	return BuilderId
 }
@@ -27,6 +28,7 @@ func (*Artifact) Files() []string {
 	return []string{}
 }
 
+//nolint:revive // Can not change packer interface
 func (a *Artifact) Id() string {
 	return a.image.GetMetadata().GetId().ID()
 }

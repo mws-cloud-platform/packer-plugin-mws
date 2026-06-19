@@ -48,6 +48,14 @@ func requireGeneratedDataGet(t *testing.T, state multistep.StateBag, key string,
 	require.Equal(t, expected, actual)
 }
 
+func requireStateGets(t *testing.T, state multistep.StateBag, kv map[string]any) {
+	for key, expected := range kv {
+		actual, ok := state.GetOk(key)
+		require.True(t, ok, "Expected %q to be stored in state", key)
+		require.Equal(t, expected, actual)
+	}
+}
+
 func requireStateGet(t *testing.T, state multistep.StateBag, key string, expected any) {
 	actual, ok := state.GetOk(key)
 	require.True(t, ok, "Expected %q to be stored in state", key)
@@ -76,12 +84,12 @@ func prepareState(t *testing.T, config *mws.Config, driver mws.Driver) (*bytes.B
 	config.Communicator.SSHPublicKey = []byte(testSSHPublicKey)
 	state.Put(mws.ConfigKey, config)
 	state.Put(mws.DriverKey, driver)
-	state.Put(mws.UuidPrefixKey, packerPrefix)
+	state.Put(mws.UUIDPrefixKey, packerPrefix)
 	writer := new(bytes.Buffer)
 	ui := &packer.BasicUi{
 		Writer: writer,
 	}
-	state.Put(mws.UiKey, ui)
+	state.Put(mws.UIKey, ui)
 
 	return writer, state
 }

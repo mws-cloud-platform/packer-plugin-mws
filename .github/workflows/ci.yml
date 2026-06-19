@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '*'
+      
+jobs:
+  generate:
+    name: Generate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+      - name: Run code generation
+        run: make generate
+      - name: Verify no changes were generated
+        run: git diff --exit-code
+
+  golangci:
+    name: Lint
+    runs-on: ubuntu-latest
+    needs: generate
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.26"
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.12
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: generate
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.26"
+          cache: false
+      - name: Build
+        run: go build ./...
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    needs: generate
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.26"
+          cache: false
+      - name: Run tests
+        run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+      - name: Display coverage
+        run: go tool cover -func=coverage.out
+

@@ -59,7 +59,7 @@ type CreateSubnetParams struct {
 
 type CreateVirtualMachineParams struct {
 	VirtualMachineName string
-	VmType             string
+	VMType             string
 	Zone               string
 	SSHUsername        string
 	SSHPublicKey       string
