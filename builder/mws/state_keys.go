@@ -7,8 +7,8 @@ const (
 	ConfigKey     = "config"
 	DriverKey     = "driver"
 	HookKey       = "hook"
-	UiKey         = "ui"
-	UuidPrefixKey = "uuid_prefix"
+	UIKey         = "ui"
+	UUIDPrefixKey = "uuid_prefix"
 	ErrorKey      = "error"
 
 	DiskNameKey            = "disk_name"
@@ -22,6 +22,6 @@ const (
 	ImageKey         = "image"
 	GeneratedDataKey = "generated_data"
 
-	InstanceIpKey = "instance_ip"
-	InstanceIdKey = "instance_id"
+	InstanceIPKey = "instance_ip"
+	InstanceIDKey = "instance_id"
 )

@@ -9,7 +9,7 @@ import (
 )
 
 func CommHost(state multistep.StateBag) (string, error) {
-	ipAddress, ok := state.Get(InstanceIpKey).(string)
+	ipAddress, ok := state.Get(InstanceIPKey).(string)
 	if !ok {
 		return "", consterr.Error("instance IP address not found")
 	}

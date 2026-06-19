@@ -13,7 +13,7 @@
  "ServiceAccountAuthorizedKeyPath": "/path/to/key",
  "Token": "",
  "VirtualMachineName": "test-vm",
- "VmType": "gen-2-16",
+ "VMType": "gen-2-16",
  "ImageName": "test-image",
  "ImageDescription": "Custom image description",
  "DiskName": "test-disk",
@@ -26,7 +26,7 @@
  "NetworkName": "test-network",
  "SubnetName": "test-subnet",
  "SubnetCidr": "10.0.0.0/8",
+ "UseExternalAddress": true,
  "ExternalAddressName": "test-external-address",
- "CleanupTimeout": "2h",
- "UseExternalAddress": true
+ "CleanupTimeout": "2h"
 }

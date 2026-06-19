@@ -1,0 +1,157 @@
+version: "2"
+
+run:
+  concurrency: 4
+  relative-path-mode: gomod
+  timeout: 5m
+  issues-exit-code: 1
+  modules-download-mode: readonly
+  allow-serial-runners: true
+
+severity:
+  default: error
+
+linters:
+  default: none
+  enable:
+  - asasalint
+  - asciicheck
+  - bidichk
+  - bodyclose
+  - containedctx
+  - copyloopvar
+  - cyclop
+  - dogsled
+  - durationcheck
+  - err113
+  - errcheck
+  - errname
+  - errorlint
+  - exptostd
+  - forbidigo
+  - gocheckcompilerdirectives
+  - gochecknoinits
+  - goconst
+  - gocritic
+  - gomoddirectives
+  - goprintffuncname
+  - gosec
+  - govet
+  - grouper
+  - ineffassign
+  - iotamixing
+  - lll
+  - misspell
+  - nakedret
+  - nilerr
+  - nilnesserr
+  - noctx
+  - nolintlint
+  - nosprintfhostport
+  - prealloc
+  - predeclared
+  - revive
+  - staticcheck
+  - unconvert
+  - unparam
+  - usestdlibvars
+  - usetesting
+  - whitespace
+  settings:
+    cyclop:
+      max-complexity: 15
+    goconst:
+      match-constant: false
+      min-occurrences: 7
+    gocritic:
+      disabled-checks:
+      - commentFormatting
+    gomoddirectives:
+      replace-allow-list:
+        - github.com/zclconf/go-cty
+    gosec:
+      config:
+        G306: "0644"
+    govet:
+      disable:
+      - fieldalignment
+      enable-all: true
+    lll:
+      line-length: 160
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+    staticcheck:
+      checks:
+      - all
+      - -ST1000
+      - -ST1003
+      - -ST1020
+      - -ST1021
+      - -ST1022
+    usestdlibvars:
+      time-month: true
+      time-layout: true
+      crypto-hash: true
+      default-rpc-path: true
+      tls-signature-scheme: true
+      constant-kind: true
+    usetesting:
+      os-temp-dir: true
+    revive:
+      rules:
+      - name: var-naming
+        arguments:
+        - [] # AllowList
+        - [] # DenyList
+        - - skip-package-name-collision-with-go-std: true
+  exclusions:
+    generated: lax
+    presets:
+    - comments
+    - common-false-positives
+    - legacy
+    - std-error-handling
+    rules:
+    - linters:
+      - staticcheck
+      text: 'SA1019:'
+    - linters:
+      - err113
+      path-except: pkg\/
+    - linters:
+      - err113
+      - errcheck
+      - funlen
+      - gocyclo
+      - gosec
+      - lll
+      - prealloc
+      - noctx
+      path: _test\.go
+    - linters:
+      - goconst
+      path: (.+)_test\.go
+    - linters:
+      - gosec
+      text: "G(117|602|70[1-6]):"
+    paths:
+    - .*\_gen\.go$
+    - .*\.gen\.go$
+    - .*\_gen\_test\.go$
+    - .*\.gen\_test\.go$
+    - .*\.pb\.go$
+    - mock
+    - vendor
+    - testdata
+    - test_data
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  uniq-by-line: false
+
+formatters:
+  exclusions:
+    warn-unused: true
+    generated: lax

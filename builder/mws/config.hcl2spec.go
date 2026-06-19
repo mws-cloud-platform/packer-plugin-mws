@@ -73,7 +73,7 @@ type FlatConfig struct {
 	ServiceAccountAuthorizedKeyPath *string           `mapstructure:"service_account_authorized_key_path" required:"false" cty:"service_account_authorized_key_path" hcl:"service_account_authorized_key_path"`
 	Token                           *string           `mapstructure:"token" required:"false" cty:"token" hcl:"token"`
 	VirtualMachineName              *string           `mapstructure:"virtual_machine_name" required:"false" cty:"virtual_machine_name" hcl:"virtual_machine_name"`
-	VmType                          *string           `mapstructure:"vm_type" required:"false" cty:"vm_type" hcl:"vm_type"`
+	VMType                          *string           `mapstructure:"vm_type" required:"false" cty:"vm_type" hcl:"vm_type"`
 	ImageName                       *string           `mapstructure:"image_name" required:"false" cty:"image_name" hcl:"image_name"`
 	ImageDescription                *string           `mapstructure:"image_description" required:"false" cty:"image_description" hcl:"image_description"`
 	DiskName                        *string           `mapstructure:"disk_name" required:"false" cty:"disk_name" hcl:"disk_name"`

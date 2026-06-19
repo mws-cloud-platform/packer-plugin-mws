@@ -13,7 +13,7 @@
  "ServiceAccountAuthorizedKeyPath": "",
  "Token": "",
  "VirtualMachineName": "",
- "VmType": "gen-2-8",
+ "VMType": "gen-2-8",
  "ImageName": "",
  "ImageDescription": "Image created by Packer",
  "DiskName": "",
@@ -26,7 +26,7 @@
  "NetworkName": "",
  "SubnetName": "",
  "SubnetCidr": "192.168.0.0/16",
+ "UseExternalAddress": true,
  "ExternalAddressName": "",
- "CleanupTimeout": "1h",
- "UseExternalAddress": true
+ "CleanupTimeout": "1h"
 }

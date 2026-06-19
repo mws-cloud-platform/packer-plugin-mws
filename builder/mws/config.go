@@ -1,8 +1,8 @@
 // Copyright 2026 MTS Web Services, LLC.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:generate packer-sdc struct-markdown
-//go:generate packer-sdc mapstructure-to-hcl2 -type Config
+//go:generate go run github.com/hashicorp/packer-plugin-sdk/cmd/packer-sdc@v0.6.9 struct-markdown
+//go:generate go run github.com/hashicorp/packer-plugin-sdk/cmd/packer-sdc@v0.6.9 mapstructure-to-hcl2 -type Config
 
 package mws
 
@@ -57,7 +57,7 @@ type Config struct {
 	// Name for the temporary build VM (defaults to "packer-{{uuid}}-vm").
 	VirtualMachineName string `mapstructure:"virtual_machine_name" required:"false"`
 	// The VM type (defaults to "gen-2-8").
-	VmType string `mapstructure:"vm_type" required:"false"`
+	VMType string `mapstructure:"vm_type" required:"false"`
 
 	// Name for the resulting image (defaults to "packer-{{uuid}}-image").
 	ImageName string `mapstructure:"image_name" required:"false"`
@@ -115,7 +115,7 @@ func (c *Config) Prepare(raws ...any) error {
 func (c *Config) SetDefaults() {
 	c.Communicator.SSHUsername = cmp.Or(c.Communicator.SSHUsername, DefaultSSHUsername)
 	c.Zone = cmp.Or(c.Zone, DefaultZone)
-	c.VmType = cmp.Or(c.VmType, DefaultVMType)
+	c.VMType = cmp.Or(c.VMType, DefaultVMType)
 	c.DiskType = cmp.Or(c.DiskType, DefaultDiskType)
 	c.DiskIOPS = cmp.Or(c.DiskIOPS, DefaultDiskIOPS)
 	c.DiskSize = cmp.Or(c.DiskSize, DefaultDiskSize)

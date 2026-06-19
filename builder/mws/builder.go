@@ -19,6 +19,7 @@ import (
 )
 
 const (
+	//nolint:revive // Very special constant for packer
 	BuilderId = "packer.mws"
 
 	errUnexpected = consterr.Error("plugin unexpected error")
@@ -60,14 +61,14 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 	state.Put(ConfigKey, &b.config)
 	state.Put(DriverKey, driver)
 	state.Put(HookKey, hook)
-	state.Put(UiKey, ui)
-	state.Put(UuidPrefixKey, fmt.Sprintf("packer-%s-", uuid.NewString()))
+	state.Put(UIKey, ui)
+	state.Put(UUIDPrefixKey, fmt.Sprintf("packer-%s-", uuid.NewString()))
 	generatedData := &packerbuilderdata.GeneratedData{State: state}
 
 	steps := []multistep.Step{
 		&communicator.StepSSHKeyGen{
 			CommConf:            &b.config.Communicator,
-			SSHTemporaryKeyPair: b.config.Communicator.SSH.SSHTemporaryKeyPair,
+			SSHTemporaryKeyPair: b.config.Communicator.SSHTemporaryKeyPair,
 		},
 		multistep.If(b.config.PackerDebug && b.config.Communicator.SSHPrivateKeyFile == "",
 			&communicator.StepDumpSSHKey{
