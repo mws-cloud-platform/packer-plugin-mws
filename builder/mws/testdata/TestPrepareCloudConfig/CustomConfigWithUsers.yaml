@@ -1,8 +1,13 @@
 #cloud-config
+packages:
+    - nginx
 users:
     - groups: sudo
-      name: testuser
+      name: packer
       shell: /bin/bash
       ssh-authorized-keys:
-        - testkey
+        - key
       sudo: ALL=(ALL) NOPASSWD:ALL
+    - groups: docker
+      name: custom
+      shell: /bin/zsh

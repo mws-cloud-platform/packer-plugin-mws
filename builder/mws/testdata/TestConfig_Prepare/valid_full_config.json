@@ -29,5 +29,5 @@
  "UseExternalAddress": true,
  "ExternalAddressName": "test-external-address",
  "CleanupTimeout": "2h",
- "CloudInit": ""
+ "CloudConfig": ""
 }

@@ -49,7 +49,9 @@
 
 - `cleanup_timeout` (string) - Timeout for cleanup of create virtual machine step (defaults to "1h").
 
-- `cloud_init` (string) - CloudInit is a script in cloud-config format.
-  This config appends after base user initialization for ssh connection.
+- `cloud_config` (string) - Configuration script for initial setup of a virtual machine in the
+  [#cloud-config](https://docs.cloud-init.io/en/latest/explanation/format/cloud-config.html)
+  format. Note that this configuration would be extended with SSH key used
+  for Packer communicator.
 
 <!-- End of code generated from the comments of the Config struct in builder/mws/config.go; -->
