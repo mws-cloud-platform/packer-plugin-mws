@@ -29,7 +29,11 @@ users:
     shell: /bin/bash
     sudo: 'ALL=(ALL) NOPASSWD:ALL'
     ssh-authorized-keys:
-      - %s`
+      - %s
+runcmd:
+  - sed -i -E '/^[[:space:]]*AllowUsers([[:space:]]|$)/ s/[[:space:]]*(#.*)?$/ %[1]s \1/' /etc/ssh/sshd_config
+  - systemctl reload-or-restart sshd.service || systemctl reload-or-restart ssh.service
+  - if mountpoint -q /tmp; then mount -o remount,exec,nodev,nosuid /tmp; fi`
 
 type driverMWSConfig struct {
 	project                         string
@@ -48,6 +52,10 @@ type driverMWS struct {
 	firewallRules     *vpcsdk.FirewallRule
 	images            *computesdk.Image
 	cleanupTimeout    time.Duration
+}
+
+func buildSSHScript(username, publicKey string) string {
+	return fmt.Sprintf(sshScript, username, publicKey)
 }
 
 func NewDriverMWS(ctx context.Context, c driverMWSConfig) (Driver, error) {
@@ -209,7 +217,7 @@ func (d *driverMWS) CreateSubnet(ctx context.Context, params CreateSubnetParams)
 }
 
 func (d *driverMWS) CreateVirtualMachine(ctx context.Context, params CreateVirtualMachineParams) (string, error) {
-	userData := fmt.Sprintf(sshScript, params.SSHUsername, params.SSHPublicKey)
+	userData := buildSSHScript(params.SSHUsername, params.SSHPublicKey)
 
 	var oneToOneNat *computemodel.ComputeOneToOneNatSpecRequest
 	if params.ExternalAddressRef != nil {
