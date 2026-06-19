@@ -22,15 +22,6 @@ import (
 	"go.mws.cloud/util-toolset/pkg/utils/consterr"
 )
 
-const sshScript = `#cloud-config
-users:
-  - name: %s
-    groups: sudo
-    shell: /bin/bash
-    sudo: 'ALL=(ALL) NOPASSWD:ALL'
-    ssh-authorized-keys:
-      - %s`
-
 type driverMWSConfig struct {
 	project                         string
 	baseEndpoint                    string
@@ -209,7 +200,10 @@ func (d *driverMWS) CreateSubnet(ctx context.Context, params CreateSubnetParams)
 }
 
 func (d *driverMWS) CreateVirtualMachine(ctx context.Context, params CreateVirtualMachineParams) (string, error) {
-	userData := fmt.Sprintf(sshScript, params.SSHUsername, params.SSHPublicKey)
+	userData, err := prepareCloudConfig(params.SSHUsername, params.SSHPublicKey, params.CloudConfig)
+	if err != nil {
+		return "", fmt.Errorf("prepare cloud-config: %w", err)
+	}
 
 	var oneToOneNat *computemodel.ComputeOneToOneNatSpecRequest
 	if params.ExternalAddressRef != nil {

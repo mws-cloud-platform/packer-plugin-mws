@@ -28,5 +28,6 @@
  "SubnetCidr": "192.168.0.0/16",
  "UseExternalAddress": true,
  "ExternalAddressName": "",
- "CleanupTimeout": "1h"
+ "CleanupTimeout": "1h",
+ "CloudConfig": ""
 }

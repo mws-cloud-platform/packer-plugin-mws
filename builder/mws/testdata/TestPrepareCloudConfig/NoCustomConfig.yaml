@@ -1,0 +1,8 @@
+#cloud-config
+users:
+    - groups: sudo
+      name: packer
+      shell: /bin/bash
+      ssh-authorized-keys:
+        - key
+      sudo: ALL=(ALL) NOPASSWD:ALL

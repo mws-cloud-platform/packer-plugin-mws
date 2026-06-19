@@ -96,6 +96,12 @@ type Config struct {
 	// Timeout for cleanup of create virtual machine step (defaults to "1h").
 	CleanupTimeout string `mapstructure:"cleanup_timeout" required:"false"`
 
+	// Configuration script for initial setup of a virtual machine in the
+	// [#cloud-config](https://docs.cloud-init.io/en/latest/explanation/format/cloud-config.html)
+	// format. Note that this configuration would be extended with SSH key used
+	// for Packer communicator.
+	CloudConfig string `mapstructure:"cloud_config" required:"false"`
+
 	ctx interpolate.Context
 }
 
