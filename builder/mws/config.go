@@ -96,6 +96,10 @@ type Config struct {
 	// Timeout for cleanup of create virtual machine step (defaults to "1h").
 	CleanupTimeout string `mapstructure:"cleanup_timeout" required:"false"`
 
+	// CloudInit is a script in cloud-config format.
+	// This config appends after base user initialization for ssh connection.
+	CloudInit string `mapstructure:"cloud_init" required:"false"`
+
 	ctx interpolate.Context
 }
 

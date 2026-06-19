@@ -89,6 +89,7 @@ type FlatConfig struct {
 	UseExternalAddress              *bool             `mapstructure:"use_external_address" required:"false" cty:"use_external_address" hcl:"use_external_address"`
 	ExternalAddressName             *string           `mapstructure:"external_address_name" required:"false" cty:"external_address_name" hcl:"external_address_name"`
 	CleanupTimeout                  *string           `mapstructure:"cleanup_timeout" required:"false" cty:"cleanup_timeout" hcl:"cleanup_timeout"`
+	CloudInit                       *string           `mapstructure:"cloud_init" required:"false" cty:"cloud_init" hcl:"cloud_init"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -182,6 +183,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"use_external_address":                &hcldec.AttrSpec{Name: "use_external_address", Type: cty.Bool, Required: false},
 		"external_address_name":               &hcldec.AttrSpec{Name: "external_address_name", Type: cty.String, Required: false},
 		"cleanup_timeout":                     &hcldec.AttrSpec{Name: "cleanup_timeout", Type: cty.String, Required: false},
+		"cloud_init":                          &hcldec.AttrSpec{Name: "cloud_init", Type: cty.String, Required: false},
 	}
 	return s
 }

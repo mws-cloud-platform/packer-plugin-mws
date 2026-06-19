@@ -20,16 +20,48 @@ import (
 	vpcmodel "go.mws.cloud/go-sdk/service/vpc/model"
 	vpcsdk "go.mws.cloud/go-sdk/service/vpc/sdk"
 	"go.mws.cloud/util-toolset/pkg/utils/consterr"
+	"gopkg.in/yaml.v3"
 )
 
-const sshScript = `#cloud-config
-users:
-  - name: %s
-    groups: sudo
-    shell: /bin/bash
-    sudo: 'ALL=(ALL) NOPASSWD:ALL'
-    ssh-authorized-keys:
-      - %s`
+// MergeCloudInit merges the base user with any users defined in the custom cloud-init
+func MergeCloudInit(baseUser, baseSSHKey, customCloudInit string) (string, error) {
+	var customCloudConfig map[string]any
+	if err := yaml.Unmarshal([]byte(customCloudInit), &customCloudConfig); err != nil {
+		return "", fmt.Errorf("unmarshal custom cloud-init: %w", err)
+	}
+
+	// For empty customCloudInit
+	if customCloudConfig == nil {
+		customCloudConfig = make(map[string]any)
+	}
+
+	baseUserConfig := map[string]any{
+		"name":                baseUser,
+		"groups":              "sudo",
+		"shell":               "/bin/bash",
+		"sudo":                "ALL=(ALL) NOPASSWD:ALL",
+		"ssh-authorized-keys": []string{baseSSHKey},
+	}
+
+	mergedUsers := []any{baseUserConfig}
+	if customUsers, ok := customCloudConfig["users"]; ok {
+		switch v := customUsers.(type) {
+		case []any:
+			mergedUsers = append(mergedUsers, v...)
+		case any:
+			mergedUsers = append(mergedUsers, v)
+		}
+	}
+	customCloudConfig["users"] = mergedUsers
+
+	mergedConfig, err := yaml.Marshal(customCloudConfig)
+	if err != nil {
+		return "", fmt.Errorf("marshal merged config: %w", err)
+	}
+
+	result := "#cloud-config\n" + string(mergedConfig)
+	return result, nil
+}
 
 type driverMWSConfig struct {
 	project                         string
@@ -209,7 +241,10 @@ func (d *driverMWS) CreateSubnet(ctx context.Context, params CreateSubnetParams)
 }
 
 func (d *driverMWS) CreateVirtualMachine(ctx context.Context, params CreateVirtualMachineParams) (string, error) {
-	userData := fmt.Sprintf(sshScript, params.SSHUsername, params.SSHPublicKey)
+	userData, err := MergeCloudInit(params.SSHUsername, params.SSHPublicKey, params.CloudInit)
+	if err != nil {
+		return "", fmt.Errorf("merge cloud-init: %w", err)
+	}
 
 	var oneToOneNat *computemodel.ComputeOneToOneNatSpecRequest
 	if params.ExternalAddressRef != nil {

@@ -1,0 +1,12 @@
+#cloud-config
+packages:
+    - nginx
+runcmd:
+    - echo "Hello World"
+users:
+    - groups: sudo
+      name: testuser
+      shell: /bin/bash
+      ssh-authorized-keys:
+        - testkey
+      sudo: ALL=(ALL) NOPASSWD:ALL

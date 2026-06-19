@@ -3,6 +3,8 @@
 
 package mws_test
 
+// This file does not test anything, but contains utils for other tests.
+
 import (
 	"bytes"
 	"testing"
