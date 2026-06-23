@@ -146,7 +146,7 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 					Zone:               mws.DefaultZone,
 					SSHUsername:        mws.DefaultSSHUsername,
 					SSHPublicKey:       testSSHPublicKey,
-					DiskRef:            expectedDiskRef,
+					DiskRefs:           map[string]*computeref.DiskRef{"boot": expectedDiskRef},
 					ExternalAddressRef: expectedExternalAddressRef,
 					SubnetRef:          new(vpcref.NewSubnetRef(tt.config.Project, expectedNetworkName, expectedSubnetName)),
 				}).

@@ -119,7 +119,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 		SSHUsername:        config.Communicator.SSHUsername,
 		SSHPublicKey:       string(config.Communicator.SSHPublicKey),
 		CloudConfig:        config.CloudConfig,
-		DiskRef:            diskRef,
+		DiskRefs:           map[string]*computeref.DiskRef{"boot": diskRef},
 		ExternalAddressRef: externalAddressRef,
 		SubnetRef:          subnetRef,
 	})

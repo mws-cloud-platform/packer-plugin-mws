@@ -216,6 +216,20 @@ func (d *driverMWS) CreateVirtualMachine(ctx context.Context, params CreateVirtu
 		}
 	}
 
+	disks := make([]computemodel.StorageDiskSpecOrRefWithAttachmentsRequest, 0, len(params.DiskRefs))
+
+	isBoot := true
+	for name, diskRef := range params.DiskRefs {
+		disks = append(disks, computemodel.StorageDiskSpecOrRefWithAttachmentsRequest{
+			Name: name,
+			Boot: new(isBoot),
+			Disk: computemodel.StorageDiskSpecOrRefRequest{
+				Ref: diskRef,
+			},
+		})
+		isBoot = false
+	}
+
 	req := computeclient.UpsertVirtualMachineRequest{
 		VirtualMachine: params.VirtualMachineName,
 		Body: computemodel.VirtualMachineRequest{
@@ -238,15 +252,7 @@ func (d *driverMWS) CreateVirtualMachine(ctx context.Context, params CreateVirtu
 					},
 				},
 				Storage: computemodel.StorageSpecRequest{
-					Disks: []computemodel.StorageDiskSpecOrRefWithAttachmentsRequest{
-						{
-							Name: "boot",
-							Boot: new(true),
-							Disk: computemodel.StorageDiskSpecOrRefRequest{
-								Ref: params.DiskRef,
-							},
-						},
-					},
+					Disks: disks,
 				},
 				Network: computemodel.NetworkSpecRequest{
 					NetworkInterfaces: []computemodel.NetworkInterfaceSpecRequest{
