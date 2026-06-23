@@ -72,10 +72,12 @@ type FlatConfig struct {
 	BaseEndpoint                    *string           `mapstructure:"base_endpoint" required:"false" cty:"base_endpoint" hcl:"base_endpoint"`
 	ServiceAccountAuthorizedKeyPath *string           `mapstructure:"service_account_authorized_key_path" required:"false" cty:"service_account_authorized_key_path" hcl:"service_account_authorized_key_path"`
 	Token                           *string           `mapstructure:"token" required:"false" cty:"token" hcl:"token"`
-	VirtualMachineName              *string           `mapstructure:"virtual_machine_name" required:"false" cty:"virtual_machine_name" hcl:"virtual_machine_name"`
-	VMType                          *string           `mapstructure:"vm_type" required:"false" cty:"vm_type" hcl:"vm_type"`
 	ImageName                       *string           `mapstructure:"image_name" required:"false" cty:"image_name" hcl:"image_name"`
 	ImageDescription                *string           `mapstructure:"image_description" required:"false" cty:"image_description" hcl:"image_description"`
+	VirtualMachineName              *string           `mapstructure:"virtual_machine_name" required:"false" cty:"virtual_machine_name" hcl:"virtual_machine_name"`
+	VMType                          *string           `mapstructure:"vm_type" required:"false" cty:"vm_type" hcl:"vm_type"`
+	CleanupTimeout                  *string           `mapstructure:"cleanup_timeout" required:"false" cty:"cleanup_timeout" hcl:"cleanup_timeout"`
+	CloudConfig                     *string           `mapstructure:"cloud_config" required:"false" cty:"cloud_config" hcl:"cloud_config"`
 	DiskName                        *string           `mapstructure:"disk_name" required:"false" cty:"disk_name" hcl:"disk_name"`
 	DiskType                        *string           `mapstructure:"disk_type" required:"false" cty:"disk_type" hcl:"disk_type"`
 	DiskSize                        *string           `mapstructure:"disk_size" required:"false" cty:"disk_size" hcl:"disk_size"`
@@ -88,8 +90,6 @@ type FlatConfig struct {
 	SubnetCidr                      *string           `mapstructure:"subnet_cidr" required:"false" cty:"subnet_cidr" hcl:"subnet_cidr"`
 	UseExternalAddress              *bool             `mapstructure:"use_external_address" required:"false" cty:"use_external_address" hcl:"use_external_address"`
 	ExternalAddressName             *string           `mapstructure:"external_address_name" required:"false" cty:"external_address_name" hcl:"external_address_name"`
-	CleanupTimeout                  *string           `mapstructure:"cleanup_timeout" required:"false" cty:"cleanup_timeout" hcl:"cleanup_timeout"`
-	CloudConfig                     *string           `mapstructure:"cloud_config" required:"false" cty:"cloud_config" hcl:"cloud_config"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -166,10 +166,12 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"base_endpoint":                       &hcldec.AttrSpec{Name: "base_endpoint", Type: cty.String, Required: false},
 		"service_account_authorized_key_path": &hcldec.AttrSpec{Name: "service_account_authorized_key_path", Type: cty.String, Required: false},
 		"token":                               &hcldec.AttrSpec{Name: "token", Type: cty.String, Required: false},
-		"virtual_machine_name":                &hcldec.AttrSpec{Name: "virtual_machine_name", Type: cty.String, Required: false},
-		"vm_type":                             &hcldec.AttrSpec{Name: "vm_type", Type: cty.String, Required: false},
 		"image_name":                          &hcldec.AttrSpec{Name: "image_name", Type: cty.String, Required: false},
 		"image_description":                   &hcldec.AttrSpec{Name: "image_description", Type: cty.String, Required: false},
+		"virtual_machine_name":                &hcldec.AttrSpec{Name: "virtual_machine_name", Type: cty.String, Required: false},
+		"vm_type":                             &hcldec.AttrSpec{Name: "vm_type", Type: cty.String, Required: false},
+		"cleanup_timeout":                     &hcldec.AttrSpec{Name: "cleanup_timeout", Type: cty.String, Required: false},
+		"cloud_config":                        &hcldec.AttrSpec{Name: "cloud_config", Type: cty.String, Required: false},
 		"disk_name":                           &hcldec.AttrSpec{Name: "disk_name", Type: cty.String, Required: false},
 		"disk_type":                           &hcldec.AttrSpec{Name: "disk_type", Type: cty.String, Required: false},
 		"disk_size":                           &hcldec.AttrSpec{Name: "disk_size", Type: cty.String, Required: false},
@@ -182,8 +184,6 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"subnet_cidr":                         &hcldec.AttrSpec{Name: "subnet_cidr", Type: cty.String, Required: false},
 		"use_external_address":                &hcldec.AttrSpec{Name: "use_external_address", Type: cty.Bool, Required: false},
 		"external_address_name":               &hcldec.AttrSpec{Name: "external_address_name", Type: cty.String, Required: false},
-		"cleanup_timeout":                     &hcldec.AttrSpec{Name: "cleanup_timeout", Type: cty.String, Required: false},
-		"cloud_config":                        &hcldec.AttrSpec{Name: "cloud_config", Type: cty.String, Required: false},
 	}
 	return s
 }

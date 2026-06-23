@@ -1,0 +1,17 @@
+<!-- Code generated from the comments of the DiskConfig struct in builder/mws/config.go; DO NOT EDIT MANUALLY -->
+
+- `disk_name` (string) - Name for the disk (defaults to "packer-{{uuid}}-disk").
+
+- `disk_type` (string) - Type of disk to create (defaults to "nbs-pl2").
+
+- `disk_size` (string) - Size of the disk (defaults to "10 GB").
+
+- `disk_iops` (int64) - IOPS for the disk (defaults to 1000).
+
+- `source_project` (string) - Project ID where the source image/snapshot exists (defaults to the `project`).
+
+- `source_image` (string) - ID of an existing image to use as a base (required unless using `source_snapshot`).
+
+- `source_snapshot` (string) - ID of an existing snapshot to use as a base (required unless using `source_image`).
+
+<!-- End of code generated from the comments of the DiskConfig struct in builder/mws/config.go; -->

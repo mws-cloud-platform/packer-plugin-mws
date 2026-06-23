@@ -34,10 +34,9 @@ const (
 	DefaultCleanupTimeout   = "1h"
 )
 
-type Config struct {
-	common.PackerConfig `mapstructure:",squash"`
-	Communicator        communicator.Config `mapstructure:",squash" json:"-"`
-
+// AccessConfig contains common configuration elements that can be shared
+// across different components of the MWS plugin.
+type AccessConfig struct {
 	// The project identifier where resources will be created.
 	Project string `mapstructure:"project" required:"true"`
 	// The zone in which the VM will be created (defaults to "ru-central1-a")
@@ -53,17 +52,73 @@ type Config struct {
 	// IAM token used for authentication.
 	// Can be specified using the `MWS_TOKEN` environment variable.
 	Token string `mapstructure:"token" required:"false"`
+}
 
+// SetDefaults sets the default values for AccessConfig fields.
+func (c *AccessConfig) SetDefaults() {
+	c.Zone = cmp.Or(c.Zone, DefaultZone)
+}
+
+// Validate validates the AccessConfig fields.
+func (c *AccessConfig) Validate() error {
+	if c.Project == "" {
+		return consterr.Error("project is not provided")
+	}
+	return nil
+}
+
+// ImageConfig contains configuration for images.
+type ImageConfig struct {
+	// Name for the resulting image (defaults to "packer-{{uuid}}-image").
+	ImageName string `mapstructure:"image_name" required:"false"`
+	// Description for the resulting image. (defaults to "Image created by Packer").
+	ImageDescription string `mapstructure:"image_description" required:"false"`
+}
+
+// SetDefaults sets the default values for ImageConfig fields.
+func (c *ImageConfig) SetDefaults() {
+	c.ImageDescription = cmp.Or(c.ImageDescription, DefaultImageDescription)
+}
+
+// Validate validates the ImageConfig fields.
+func (c *ImageConfig) Validate() error {
+	return nil
+}
+
+// VirtualMachineConfig contains configuration for virtual machines.
+type VirtualMachineConfig struct {
 	// Name for the temporary build VM (defaults to "packer-{{uuid}}-vm").
 	VirtualMachineName string `mapstructure:"virtual_machine_name" required:"false"`
 	// The VM type (defaults to "gen-2-8").
 	VMType string `mapstructure:"vm_type" required:"false"`
 
-	// Name for the resulting image (defaults to "packer-{{uuid}}-image").
-	ImageName string `mapstructure:"image_name" required:"false"`
-	// Description for the resulting image. (defaults to "Image created by Packer").
-	ImageDescription string `mapstructure:"image_description" required:"false"`
+	// Timeout for cleanup of create virtual machine step (defaults to "1h").
+	CleanupTimeout string `mapstructure:"cleanup_timeout" required:"false"`
 
+	// Configuration script for initial setup of a virtual machine in the
+	// [#cloud-config](https://docs.cloud-init.io/en/latest/explanation/format/cloud-config.html)
+	// format. Note that this configuration would be extended with SSH key used
+	// for Packer communicator.
+	CloudConfig string `mapstructure:"cloud_config" required:"false"`
+}
+
+// SetDefaults sets the default values for VirtualMachineConfig fields.
+func (c *VirtualMachineConfig) SetDefaults() {
+	c.VMType = cmp.Or(c.VMType, DefaultVMType)
+	c.CleanupTimeout = cmp.Or(c.CleanupTimeout, DefaultCleanupTimeout)
+}
+
+// Validate validates the VirtualMachineConfig fields.
+func (c *VirtualMachineConfig) Validate() error {
+	var err error
+	if _, parseErr := time.ParseDuration(c.CleanupTimeout); parseErr != nil {
+		err = errors.Join(err, fmt.Errorf("parse cleanup timeout: %w", parseErr))
+	}
+	return err
+}
+
+// DiskConfig contains configuration for disks and source parameters.
+type DiskConfig struct {
 	// Name for the disk (defaults to "packer-{{uuid}}-disk").
 	DiskName string `mapstructure:"disk_name" required:"false"`
 	// Type of disk to create (defaults to "nbs-pl2").
@@ -78,7 +133,29 @@ type Config struct {
 	SourceImage string `mapstructure:"source_image" required:"false"`
 	// ID of an existing snapshot to use as a base (required unless using `source_image`).
 	SourceSnapshot string `mapstructure:"source_snapshot" required:"false"`
+}
 
+// SetDefaults sets the default values for DiskConfig fields.
+func (c *DiskConfig) SetDefaults() {
+	c.DiskType = cmp.Or(c.DiskType, DefaultDiskType)
+	c.DiskIOPS = cmp.Or(c.DiskIOPS, DefaultDiskIOPS)
+	c.DiskSize = cmp.Or(c.DiskSize, DefaultDiskSize)
+}
+
+// Validate validates the DiskConfig fields.
+func (c *DiskConfig) Validate() error {
+	var err error
+	if _, parseErr := bytesize.ParseString(c.DiskSize); parseErr != nil {
+		err = errors.Join(err, fmt.Errorf("parse disk size: %w", parseErr))
+	}
+	if (c.SourceImage == "") == (c.SourceSnapshot == "") {
+		err = errors.Join(err, consterr.Error("exactly one of source_image or source_snapshot must be provided"))
+	}
+	return err
+}
+
+// NetworkConfig contains configuration for networks.
+type NetworkConfig struct {
 	// Name for the network (defaults to "packer-{{uuid}}-network").
 	// If specified, Packer will use existing network.
 	NetworkName string `mapstructure:"network_name" required:"false"`
@@ -92,15 +169,39 @@ type Config struct {
 	// External address name (defaults to "packer-{{uuid}}-external-address").
 	// Can be specified only if external address usage is enabled.
 	ExternalAddressName string `mapstructure:"external_address_name" required:"false"`
+}
 
-	// Timeout for cleanup of create virtual machine step (defaults to "1h").
-	CleanupTimeout string `mapstructure:"cleanup_timeout" required:"false"`
+// SetDefaults sets the default values for NetworkConfig fields.
+func (c *NetworkConfig) SetDefaults() {
+	c.SubnetCidr = cmp.Or(c.SubnetCidr, DefaultSubnetCidr)
+}
 
-	// Configuration script for initial setup of a virtual machine in the
-	// [#cloud-config](https://docs.cloud-init.io/en/latest/explanation/format/cloud-config.html)
-	// format. Note that this configuration would be extended with SSH key used
-	// for Packer communicator.
-	CloudConfig string `mapstructure:"cloud_config" required:"false"`
+// Validate validates the NetworkConfig fields.
+func (c *NetworkConfig) Validate() error {
+	var err error
+	if _, parseErr := cidraddress.ParseCIDR4AddressString(c.SubnetCidr); parseErr != nil {
+		err = errors.Join(err, fmt.Errorf("parse subnet CIDR: %w", parseErr))
+	}
+	if c.SubnetName != "" && c.NetworkName == "" {
+		err = errors.Join(err, consterr.Error("when subnet_name is provided, network_name must be provided"))
+	}
+	if !c.UseExternalAddress && c.SubnetName == "" {
+		err = errors.Join(err, consterr.Error("when use_external_address is false, subnet_name must be provided"))
+	}
+	if !c.UseExternalAddress && c.ExternalAddressName != "" {
+		err = errors.Join(err, consterr.Error("when use_external_address is false, external_address_name must not be provided"))
+	}
+	return err
+}
+
+type Config struct {
+	common.PackerConfig  `mapstructure:",squash"`
+	Communicator         communicator.Config `mapstructure:",squash" json:"-"`
+	AccessConfig         `mapstructure:",squash"`
+	ImageConfig          `mapstructure:",squash"`
+	VirtualMachineConfig `mapstructure:",squash"`
+	DiskConfig           `mapstructure:",squash"`
+	NetworkConfig        `mapstructure:",squash"`
 
 	ctx interpolate.Context
 }
@@ -120,42 +221,27 @@ func (c *Config) Prepare(raws ...any) error {
 
 func (c *Config) SetDefaults() {
 	c.Communicator.SSHUsername = cmp.Or(c.Communicator.SSHUsername, DefaultSSHUsername)
-	c.Zone = cmp.Or(c.Zone, DefaultZone)
-	c.VMType = cmp.Or(c.VMType, DefaultVMType)
-	c.DiskType = cmp.Or(c.DiskType, DefaultDiskType)
-	c.DiskIOPS = cmp.Or(c.DiskIOPS, DefaultDiskIOPS)
-	c.DiskSize = cmp.Or(c.DiskSize, DefaultDiskSize)
+	// Call SetDefaults for each subconfig
+	c.AccessConfig.SetDefaults()
+	c.ImageConfig.SetDefaults()
+	c.VirtualMachineConfig.SetDefaults()
+	c.DiskConfig.SetDefaults()
+	c.NetworkConfig.SetDefaults()
+	// Set remaining defaults that depend on other fields
 	c.SourceProject = cmp.Or(c.SourceProject, c.Project)
-	c.SubnetCidr = cmp.Or(c.SubnetCidr, DefaultSubnetCidr)
-	c.ImageDescription = cmp.Or(c.ImageDescription, DefaultImageDescription)
-	c.CleanupTimeout = cmp.Or(c.CleanupTimeout, DefaultCleanupTimeout)
 }
 
 func (c *Config) Validate() error {
-	err := errors.Join(c.Communicator.Prepare(&c.ctx)...)
-	if c.Project == "" {
-		err = errors.Join(err, consterr.Error("project is not provided"))
+	// Call Validate for each subconfig
+	errs := []error{
+		c.AccessConfig.Validate(),
+		c.ImageConfig.Validate(),
+		c.VirtualMachineConfig.Validate(),
+		c.DiskConfig.Validate(),
+		c.NetworkConfig.Validate(),
 	}
-	if (c.SourceImage == "") == (c.SourceSnapshot == "") {
-		err = errors.Join(err, consterr.Error("exactly one of source_image or source_snapshot must be provided"))
-	}
-	if _, parseErr := bytesize.ParseString(c.DiskSize); parseErr != nil {
-		err = errors.Join(err, fmt.Errorf("parse disk size: %w", parseErr))
-	}
-	if _, parseErr := cidraddress.ParseCIDR4AddressString(c.SubnetCidr); parseErr != nil {
-		err = errors.Join(err, fmt.Errorf("parse subnet CIDR: %w", parseErr))
-	}
-	if c.SubnetName != "" && c.NetworkName == "" {
-		err = errors.Join(err, consterr.Error("when subnet_name is provided, network_name must be provided"))
-	}
-	if _, parseErr := time.ParseDuration(c.CleanupTimeout); parseErr != nil {
-		err = errors.Join(err, fmt.Errorf("parse cleanup timeout: %w", parseErr))
-	}
-	if !c.UseExternalAddress && c.SubnetName == "" {
-		err = errors.Join(err, consterr.Error("when use_external_address is false, subnet_name must be provided"))
-	}
-	if !c.UseExternalAddress && c.ExternalAddressName != "" {
-		err = errors.Join(err, consterr.Error("when use_external_address is false, external_address_name must not be provided"))
-	}
+
+	// Join all errors including Communicator preparation errors
+	err := errors.Join(append([]error{errors.Join(c.Communicator.Prepare(&c.ctx)...)}, errs...)...)
 	return err
 }

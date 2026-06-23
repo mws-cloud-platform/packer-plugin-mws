@@ -53,11 +53,19 @@ func TestStepCreateImage(t *testing.T) {
 		{
 			name: "success_set_name",
 			config: &mws.Config{
-				Project:            testProjectName,
-				SourceImage:        testSourceImage,
-				ImageName:          testImageName,
-				ImageDescription:   testImageDescription,
-				UseExternalAddress: true,
+				AccessConfig: mws.AccessConfig{
+					Project: testProjectName,
+				},
+				DiskConfig: mws.DiskConfig{
+					SourceImage: testSourceImage,
+				},
+				ImageConfig: mws.ImageConfig{
+					ImageName:        testImageName,
+					ImageDescription: testImageDescription,
+				},
+				NetworkConfig: mws.NetworkConfig{
+					UseExternalAddress: true,
+				},
 			},
 			expectedImageName: testImageName,
 			expectedImage:     expectedTestImage,
@@ -76,13 +84,21 @@ func TestStepCreateImage(t *testing.T) {
 		{
 			name: "success_set_name_no_external_address",
 			config: &mws.Config{
-				Project:            testProjectName,
-				SourceImage:        testSourceImage,
-				ImageName:          testImageName,
-				ImageDescription:   testImageDescription,
-				NetworkName:        testNetworkName,
-				SubnetName:         testSubnetName,
-				UseExternalAddress: false,
+				AccessConfig: mws.AccessConfig{
+					Project: testProjectName,
+				},
+				DiskConfig: mws.DiskConfig{
+					SourceImage: testSourceImage,
+				},
+				ImageConfig: mws.ImageConfig{
+					ImageName:        testImageName,
+					ImageDescription: testImageDescription,
+				},
+				NetworkConfig: mws.NetworkConfig{
+					NetworkName:        testNetworkName,
+					SubnetName:         testSubnetName,
+					UseExternalAddress: false,
+				},
 			},
 			expectedImageName: testImageName,
 			expectedImage:     expectedTestImage,
@@ -101,9 +117,15 @@ func TestStepCreateImage(t *testing.T) {
 		{
 			name: "success_default_name",
 			config: &mws.Config{
-				Project:            testProjectName,
-				SourceImage:        testSourceImage,
-				UseExternalAddress: true,
+				AccessConfig: mws.AccessConfig{
+					Project: testProjectName,
+				},
+				DiskConfig: mws.DiskConfig{
+					SourceImage: testSourceImage,
+				},
+				NetworkConfig: mws.NetworkConfig{
+					UseExternalAddress: true,
+				},
 			},
 			expectedImageName: defaultImageName,
 			expectedImage:     expectedDefaultImage,
@@ -122,11 +144,17 @@ func TestStepCreateImage(t *testing.T) {
 		{
 			name: "success_default_name_no_external_address",
 			config: &mws.Config{
-				Project:            testProjectName,
-				SourceImage:        testSourceImage,
-				NetworkName:        testNetworkName,
-				SubnetName:         testSubnetName,
-				UseExternalAddress: false,
+				AccessConfig: mws.AccessConfig{
+					Project: testProjectName,
+				},
+				DiskConfig: mws.DiskConfig{
+					SourceImage: testSourceImage,
+				},
+				NetworkConfig: mws.NetworkConfig{
+					NetworkName:        testNetworkName,
+					SubnetName:         testSubnetName,
+					UseExternalAddress: false,
+				},
 			},
 			expectedImageName: defaultImageName,
 			expectedImage:     expectedDefaultImage,
@@ -145,9 +173,15 @@ func TestStepCreateImage(t *testing.T) {
 		{
 			name: "error_missing_disk_ref",
 			config: &mws.Config{
-				Project:            testProjectName,
-				SourceImage:        testSourceImage,
-				UseExternalAddress: true,
+				AccessConfig: mws.AccessConfig{
+					Project: testProjectName,
+				},
+				DiskConfig: mws.DiskConfig{
+					SourceImage: testSourceImage,
+				},
+				NetworkConfig: mws.NetworkConfig{
+					UseExternalAddress: true,
+				},
 			},
 			expectedError: true,
 		},
