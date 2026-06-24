@@ -340,6 +340,36 @@ func (d *driverMWS) CreateImage(ctx context.Context, params CreateImageParams) (
 	return image, nil
 }
 
+func (d *driverMWS) AttachDiskToVirtualMachine(ctx context.Context, params AttachDiskToVirtualMachineParams) error {
+	_, err := d.virtualMachines.UpsertVirtualMachine(ctx, computeclient.UpsertVirtualMachineRequest{
+		VirtualMachine: params.VirtualMachineName,
+		Body: computemodel.VirtualMachineRequest{
+			Spec: computemodel.VirtualMachineSpecRequest{
+				Storage: computemodel.StorageSpecRequest{
+					Disks: []computemodel.StorageDiskSpecOrRefWithAttachmentsRequest{
+						{Name: "boot"},
+						{
+							Name: "image-for-export",
+							Disk: computemodel.StorageDiskSpecOrRefRequest{
+								Spec: &computemodel.StorageDiskSpecRequest{
+									Size:     &params.Size,
+									Source:   &computemodel.StorageDiskSpecSourceRequest{Image: params.ImageRef},
+									DiskType: new(computeref.NewDiskTypeRef(params.DiskType)),
+									Iops:     new(computemodel.Iops(params.Iops)),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}, computeclient.WithWait())
+	if err != nil {
+		return fmt.Errorf("attach disk to virtual machine: %w", err)
+	}
+	return nil
+}
+
 func (d *driverMWS) DeleteDisk(ctx context.Context, diskName string) error {
 	if err := d.disks.DeleteDisk(ctx, computeclient.DeleteDiskRequest{
 		Disk: diskName,

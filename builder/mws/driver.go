@@ -24,6 +24,8 @@ type Driver interface {
 	CreateFirewallRule(context.Context, CreateFirewallRuleParams) error
 	CreateImage(context.Context, CreateImageParams) (*computemodel.ImageOptionalResponse, error)
 
+	AttachDiskToVirtualMachine(context.Context, AttachDiskToVirtualMachineParams) error
+
 	DeleteDisk(context.Context, string) error
 	DeleteExternalAddress(context.Context, string) error
 	DeleteNetwork(context.Context, string) error
@@ -79,4 +81,12 @@ type CreateFirewallRuleParams struct {
 	NetworkName                   string
 	FirewallRuleName              string
 	VirtualMachineInternalAddress string
+}
+
+type AttachDiskToVirtualMachineParams struct {
+	VirtualMachineName string
+	DiskType           string
+	Size               bytesize.ByteSize
+	Iops               int64
+	ImageRef           *computeref.ImageRef
 }

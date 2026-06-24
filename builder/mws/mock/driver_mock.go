@@ -42,6 +42,44 @@ func (m *MockDriver) EXPECT() *MockDriverMockRecorder {
 	return m.recorder
 }
 
+// AttachDiskToVirtualMachine mocks base method.
+func (m *MockDriver) AttachDiskToVirtualMachine(arg0 context.Context, arg1 mws.AttachDiskToVirtualMachineParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AttachDiskToVirtualMachine", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AttachDiskToVirtualMachine indicates an expected call of AttachDiskToVirtualMachine.
+func (mr *MockDriverMockRecorder) AttachDiskToVirtualMachine(arg0, arg1 any) *MockDriverAttachDiskToVirtualMachineCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AttachDiskToVirtualMachine", reflect.TypeOf((*MockDriver)(nil).AttachDiskToVirtualMachine), arg0, arg1)
+	return &MockDriverAttachDiskToVirtualMachineCall{Call: call}
+}
+
+// MockDriverAttachDiskToVirtualMachineCall wrap *gomock.Call
+type MockDriverAttachDiskToVirtualMachineCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockDriverAttachDiskToVirtualMachineCall) Return(arg0 error) *MockDriverAttachDiskToVirtualMachineCall {
+	c.Call = c.Call.Return(arg0)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockDriverAttachDiskToVirtualMachineCall) Do(f func(context.Context, mws.AttachDiskToVirtualMachineParams) error) *MockDriverAttachDiskToVirtualMachineCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockDriverAttachDiskToVirtualMachineCall) DoAndReturn(f func(context.Context, mws.AttachDiskToVirtualMachineParams) error) *MockDriverAttachDiskToVirtualMachineCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
 // CreateDisk mocks base method.
 func (m *MockDriver) CreateDisk(arg0 context.Context, arg1 mws.CreateDiskParams) error {
 	m.ctrl.T.Helper()
