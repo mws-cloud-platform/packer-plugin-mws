@@ -56,7 +56,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 		SnapshotRef: snapshotRef,
 		Zone:        config.Zone,
 	}); err != nil {
-		return actionHaltWithError(state, fmt.Errorf("create disk %q: %w", diskName, err))
+		return ActionHaltWithError(state, fmt.Errorf("create disk %q: %w", diskName, err))
 	}
 
 	ui.Sayf("Disk %q created", diskName)
@@ -72,7 +72,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 			ExternalAddressName: externalAddressName,
 		})
 		if err != nil {
-			return actionHaltWithError(state, fmt.Errorf("create external-address %q: %w", externalAddressName, err))
+			return ActionHaltWithError(state, fmt.Errorf("create external-address %q: %w", externalAddressName, err))
 		}
 
 		ui.Sayf("External Address %q created", externalAddressName)
@@ -87,7 +87,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 		if err := driver.CreateNetwork(ctx, CreateNetworkParams{
 			NetworkName: networkName,
 		}); err != nil {
-			return actionHaltWithError(state, fmt.Errorf("create network %q: %w", networkName, err))
+			return ActionHaltWithError(state, fmt.Errorf("create network %q: %w", networkName, err))
 		}
 
 		ui.Sayf("Network %q created", networkName)
@@ -102,7 +102,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 			SubnetName:  subnetName,
 			SubnetCidr:  cidraddress.MustParseCIDR4AddressString(config.SubnetCidr),
 		}); err != nil {
-			return actionHaltWithError(state, fmt.Errorf("create subnet %q: %w", subnetName, err))
+			return ActionHaltWithError(state, fmt.Errorf("create subnet %q: %w", subnetName, err))
 		}
 
 		ui.Sayf("Subnet %q created", subnetName)
@@ -124,7 +124,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 		SubnetRef:          subnetRef,
 	})
 	if err != nil {
-		return actionHaltWithError(state, fmt.Errorf("create vm %q: %w", virtualMachineName, err))
+		return ActionHaltWithError(state, fmt.Errorf("create vm %q: %w", virtualMachineName, err))
 	}
 
 	ui.Sayf("Virtual Machine %q created", virtualMachineName)
@@ -138,7 +138,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 			VirtualMachineInternalAddress: internalAddress,
 		})
 		if err != nil {
-			return actionHaltWithError(state, fmt.Errorf("create firewall rule %q: %w", FirewallRuleName, err))
+			return ActionHaltWithError(state, fmt.Errorf("create firewall rule %q: %w", FirewallRuleName, err))
 		}
 
 		ui.Sayf("Firewall Rule %q created", FirewallRuleName)

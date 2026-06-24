@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 )
 
-func actionHaltWithError(state multistep.StateBag, err error) multistep.StepAction {
+func ActionHaltWithError(state multistep.StateBag, err error) multistep.StepAction {
 	ui := state.Get(UIKey).(packer.Ui)
 	state.Put(ErrorKey, err)
 	ui.Error(err.Error())

@@ -30,7 +30,7 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 
 	diskRef, ok := state.Get(DiskRefKey).(*computeref.DiskRef)
 	if !ok || diskRef == nil {
-		return actionHaltWithError(state, fmt.Errorf("disk ref not found in state: %w", errUnexpected))
+		return ActionHaltWithError(state, fmt.Errorf("disk ref not found in state: %w", errUnexpected))
 	}
 
 	image, err := driver.CreateImage(ctx, CreateImageParams{
@@ -39,7 +39,7 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 		DiskRef:          diskRef,
 	})
 	if err != nil {
-		return actionHaltWithError(state, fmt.Errorf("create image: %w", err))
+		return ActionHaltWithError(state, fmt.Errorf("create image: %w", err))
 	}
 
 	ui.Sayf("Image %q created", imageName)
