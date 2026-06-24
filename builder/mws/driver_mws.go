@@ -340,6 +340,18 @@ func (d *driverMWS) CreateImage(ctx context.Context, params CreateImageParams) (
 	return image, nil
 }
 
+func (d *driverMWS) GetImage(ctx context.Context, project, imageName string) (*computemodel.ImageOptionalResponse, error) {
+	image, err := d.images.GetImage(ctx, computeclient.GetImageRequest{
+		Project: project,
+		Image:   imageName,
+	}, computeclient.WithWait())
+	if err != nil {
+		return nil, fmt.Errorf("get image: %w", err)
+	}
+
+	return image, nil
+}
+
 func (d *driverMWS) AttachDiskToVirtualMachine(ctx context.Context, params AttachDiskToVirtualMachineParams) error {
 	_, err := d.virtualMachines.UpsertVirtualMachine(ctx, computeclient.UpsertVirtualMachineRequest{
 		VirtualMachine: params.VirtualMachineName,

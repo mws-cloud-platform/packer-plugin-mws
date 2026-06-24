@@ -24,6 +24,7 @@ type Driver interface {
 	CreateFirewallRule(context.Context, CreateFirewallRuleParams) error
 	CreateImage(context.Context, CreateImageParams) (*computemodel.ImageOptionalResponse, error)
 
+	GetImage(context.Context, string, string) (*computemodel.ImageOptionalResponse, error)
 	AttachDiskToVirtualMachine(context.Context, AttachDiskToVirtualMachineParams) error
 
 	DeleteDisk(context.Context, string) error

@@ -614,3 +614,42 @@ func (c *MockDriverDeleteVirtualMachineCall) DoAndReturn(f func(context.Context,
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
+
+// GetImage mocks base method.
+func (m *MockDriver) GetImage(arg0 context.Context, arg1, arg2 string) (*model.ImageOptionalResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetImage", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*model.ImageOptionalResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetImage indicates an expected call of GetImage.
+func (mr *MockDriverMockRecorder) GetImage(arg0, arg1, arg2 any) *MockDriverGetImageCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetImage", reflect.TypeOf((*MockDriver)(nil).GetImage), arg0, arg1, arg2)
+	return &MockDriverGetImageCall{Call: call}
+}
+
+// MockDriverGetImageCall wrap *gomock.Call
+type MockDriverGetImageCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockDriverGetImageCall) Return(arg0 *model.ImageOptionalResponse, arg1 error) *MockDriverGetImageCall {
+	c.Call = c.Call.Return(arg0, arg1)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockDriverGetImageCall) Do(f func(context.Context, string, string) (*model.ImageOptionalResponse, error)) *MockDriverGetImageCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockDriverGetImageCall) DoAndReturn(f func(context.Context, string, string) (*model.ImageOptionalResponse, error)) *MockDriverGetImageCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
