@@ -12,10 +12,12 @@
  "BaseEndpoint": "",
  "ServiceAccountAuthorizedKeyPath": "",
  "Token": "",
- "VirtualMachineName": "",
- "VMType": "gen-2-8",
  "ImageName": "",
  "ImageDescription": "Image created by Packer",
+ "VirtualMachineName": "",
+ "VMType": "gen-2-8",
+ "CleanupTimeout": "1h",
+ "CloudConfig": "",
  "DiskName": "",
  "DiskType": "nbs-pl2",
  "DiskSize": "10 GB",
@@ -27,7 +29,5 @@
  "SubnetName": "test-subnet",
  "SubnetCidr": "192.168.0.0/16",
  "UseExternalAddress": false,
- "ExternalAddressName": "",
- "CleanupTimeout": "1h",
- "CloudConfig": ""
+ "ExternalAddressName": ""
 }

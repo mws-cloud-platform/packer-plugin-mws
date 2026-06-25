@@ -12,10 +12,12 @@
  "BaseEndpoint": "https://custom.api.mwsapis.ru",
  "ServiceAccountAuthorizedKeyPath": "/path/to/key",
  "Token": "",
- "VirtualMachineName": "test-vm",
- "VMType": "gen-2-16",
  "ImageName": "test-image",
  "ImageDescription": "Custom image description",
+ "VirtualMachineName": "test-vm",
+ "VMType": "gen-2-16",
+ "CleanupTimeout": "2h",
+ "CloudConfig": "",
  "DiskName": "test-disk",
  "DiskType": "nbs-pl3",
  "DiskSize": "50 GB",
@@ -27,7 +29,5 @@
  "SubnetName": "test-subnet",
  "SubnetCidr": "10.0.0.0/8",
  "UseExternalAddress": true,
- "ExternalAddressName": "test-external-address",
- "CleanupTimeout": "2h",
- "CloudConfig": ""
+ "ExternalAddressName": "test-external-address"
 }
