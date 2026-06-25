@@ -5,6 +5,7 @@ package mwsexport
 
 import "fmt"
 
+//nolint:revive // Very special constant for packer
 const BuilderId = "packer.post-processor.mws-export"
 
 type Artifact struct {
@@ -12,10 +13,12 @@ type Artifact struct {
 	url  string
 }
 
+//nolint:revive // Can not change packer interface
 func (*Artifact) BuilderId() string {
 	return BuilderId
 }
 
+//nolint:revive // Can not change packer interface
 func (a *Artifact) Id() string {
 	return a.url
 }

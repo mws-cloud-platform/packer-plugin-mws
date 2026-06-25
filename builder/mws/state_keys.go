@@ -29,6 +29,6 @@ const (
 	ProjectForExportKey  = "project_for_export"
 	DiskForExportNameKey = "disk_for_export_name"
 	S3AccessKeyKey       = "s3_access_key"
-	S3SecretKeyKey       = "s3_secret_key"
+	S3SecretKeyKey       = "s3_secret_key" //nolint:gosec // Not credentials, key for credentials
 	S3PathKey            = "s3_path"
 )

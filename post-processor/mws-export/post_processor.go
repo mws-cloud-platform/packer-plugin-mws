@@ -68,7 +68,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, artifact 
 	}
 	p.config.ctx.Data = generatedData
 
-	ui.Sayf("Exporting image %s to %s", imageForExport, p.config.S3Config.S3Path)
+	ui.Sayf("Exporting image %s to %s", imageForExport, p.config.S3Path)
 
 	config := mws.Config{
 		PackerConfig:         p.config.PackerConfig,
@@ -103,7 +103,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, artifact 
 		ictx := p.config.ctx
 		interpolated, err := interpolate.Render(s3Path, &ictx)
 		if err != nil {
-			return nil, false, false, fmt.Errorf("error interpolating s3_key: %s", err)
+			return nil, false, false, fmt.Errorf("error interpolating s3_key: %w", err)
 		}
 		s3Path = interpolated
 	}
