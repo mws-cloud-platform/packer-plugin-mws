@@ -94,9 +94,5 @@ type CreateHMACKeyParams struct {
 
 type AttachDiskToVirtualMachineParams struct {
 	VirtualMachineName string
-	// DiskType           string
-	// Size               bytesize.ByteSize
-	// Iops               int64
-	// ImageRef           *computeref.ImageRef
-	DiskRef *computeref.DiskRef
+	DiskRef            *computeref.DiskRef
 }

@@ -1,3 +1,6 @@
+// Copyright 2026 MTS Web Services, LLC.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:generate go run github.com/hashicorp/packer-plugin-sdk/cmd/packer-sdc@v0.6.9 struct-markdown
 //go:generate go run github.com/hashicorp/packer-plugin-sdk/cmd/packer-sdc@v0.6.9 mapstructure-to-hcl2 -type Config
 
@@ -99,7 +102,6 @@ type S3Config struct {
 
 func (c *S3Config) SetDefaults() {
 	c.S3Region = cmp.Or(c.S3Region, DefaultS3Bucket)
-	// c.S3Path = cmp.Or(c.S3Path, mws.DefaultDiskIOPS)
 	c.S3Endpoint = cmp.Or(c.S3Endpoint, DefaultS3Endpoint)
 }
 
