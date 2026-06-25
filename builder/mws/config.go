@@ -43,27 +43,26 @@ func (c *Config) Prepare(raws ...any) error {
 
 func (c *Config) SetDefaults() {
 	c.Communicator.SSHUsername = cmp.Or(c.Communicator.SSHUsername, DefaultSSHUsername)
-	// Call SetDefaults for each subconfig
+
 	c.AccessConfig.SetDefaults()
 	c.ImageConfig.SetDefaults()
 	c.VirtualMachineConfig.SetDefaults()
 	c.DiskConfig.SetDefaults()
 	c.NetworkConfig.SetDefaults()
-	// Set remaining defaults that depend on other fields
+
 	c.SourceProject = cmp.Or(c.SourceProject, c.Project)
 }
 
 func (c *Config) Validate() error {
-	// Call Validate for each subconfig
-	errs := []error{
+	errs := append(
+		c.Communicator.Prepare(&c.ctx),
 		c.AccessConfig.Validate(),
 		c.ImageConfig.Validate(),
 		c.VirtualMachineConfig.Validate(),
 		c.DiskConfig.Validate(),
 		c.NetworkConfig.Validate(),
-	}
+	)
 
-	// Join all errors including Communicator preparation errors
-	err := errors.Join(append([]error{errors.Join(c.Communicator.Prepare(&c.ctx)...)}, errs...)...)
+	err := errors.Join(errs...)
 	return err
 }

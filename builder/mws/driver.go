@@ -23,9 +23,11 @@ type Driver interface {
 	CreateVirtualMachine(context.Context, CreateVirtualMachineParams) (string, error)
 	CreateFirewallRule(context.Context, CreateFirewallRuleParams) error
 	CreateImage(context.Context, CreateImageParams) (*computemodel.ImageOptionalResponse, error)
+	CreateHMACKey(context.Context, CreateHMACKeyParams) (string, string, error)
 
 	GetImage(context.Context, string, string) (*computemodel.ImageOptionalResponse, error)
 	AttachDiskToVirtualMachine(context.Context, AttachDiskToVirtualMachineParams) error
+	DetachDisksFromVirtualMachine(context.Context, string) error
 
 	DeleteDisk(context.Context, string) error
 	DeleteExternalAddress(context.Context, string) error
@@ -34,6 +36,7 @@ type Driver interface {
 	DeleteVirtualMachine(context.Context, string) error
 	DeleteFirewallRule(context.Context, string, string) error
 	DeleteImage(context.Context, string) error
+	DeleteHMACKey(context.Context, string, string) error
 }
 
 type CreateDiskParams struct {
@@ -84,10 +87,16 @@ type CreateFirewallRuleParams struct {
 	VirtualMachineInternalAddress string
 }
 
+type CreateHMACKeyParams struct {
+	HMACKeyName   string
+	ServiceAccout string
+}
+
 type AttachDiskToVirtualMachineParams struct {
 	VirtualMachineName string
-	DiskType           string
-	Size               bytesize.ByteSize
-	Iops               int64
-	ImageRef           *computeref.ImageRef
+	// DiskType           string
+	// Size               bytesize.ByteSize
+	// Iops               int64
+	// ImageRef           *computeref.ImageRef
+	DiskRef *computeref.DiskRef
 }

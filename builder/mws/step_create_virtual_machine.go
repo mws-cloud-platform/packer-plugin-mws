@@ -167,12 +167,12 @@ func (s *StepCreateVirtualMachine) Cleanup(state multistep.StateBag) {
 	ctx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
 	defer cancel()
 
-	diskName := stateGetOkString(state, DiskNameKey)
-	externalAddressName := stateGetOkString(state, ExternalAddressNameKey)
-	networkName := stateGetOkString(state, NetworkNameKey)
-	subnetName := stateGetOkString(state, SubnetNameKey)
-	virtualMachineName := stateGetOkString(state, VirtualMachineNameKey)
-	firewallRuleName := stateGetOkString(state, FirewallRuleNameKey)
+	diskName := StateGetOkString(state, DiskNameKey)
+	externalAddressName := StateGetOkString(state, ExternalAddressNameKey)
+	networkName := StateGetOkString(state, NetworkNameKey)
+	subnetName := StateGetOkString(state, SubnetNameKey)
+	virtualMachineName := StateGetOkString(state, VirtualMachineNameKey)
+	firewallRuleName := StateGetOkString(state, FirewallRuleNameKey)
 
 	if firewallRuleName != "" {
 		if err := driver.DeleteFirewallRule(ctx, networkName, firewallRuleName); err != nil {

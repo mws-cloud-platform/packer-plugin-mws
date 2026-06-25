@@ -15,7 +15,7 @@ func ActionHaltWithError(state multistep.StateBag, err error) multistep.StepActi
 	return multistep.ActionHalt
 }
 
-func stateGetOkString(state multistep.StateBag, key string) string {
+func StateGetOkString(state multistep.StateBag, key string) string {
 	if val, ok := state.GetOk(key); ok {
 		return val.(string)
 	}

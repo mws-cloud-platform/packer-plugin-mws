@@ -13,6 +13,7 @@ build:
 
 dev:
 	go build -ldflags="-X '${PLUGIN_FQN}/version.VersionPrerelease=dev'" -o ${BINARY}
+	rm -rf ${HOME}/.config/packer/plugins/github.com/mws-cloud-platform/mws/*
 	packer plugins install --path ${BINARY} "$(shell echo "${PLUGIN_FQN}" | sed 's/packer-plugin-//')"
 
 test:

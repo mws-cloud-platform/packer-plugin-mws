@@ -27,10 +27,10 @@ const (
 	DefaultSubnetCidr       = "192.168.0.0/16"
 	DefaultImageDescription = "Image created by Packer"
 	DefaultCleanupTimeout   = "1h"
+
+	DefaultAdditionalDiskForExportSize = "0 GB"
 )
 
-// AccessConfig contains common configuration elements that can be shared
-// across different components of the MWS plugin.
 type AccessConfig struct {
 	// The project identifier where resources will be created.
 	Project string `mapstructure:"project" required:"true"`
@@ -49,12 +49,10 @@ type AccessConfig struct {
 	Token string `mapstructure:"token" required:"false"`
 }
 
-// SetDefaults sets the default values for AccessConfig fields.
 func (c *AccessConfig) SetDefaults() {
 	c.Zone = cmp.Or(c.Zone, DefaultZone)
 }
 
-// Validate validates the AccessConfig fields.
 func (c *AccessConfig) Validate() error {
 	if c.Project == "" {
 		return consterr.Error("project is not provided")
@@ -62,7 +60,6 @@ func (c *AccessConfig) Validate() error {
 	return nil
 }
 
-// ImageConfig contains configuration for images.
 type ImageConfig struct {
 	// Name for the resulting image (defaults to "packer-{{uuid}}-image").
 	ImageName string `mapstructure:"image_name" required:"false"`
@@ -70,17 +67,14 @@ type ImageConfig struct {
 	ImageDescription string `mapstructure:"image_description" required:"false"`
 }
 
-// SetDefaults sets the default values for ImageConfig fields.
 func (c *ImageConfig) SetDefaults() {
 	c.ImageDescription = cmp.Or(c.ImageDescription, DefaultImageDescription)
 }
 
-// Validate validates the ImageConfig fields.
 func (c *ImageConfig) Validate() error {
 	return nil
 }
 
-// VirtualMachineConfig contains configuration for virtual machines.
 type VirtualMachineConfig struct {
 	// Name for the temporary build VM (defaults to "packer-{{uuid}}-vm").
 	VirtualMachineName string `mapstructure:"virtual_machine_name" required:"false"`
@@ -97,13 +91,11 @@ type VirtualMachineConfig struct {
 	CloudConfig string `mapstructure:"cloud_config" required:"false"`
 }
 
-// SetDefaults sets the default values for VirtualMachineConfig fields.
 func (c *VirtualMachineConfig) SetDefaults() {
 	c.VMType = cmp.Or(c.VMType, DefaultVMType)
 	c.CleanupTimeout = cmp.Or(c.CleanupTimeout, DefaultCleanupTimeout)
 }
 
-// Validate validates the VirtualMachineConfig fields.
 func (c *VirtualMachineConfig) Validate() error {
 	var err error
 	if _, parseErr := time.ParseDuration(c.CleanupTimeout); parseErr != nil {
@@ -112,7 +104,6 @@ func (c *VirtualMachineConfig) Validate() error {
 	return err
 }
 
-// DiskConfig contains configuration for disks and source parameters.
 type DiskConfig struct {
 	// Name for the disk (defaults to "packer-{{uuid}}-disk").
 	DiskName string `mapstructure:"disk_name" required:"false"`
@@ -130,14 +121,12 @@ type DiskConfig struct {
 	SourceSnapshot string `mapstructure:"source_snapshot" required:"false"`
 }
 
-// SetDefaults sets the default values for DiskConfig fields.
 func (c *DiskConfig) SetDefaults() {
 	c.DiskType = cmp.Or(c.DiskType, DefaultDiskType)
 	c.DiskIOPS = cmp.Or(c.DiskIOPS, DefaultDiskIOPS)
 	c.DiskSize = cmp.Or(c.DiskSize, DefaultDiskSize)
 }
 
-// Validate validates the DiskConfig fields.
 func (c *DiskConfig) Validate() error {
 	var err error
 	if _, parseErr := bytesize.ParseString(c.DiskSize); parseErr != nil {
@@ -149,7 +138,6 @@ func (c *DiskConfig) Validate() error {
 	return err
 }
 
-// NetworkConfig contains configuration for networks.
 type NetworkConfig struct {
 	// Name for the network (defaults to "packer-{{uuid}}-network").
 	// If specified, Packer will use existing network.
@@ -166,12 +154,10 @@ type NetworkConfig struct {
 	ExternalAddressName string `mapstructure:"external_address_name" required:"false"`
 }
 
-// SetDefaults sets the default values for NetworkConfig fields.
 func (c *NetworkConfig) SetDefaults() {
 	c.SubnetCidr = cmp.Or(c.SubnetCidr, DefaultSubnetCidr)
 }
 
-// Validate validates the NetworkConfig fields.
 func (c *NetworkConfig) Validate() error {
 	var err error
 	if _, parseErr := cidraddress.ParseCIDR4AddressString(c.SubnetCidr); parseErr != nil {

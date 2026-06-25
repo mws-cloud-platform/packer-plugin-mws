@@ -195,6 +195,46 @@ func (c *MockDriverCreateFirewallRuleCall) DoAndReturn(f func(context.Context, m
 	return c
 }
 
+// CreateHMACKey mocks base method.
+func (m *MockDriver) CreateHMACKey(arg0 context.Context, arg1 mws.CreateHMACKeyParams) (string, string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateHMACKey", arg0, arg1)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// CreateHMACKey indicates an expected call of CreateHMACKey.
+func (mr *MockDriverMockRecorder) CreateHMACKey(arg0, arg1 any) *MockDriverCreateHMACKeyCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateHMACKey", reflect.TypeOf((*MockDriver)(nil).CreateHMACKey), arg0, arg1)
+	return &MockDriverCreateHMACKeyCall{Call: call}
+}
+
+// MockDriverCreateHMACKeyCall wrap *gomock.Call
+type MockDriverCreateHMACKeyCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockDriverCreateHMACKeyCall) Return(arg0, arg1 string, arg2 error) *MockDriverCreateHMACKeyCall {
+	c.Call = c.Call.Return(arg0, arg1, arg2)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockDriverCreateHMACKeyCall) Do(f func(context.Context, mws.CreateHMACKeyParams) (string, string, error)) *MockDriverCreateHMACKeyCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockDriverCreateHMACKeyCall) DoAndReturn(f func(context.Context, mws.CreateHMACKeyParams) (string, string, error)) *MockDriverCreateHMACKeyCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
 // CreateImage mocks base method.
 func (m *MockDriver) CreateImage(arg0 context.Context, arg1 mws.CreateImageParams) (*model.ImageOptionalResponse, error) {
 	m.ctrl.T.Helper()
@@ -463,6 +503,44 @@ func (c *MockDriverDeleteFirewallRuleCall) DoAndReturn(f func(context.Context, s
 	return c
 }
 
+// DeleteHMACKey mocks base method.
+func (m *MockDriver) DeleteHMACKey(arg0 context.Context, arg1, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteHMACKey", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteHMACKey indicates an expected call of DeleteHMACKey.
+func (mr *MockDriverMockRecorder) DeleteHMACKey(arg0, arg1, arg2 any) *MockDriverDeleteHMACKeyCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteHMACKey", reflect.TypeOf((*MockDriver)(nil).DeleteHMACKey), arg0, arg1, arg2)
+	return &MockDriverDeleteHMACKeyCall{Call: call}
+}
+
+// MockDriverDeleteHMACKeyCall wrap *gomock.Call
+type MockDriverDeleteHMACKeyCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockDriverDeleteHMACKeyCall) Return(arg0 error) *MockDriverDeleteHMACKeyCall {
+	c.Call = c.Call.Return(arg0)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockDriverDeleteHMACKeyCall) Do(f func(context.Context, string, string) error) *MockDriverDeleteHMACKeyCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockDriverDeleteHMACKeyCall) DoAndReturn(f func(context.Context, string, string) error) *MockDriverDeleteHMACKeyCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
 // DeleteImage mocks base method.
 func (m *MockDriver) DeleteImage(arg0 context.Context, arg1 string) error {
 	m.ctrl.T.Helper()
@@ -611,6 +689,44 @@ func (c *MockDriverDeleteVirtualMachineCall) Do(f func(context.Context, string) 
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
 func (c *MockDriverDeleteVirtualMachineCall) DoAndReturn(f func(context.Context, string) error) *MockDriverDeleteVirtualMachineCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
+// DetachDisksFromVirtualMachine mocks base method.
+func (m *MockDriver) DetachDisksFromVirtualMachine(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DetachDisksFromVirtualMachine", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DetachDisksFromVirtualMachine indicates an expected call of DetachDisksFromVirtualMachine.
+func (mr *MockDriverMockRecorder) DetachDisksFromVirtualMachine(arg0, arg1 any) *MockDriverDetachDisksFromVirtualMachineCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DetachDisksFromVirtualMachine", reflect.TypeOf((*MockDriver)(nil).DetachDisksFromVirtualMachine), arg0, arg1)
+	return &MockDriverDetachDisksFromVirtualMachineCall{Call: call}
+}
+
+// MockDriverDetachDisksFromVirtualMachineCall wrap *gomock.Call
+type MockDriverDetachDisksFromVirtualMachineCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockDriverDetachDisksFromVirtualMachineCall) Return(arg0 error) *MockDriverDetachDisksFromVirtualMachineCall {
+	c.Call = c.Call.Return(arg0)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockDriverDetachDisksFromVirtualMachineCall) Do(f func(context.Context, string) error) *MockDriverDetachDisksFromVirtualMachineCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockDriverDetachDisksFromVirtualMachineCall) DoAndReturn(f func(context.Context, string) error) *MockDriverDetachDisksFromVirtualMachineCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }

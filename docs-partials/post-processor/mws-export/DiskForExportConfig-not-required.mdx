@@ -1,0 +1,14 @@
+<!-- Code generated from the comments of the DiskForExportConfig struct in post-processor/mws-export/config.go; DO NOT EDIT MANUALLY -->
+
+- `disk_for_export_type` (string) - Type of disk for export to create (defaults to "nbs-pl2").
+
+- `additional_disk_for_export_size` (string) - Additional size of the disk for export image (defaults to "0 GB").
+  Adds to image_for_export minDiskSize.
+
+- `disk_for_export_iops` (int64) - IOPS for the disk for export image (defaults to 1000).
+
+- `project_for_export` (string) - Project ID where the image_for_export exists (defaults to the `project`).
+
+- `image_for_export` (string) - ID of an existing image to export (required when post processor used without mws builder).
+
+<!-- End of code generated from the comments of the DiskForExportConfig struct in post-processor/mws-export/config.go; -->

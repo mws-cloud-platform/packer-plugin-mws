@@ -40,18 +40,19 @@ func (b *Builder) Prepare(raws ...any) ([]string, []string, error) {
 		"SourceProject",
 		"SourceImageName",
 		"SourceSnapshotName",
+		"ImageProject",
 		"ImageName",
 	}
 	return generatedDataKeys, nil, nil
 }
 
 func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (packer.Artifact, error) {
-	driver, err := NewDriverMWS(ctx, driverMWSConfig{
-		project:                         b.config.Project,
-		baseEndpoint:                    b.config.BaseEndpoint,
-		serviceAccountAuthorizedKeyPath: b.config.ServiceAccountAuthorizedKeyPath,
-		token:                           b.config.Token,
-		cleanupTimeout:                  b.config.CleanupTimeout,
+	driver, err := NewDriverMWS(ctx, DriverMWSConfig{
+		Project:                         b.config.Project,
+		BaseEndpoint:                    b.config.BaseEndpoint,
+		ServiceAccountAuthorizedKeyPath: b.config.ServiceAccountAuthorizedKeyPath,
+		Token:                           b.config.Token,
+		CleanupTimeout:                  b.config.CleanupTimeout,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("create driver mws: %w", err)
@@ -111,7 +112,7 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 	}
 
 	return &Artifact{
-		StateData: map[string]any{"generated_data": state.Get(GeneratedDataKey)},
+		StateData: map[string]any{GeneratedDataKey: state.Get(GeneratedDataKey)},
 		driver:    driver,
 		image:     image,
 	}, nil

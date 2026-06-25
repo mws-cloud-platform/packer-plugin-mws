@@ -46,6 +46,7 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 
 	state.Put(ImageKey, image)
 
+	s.GeneratedData.Put("ImageProject", config.Project)
 	s.GeneratedData.Put("ImageName", imageName)
 
 	return multistep.ActionContinue
