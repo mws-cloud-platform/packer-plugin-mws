@@ -6,6 +6,7 @@ package mwsexport
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
@@ -14,7 +15,7 @@ import (
 )
 
 type stepPrepareS3Keys struct {
-	S3Config
+	Config
 }
 
 func (s *stepPrepareS3Keys) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
@@ -52,5 +53,21 @@ func (s *stepPrepareS3Keys) Run(ctx context.Context, state multistep.StateBag) m
 }
 
 func (s *stepPrepareS3Keys) Cleanup(state multistep.StateBag) {
-	// TODO delete keys if created by packer
+	driver := state.Get(mws.DriverKey).(mws.Driver)
+	ui := state.Get(mws.UIKey).(packer.Ui)
+	prefix := state.Get(mws.UUIDPrefixKey).(string)
+
+	cleanupTimeout, _ := time.ParseDuration(s.CleanupTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
+	defer cancel()
+
+	if s.ServiceAccount != "" {
+		keyName := prefix + "tmp-hmac-key"
+		if err := driver.DeleteHMACKey(ctx, s.ServiceAccount, keyName); err != nil {
+			ui.Errorf("Error deleting HMAC Key %q. Please delete it manually.\n"+
+				"Error: %v.", keyName, err)
+		} else {
+			ui.Sayf("HMAC Key %q deleted", keyName)
+		}
+	}
 }

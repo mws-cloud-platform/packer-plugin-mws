@@ -130,7 +130,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, artifact 
 
 	steps := []multistep.Step{
 		&stepPrepareS3Keys{
-			S3Config: p.config.S3Config,
+			Config: p.config,
 		},
 		&communicator.StepSSHKeyGen{
 			CommConf:            &config.Communicator,
