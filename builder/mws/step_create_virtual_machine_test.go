@@ -180,6 +180,7 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 					Zone:               mws.DefaultZone,
 					SSHUsername:        mws.DefaultSSHUsername,
 					SSHPublicKey:       testSSHPublicKey,
+					CloudConfig:        state.Get(mws.CloudConfigKey).(*mws.CloudConfig),
 					DiskRef:            expectedDiskRef,
 					ExternalAddressRef: expectedExternalAddressRef,
 					SubnetRef:          new(vpcref.NewSubnetRef(tt.config.Project, expectedNetworkName, expectedSubnetName)),

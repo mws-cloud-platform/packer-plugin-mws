@@ -84,9 +84,11 @@ func prepareState(t *testing.T, config *mws.Config, driver mws.Driver) (*bytes.B
 	config.SetDefaults()
 	require.NoError(t, config.Validate())
 	config.Communicator.SSHPublicKey = []byte(testSSHPublicKey)
+	cloudConfig, _ := mws.NewCloudConfig("")
 	state.Put(mws.ConfigKey, config)
 	state.Put(mws.DriverKey, driver)
 	state.Put(mws.UUIDPrefixKey, packerPrefix)
+	state.Put(mws.CloudConfigKey, cloudConfig)
 	writer := new(bytes.Buffer)
 	ui := &packer.BasicUi{
 		Writer: writer,
