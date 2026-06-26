@@ -31,6 +31,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	driver := state.Get(DriverKey).(Driver)
 	prefix := state.Get(UUIDPrefixKey).(string)
 	ui := state.Get(UIKey).(packer.Ui)
+	cloudConfig := state.Get(CloudConfigKey).(*CloudConfig)
 
 	var (
 		imageRef           *computeref.ImageRef
@@ -118,7 +119,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 		Zone:               config.Zone,
 		SSHUsername:        config.Communicator.SSHUsername,
 		SSHPublicKey:       string(config.Communicator.SSHPublicKey),
-		CloudConfig:        config.CloudConfig,
+		CloudConfig:        cloudConfig,
 		DiskRef:            diskRef,
 		ExternalAddressRef: externalAddressRef,
 		SubnetRef:          subnetRef,

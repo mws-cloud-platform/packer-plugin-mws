@@ -212,7 +212,9 @@ func (d *driverMWS) CreateSubnet(ctx context.Context, params CreateSubnetParams)
 }
 
 func (d *driverMWS) CreateVirtualMachine(ctx context.Context, params CreateVirtualMachineParams) (string, error) {
-	userData, err := prepareCloudConfig(params.SSHUsername, params.SSHPublicKey, params.CloudConfig)
+	userData, err := params.CloudConfig.
+		AppendUserForSSH(params.SSHUsername, params.SSHPublicKey).
+		Render()
 	if err != nil {
 		return "", fmt.Errorf("prepare cloud-config: %w", err)
 	}

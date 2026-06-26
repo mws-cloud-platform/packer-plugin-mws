@@ -58,12 +58,18 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 		return nil, fmt.Errorf("create driver mws: %w", err)
 	}
 
+	cloudConfig, err := NewCloudConfig(b.config.CloudConfig)
+	if err != nil {
+		return nil, fmt.Errorf("create cloud config: %w", err)
+	}
+
 	state := new(multistep.BasicStateBag)
 	state.Put(ConfigKey, &b.config)
 	state.Put(DriverKey, driver)
 	state.Put(HookKey, hook)
 	state.Put(UIKey, ui)
 	state.Put(UUIDPrefixKey, fmt.Sprintf("packer-%s-", uuid.NewString()))
+	state.Put(CloudConfigKey, cloudConfig)
 	generatedData := &packerbuilderdata.GeneratedData{State: state}
 
 	steps := []multistep.Step{

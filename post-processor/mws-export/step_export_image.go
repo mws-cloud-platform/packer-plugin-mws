@@ -4,9 +4,9 @@
 package mwsexport
 
 import (
-	"bytes"
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
@@ -25,15 +25,11 @@ func (s *stepExportImage) Run(ctx context.Context, state multistep.StateBag) mul
 	comm := state.Get("communicator").(packer.Communicator)
 
 	if err := firstError([]func() error{
-		// install tools:
-		// qemu-utils for saving image from disk to qcow2 file
-		// unzip for unpacking aws
-		// aws for image upload to s3
-		execCmd(ctx, comm, ui, `sudo apt-get update`),
-		execCmd(ctx, comm, ui, `sudo apt-get install -y qemu-utils unzip`),
+		// install aws for image upload to s3
 		execCmd(ctx, comm, ui, `curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv.zip"`),
 		execCmd(ctx, comm, ui, `unzip awscliv.zip`),
 		execCmd(ctx, comm, ui, `sudo ./aws/install`),
+		execCmd(ctx, comm, ui, `aws --version`),
 
 		// convert raw image from disk /dev/disk/by-id/mws-image-for-export to image.qcow2 file with compression
 		execCmd(ctx, comm, ui, `sudo qemu-img convert -f raw -O qcow2 -c /dev/disk/by-id/mws-image-for-export image.qcow2`),
@@ -47,10 +43,18 @@ func (s *stepExportImage) Run(ctx context.Context, state multistep.StateBag) mul
 		// sudo curl -o /usr/local/share/ca-certificates/mws-root-ca.crt http://pki.mws.ru/certs/mws-root-ca.crt
 		// sudo update-ca-certificates
 
+		execCmd(ctx, comm, ui, `mkdir .aws`),
+
+		uploadFile(comm, "~/.aws/credentials", fmt.Sprintf(
+			"[default]\naws_access_key_id = %s\naws_secret_access_key = %s\n",
+			accessKey, secretKey)),
+		uploadFile(comm, "~/.aws/config", fmt.Sprintf(
+			"[default]\nregion = %s\nendpoint_url = %s\n",
+			s.S3Region, s.S3Endpoint)),
+
 		// upload image.qcow2 to configured s3
 		execCmd(ctx, comm, ui,
-			fmt.Sprintf(`AWS_ACCESS_KEY_ID="%s" AWS_SECRET_ACCESS_KEY="%s" AWS_DEFAULT_REGION="%s" `, accessKey, secretKey, s.S3Region)+
-				fmt.Sprintf(`aws s3 cp image.qcow2 s3://%s/%s --endpoint-url %s --no-verify-ssl`, s.S3Bucket, s3Path, s.S3Endpoint)),
+			fmt.Sprintf(`aws s3 cp image.qcow2 s3://%s/%s  --no-verify-ssl`, s.S3Bucket, s3Path)),
 	}); err != nil {
 		return mws.ActionHaltWithError(state, err)
 	}
@@ -60,20 +64,24 @@ func (s *stepExportImage) Run(ctx context.Context, state multistep.StateBag) mul
 
 func (s *stepExportImage) Cleanup(state multistep.StateBag) {}
 
+func uploadFile(comm packer.Communicator, fileName, fileContent string) func() error {
+	return func() error {
+		if err := comm.Upload(fileName, strings.NewReader(fileContent), nil); err != nil {
+			return fmt.Errorf("upload file %s: %w", fileName, err)
+		}
+		return nil
+	}
+}
+
 func execCmd(ctx context.Context, comm packer.Communicator, ui packer.Ui, cmdStr string) func() error {
 	return func() error {
-		buf := bytes.Buffer{}
 		cmd := &packer.RemoteCmd{
 			Command: cmdStr,
-			Stdout:  &buf,
-			Stderr:  &buf,
 		}
-		if err := comm.Start(ctx, cmd); err != nil {
+		if err := cmd.RunWithUi(ctx, comm, ui); err != nil {
 			return fmt.Errorf("executing remote command: %w", err)
 		}
-		badCode := cmd.Wait() != 0
-		ui.Say(buf.String())
-		if badCode {
+		if cmd.ExitStatus() != 0 {
 			return fmt.Errorf("bad exit code: %d", cmd.ExitStatus())
 		}
 		return nil

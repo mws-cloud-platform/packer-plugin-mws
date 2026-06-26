@@ -69,7 +69,7 @@ type CreateVirtualMachineParams struct {
 	Zone               string
 	SSHUsername        string
 	SSHPublicKey       string
-	CloudConfig        string
+	CloudConfig        *CloudConfig
 	DiskRef            *computeref.DiskRef
 	ExternalAddressRef *vpcref.ExternalAddressRef
 	SubnetRef          *vpcref.SubnetRef

@@ -4,12 +4,13 @@
 package mws
 
 const (
-	ConfigKey     = "config"
-	DriverKey     = "driver"
-	HookKey       = "hook"
-	UIKey         = "ui"
-	UUIDPrefixKey = "uuid_prefix"
-	ErrorKey      = "error"
+	ConfigKey      = "config"
+	DriverKey      = "driver"
+	HookKey        = "hook"
+	UIKey          = "ui"
+	UUIDPrefixKey  = "uuid_prefix"
+	ErrorKey       = "error"
+	CloudConfigKey = "cloud_config"
 
 	DiskNameKey            = "disk_name"
 	ExternalAddressNameKey = "external_address_name"

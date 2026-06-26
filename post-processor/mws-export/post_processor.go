@@ -108,6 +108,15 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, artifact 
 		s3Path = interpolated
 	}
 
+	cloudConfig, err := mws.NewCloudConfig(config.CloudConfig)
+	if err != nil {
+		return nil, false, false, fmt.Errorf("create cloud config: %w", err)
+	}
+	cloudConfig.SetSection("package_update", true)
+	// qemu-utils for saving image from disk to qcow2 file
+	// unzip for unpacking aws
+	cloudConfig.AppendSection("packages", "qemu-utils", "unzip")
+
 	state := new(multistep.BasicStateBag)
 	state.Put(mws.ConfigKey, &config)
 	state.Put(mws.DriverKey, driver)
@@ -116,6 +125,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, artifact 
 	state.Put(mws.ProjectForExportKey, projectForExport)
 	state.Put(mws.ImageForExportKey, imageForExport)
 	state.Put(mws.S3PathKey, s3Path)
+	state.Put(mws.CloudConfigKey, cloudConfig)
 
 	steps := []multistep.Step{
 		&stepPrepareS3Keys{
