@@ -101,7 +101,8 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, artifact 
 		s3Path = fmt.Sprintf("packer-images/%s.qcow2", imageForExport)
 	} else {
 		ictx := p.config.ctx
-		interpolated, err := interpolate.Render(s3Path, &ictx)
+		var interpolated string
+		interpolated, err = interpolate.Render(s3Path, &ictx)
 		if err != nil {
 			return nil, false, false, fmt.Errorf("error interpolating s3_key: %w", err)
 		}
