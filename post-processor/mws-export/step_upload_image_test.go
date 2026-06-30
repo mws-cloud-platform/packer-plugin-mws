@@ -29,7 +29,7 @@ func TestStepUploadImage_Run(t *testing.T) {
 
 	step := &mwsexport.StepUploadImage{
 		Region:   "ru-central1",
-		Endpoint: "https://storage.mwsapis.ru",
+		Endpoint: "storage.mwsapis.ru",
 		Path:     "path/to/image",
 	}
 
