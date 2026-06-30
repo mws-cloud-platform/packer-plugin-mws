@@ -24,11 +24,12 @@ func (s *StepUploadImage) Run(ctx context.Context, state multistep.StateBag) mul
 
 	uploadCmd := &packer.RemoteCmd{
 		Command: fmt.Sprintf(
-			"%s=%s aws s3 --region=%s --endpoint-url=https://%s cp image.qcow2 %s",
+			"%s=%s aws s3 --region=%s --endpoint-url=https://%s cp %s %s",
 			"AWS_SHARED_CREDENTIALS_FILE",
 			awsSharedCredsFile,
 			s.Region,
 			s.Endpoint,
+			diskImageFile,
 			s.Path,
 		),
 	}
