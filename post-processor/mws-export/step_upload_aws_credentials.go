@@ -37,4 +37,4 @@ func (s *StepUploadAWSSharedCredsFile) Run(ctx context.Context, state multistep.
 	return multistep.ActionContinue
 }
 
-func (s *StepUploadAWSSharedCredsFile) Cleanup(state multistep.StateBag) {}
+func (s *StepUploadAWSSharedCredsFile) Cleanup(multistep.StateBag) {}
