@@ -6,7 +6,6 @@ package mws
 import (
 	"cmp"
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
@@ -30,7 +29,7 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 
 	diskRef, ok := state.Get(DiskRefKey).(*computeref.DiskRef)
 	if !ok || diskRef == nil {
-		return ActionHaltWithError(state, fmt.Errorf("disk ref not found in state: %w", errUnexpected))
+		return ActionHaltWithErrorf(state, "disk ref not found in state: %w", errUnexpected)
 	}
 
 	image, err := driver.CreateImage(ctx, CreateImageParams{
@@ -39,7 +38,7 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 		DiskRef:          diskRef,
 	})
 	if err != nil {
-		return ActionHaltWithError(state, fmt.Errorf("create image: %w", err))
+		return ActionHaltWithErrorf(state, "create image: %w", err)
 	}
 
 	ui.Sayf("Image %q created", imageName)
