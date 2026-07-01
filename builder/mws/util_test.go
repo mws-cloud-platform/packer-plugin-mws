@@ -86,7 +86,7 @@ func prepareState(t *testing.T, config *mws.Config, driver mws.Driver) (*bytes.B
 	config.Communicator.SSHPublicKey = []byte(testSSHPublicKey)
 	state.Put(mws.ConfigKey, config)
 	state.Put(mws.DriverKey, driver)
-	state.Put(mws.UUIDPrefixKey, packerPrefix)
+	state.Put(mws.PrefixKey, packerPrefix)
 	writer := new(bytes.Buffer)
 	ui := &packer.BasicUi{
 		Writer: writer,

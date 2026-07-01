@@ -9,7 +9,7 @@ const (
 	HookKey         = "hook"
 	UIKey           = "ui"
 	CommunicatorKey = "communicator"
-	UUIDPrefixKey   = "uuid_prefix"
+	PrefixKey       = "prefix"
 	ErrorKey        = "error"
 
 	DiskNameKey            = "disk_name"

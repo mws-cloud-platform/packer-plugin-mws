@@ -12,7 +12,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-//go:generate go run go.uber.org/mock/mockgen@v0.6.0 -typed -destination=mock/communicator_mock.go github.com/hashicorp/packer-plugin-sdk/packer Communicator
+//go:generate go run go.uber.org/mock/mockgen@v0.6.0 -typed -package=mock -destination=mock/communicator_mock.go github.com/hashicorp/packer-plugin-sdk/packer Communicator
 
 func expectRemoteCmd(comm *mock.MockCommunicator, command string, err error, exitCode int) {
 	comm.EXPECT().
