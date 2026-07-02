@@ -1,0 +1,3 @@
+Deleting HMAC key...
+Error deleting HMAC key "packer-hmac-key". Please delete it manually.
+Error: internal error.

@@ -62,7 +62,7 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 	state.Put(DriverKey, driver)
 	state.Put(HookKey, hook)
 	state.Put(UIKey, ui)
-	state.Put(UUIDPrefixKey, fmt.Sprintf("packer-%s-", uuid.NewString()))
+	state.Put(PrefixKey, fmt.Sprintf("packer-%s-", uuid.NewString()))
 	generatedData := &packerbuilderdata.GeneratedData{State: state}
 
 	steps := []multistep.Step{

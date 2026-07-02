@@ -20,7 +20,7 @@ type StepCreateImage struct {
 func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	config := state.Get(ConfigKey).(*Config)
 	driver := state.Get(DriverKey).(Driver)
-	prefix := state.Get(UUIDPrefixKey).(string)
+	prefix := state.Get(PrefixKey).(string)
 	ui := state.Get(UIKey).(packer.Ui)
 
 	imageName := cmp.Or(config.ImageName, prefix+"image")
