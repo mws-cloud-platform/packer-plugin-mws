@@ -4,6 +4,7 @@
 package mwsexport
 
 const (
+	DiskForExportNameKey  = "disk_for_export_name"
 	HMACAccessKeyStateKey = "hmac_access_key"
 	HMACSecretKeyStateKey = "hmac_secret_key"
 )
