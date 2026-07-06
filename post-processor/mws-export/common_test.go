@@ -4,8 +4,9 @@
 package mwsexport_test
 
 import (
-	"errors"
 	"time"
+
+	"go.mws.cloud/util-toolset/pkg/utils/consterr"
 )
 
 const (
@@ -13,6 +14,5 @@ const (
 	project        = "test-project"
 	vmName         = "packer-vm"
 	cleanupTimeout = time.Hour
+	errInternal    = consterr.Error("internal error")
 )
-
-var errInternal = errors.New("internal error")

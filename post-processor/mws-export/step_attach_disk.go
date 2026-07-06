@@ -32,7 +32,7 @@ func (s *StepAttachDisk) Run(ctx context.Context, state multistep.StateBag) mult
 	ui.Sayf("Getting image %q info...", s.ImageRef.String())
 	image, err := driver.GetImage(ctx, s.ImageRef)
 	if err != nil {
-		return mws.ActionHaltWithError(state, err)
+		return mws.ActionHaltWithErrorf(state, "get image: %w", err)
 	}
 	if image.GetStatus().GetMinDiskSize() == nil {
 		ui.Error("Image for export has unknown minimum disk size")
@@ -40,7 +40,7 @@ func (s *StepAttachDisk) Run(ctx context.Context, state multistep.StateBag) mult
 	}
 
 	ui.Say("Creating disk from image for export...")
-	if err := driver.CreateDisk(ctx, mws.CreateDiskParams{
+	if err = driver.CreateDisk(ctx, mws.CreateDiskParams{
 		DiskName: diskName,
 		DiskType: s.DiskType,
 		Size:     *image.GetStatus().GetMinDiskSize(),
@@ -48,15 +48,15 @@ func (s *StepAttachDisk) Run(ctx context.Context, state multistep.StateBag) mult
 		ImageRef: &s.ImageRef,
 		Zone:     s.Zone,
 	}); err != nil {
-		return mws.ActionHaltWithError(state, err)
+		return mws.ActionHaltWithErrorf(state, "create disk: %w", err)
 	}
 
 	state.Put(DiskForExportNameKey, diskName)
 	diskRef := computeref.NewDiskRef(s.Project, diskName)
 
 	ui.Sayf("Attaching disk for export %q to the virtual machine %q...", diskName, vmName)
-	if err := driver.AttachDiskToVirtualMachine(ctx, vmName, diskRef); err != nil {
-		return mws.ActionHaltWithError(state, err)
+	if err = driver.AttachDiskToVirtualMachine(ctx, vmName, diskRef); err != nil {
+		return mws.ActionHaltWithErrorf(state, "attach disk to virtual machine: %w", err)
 	}
 
 	ui.Sayf("Disk for export %q attached", diskName)
