@@ -1,0 +1,3 @@
+Error detaching disk for export "packer-disk-for-export" from virtual machine "packer-vm". Error: internal error.
+Trying to delete it anyway...
+Disk for export "packer-disk-for-export" deleted

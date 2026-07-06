@@ -5,7 +5,6 @@ package mwsexport_test
 
 import (
 	"bytes"
-	"errors"
 	"path"
 	"testing"
 
@@ -61,7 +60,7 @@ func TestStepDumpDiskImage_Run(t *testing.T) {
 				t.Helper()
 				ctrl := gomock.NewController(t)
 				comm := mock.NewMockCommunicator(ctrl)
-				expectRemoteCmd(comm, checkAccessCommand, errors.New("internal error"), 0)
+				expectRemoteCmd(comm, checkAccessCommand, errInternal, 0)
 				return comm
 			}(t),
 			expectedAction: multistep.ActionHalt,
@@ -73,7 +72,7 @@ func TestStepDumpDiskImage_Run(t *testing.T) {
 				ctrl := gomock.NewController(t)
 				comm := mock.NewMockCommunicator(ctrl)
 				expectRemoteCmd(comm, checkAccessCommand, nil, 0)
-				expectRemoteCmd(comm, dumpCommand, errors.New("internal error"), 0)
+				expectRemoteCmd(comm, dumpCommand, errInternal, 0)
 				return comm
 			}(t),
 			expectedAction: multistep.ActionHalt,

@@ -5,10 +5,8 @@ package mwsexport_test
 
 import (
 	"bytes"
-	"errors"
 	"path"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
@@ -21,10 +19,8 @@ import (
 )
 
 const (
-	prefix         = "packer-"
 	hmacKeyName    = prefix + "hmac-key"
 	serviceAccount = "sa"
-	cleanupTimeout = time.Hour
 )
 
 func TestStepCreateHMACKey_Run(t *testing.T) {
@@ -37,9 +33,10 @@ func TestStepCreateHMACKey_Run(t *testing.T) {
 		err  error
 	}{
 		{name: "ok"},
-		{name: "error", err: errors.New("internal error")},
+		{name: "error", err: errInternal},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			ctrl := gomock.NewController(t)
 
 			state := new(multistep.BasicStateBag)
@@ -80,9 +77,10 @@ func TestStepCreateHMACKey_Cleanup(t *testing.T) {
 		err  error
 	}{
 		{name: "ok"},
-		{name: "error", err: errors.New("internal error")},
+		{name: "error", err: errInternal},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			ctrl := gomock.NewController(t)
 
 			state := new(multistep.BasicStateBag)
