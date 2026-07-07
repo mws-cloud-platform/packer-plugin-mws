@@ -40,6 +40,7 @@ func (b *Builder) Prepare(raws ...any) ([]string, []string, error) {
 		"SourceProject",
 		"SourceImageName",
 		"SourceSnapshotName",
+		"ImageProject",
 		"ImageName",
 	}
 	return generatedDataKeys, nil, nil
@@ -89,7 +90,10 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			Comm: &b.config.Communicator,
 		},
 		&StepCreateImage{
-			GeneratedData: generatedData,
+			Project:          b.config.Project,
+			ImageName:        b.config.ImageName,
+			ImageDescription: b.config.ImageDescription,
+			GeneratedData:    generatedData,
 		},
 	}
 

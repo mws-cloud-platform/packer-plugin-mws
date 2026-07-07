@@ -14,16 +14,19 @@ import (
 )
 
 type StepCreateImage struct {
+	Project          string
+	ImageName        string
+	ImageDescription string
+
 	GeneratedData *packerbuilderdata.GeneratedData
 }
 
 func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	config := state.Get(ConfigKey).(*Config)
 	driver := state.Get(DriverKey).(Driver)
 	prefix := state.Get(PrefixKey).(string)
 	ui := state.Get(UIKey).(packer.Ui)
 
-	imageName := cmp.Or(config.ImageName, prefix+"image")
+	imageName := cmp.Or(s.ImageName, prefix+"image")
 
 	ui.Sayf("Creating image %q from virtual machine %q...", imageName, state.Get(VirtualMachineNameKey))
 
@@ -34,7 +37,7 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 
 	image, err := driver.CreateImage(ctx, CreateImageParams{
 		ImageName:        imageName,
-		ImageDescription: config.ImageDescription,
+		ImageDescription: s.ImageDescription,
 		DiskRef:          diskRef,
 	})
 	if err != nil {
@@ -45,6 +48,7 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 
 	state.Put(ImageKey, image)
 
+	s.GeneratedData.Put("ImageProject", s.Project)
 	s.GeneratedData.Put("ImageName", imageName)
 
 	return multistep.ActionContinue
