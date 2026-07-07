@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
+	drivermws "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 	computeref "go.mws.cloud/go-sdk/service/resources/references/compute"
 )
 
@@ -40,7 +41,7 @@ func (s *StepAttachDisk) Run(ctx context.Context, state multistep.StateBag) mult
 	}
 
 	ui.Say("Creating disk from image for export...")
-	if err = driver.CreateDisk(ctx, mws.CreateDiskParams{
+	if err = driver.CreateDisk(ctx, drivermws.CreateDiskParams{
 		DiskName: diskName,
 		DiskType: s.DiskType,
 		Size:     *image.GetStatus().GetMinDiskSize(),

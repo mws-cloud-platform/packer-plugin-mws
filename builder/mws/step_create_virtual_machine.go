@@ -6,11 +6,11 @@ package mws
 import (
 	"cmp"
 	"context"
-	"time"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/packerbuilderdata"
+	drivermws "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 	"go.mws.cloud/go-sdk/pkg/apimodels/cidraddress"
 	"go.mws.cloud/go-sdk/pkg/apimodels/units/bytesize"
 	computeref "go.mws.cloud/go-sdk/service/resources/references/compute"
@@ -46,7 +46,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 
 	diskName := cmp.Or(config.DiskName, prefix+"disk")
 	ui.Sayf("Creating disk...")
-	if err := driver.CreateDisk(ctx, CreateDiskParams{
+	if err := driver.CreateDisk(ctx, drivermws.CreateDiskParams{
 		DiskName:    diskName,
 		DiskType:    config.DiskType,
 		Size:        bytesize.MustParseString(config.DiskSize),
@@ -67,7 +67,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	if config.UseExternalAddress {
 		externalAddressName := cmp.Or(config.ExternalAddressName, prefix+"external-address")
 		ui.Sayf("Creating external address...")
-		externalAddress, err := driver.CreateExternalAddress(ctx, CreateExternalAddressParams{
+		externalAddress, err := driver.CreateExternalAddress(ctx, drivermws.CreateExternalAddressParams{
 			ExternalAddressName: externalAddressName,
 		})
 		if err != nil {
@@ -83,7 +83,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	networkName := cmp.Or(config.NetworkName, prefix+"network")
 	if config.NetworkName == "" {
 		ui.Sayf("Creating network...")
-		if err := driver.CreateNetwork(ctx, CreateNetworkParams{
+		if err := driver.CreateNetwork(ctx, drivermws.CreateNetworkParams{
 			NetworkName: networkName,
 		}); err != nil {
 			return ActionHaltWithErrorf(state, "create network %q: %w", networkName, err)
@@ -96,7 +96,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	subnetName := cmp.Or(config.SubnetName, prefix+"subnet")
 	if config.SubnetName == "" {
 		ui.Sayf("Creating subnet...")
-		if err := driver.CreateSubnet(ctx, CreateSubnetParams{
+		if err := driver.CreateSubnet(ctx, drivermws.CreateSubnetParams{
 			NetworkName: networkName,
 			SubnetName:  subnetName,
 			SubnetCidr:  cidraddress.MustParseCIDR4AddressString(config.SubnetCidr),
@@ -111,7 +111,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 
 	virtualMachineName := cmp.Or(config.VirtualMachineName, prefix+"vm")
 	ui.Sayf("Creating virtual machine...")
-	internalAddress, err := driver.CreateVirtualMachine(ctx, CreateVirtualMachineParams{
+	internalAddress, err := driver.CreateVirtualMachine(ctx, drivermws.CreateVirtualMachineParams{
 		VirtualMachineName: virtualMachineName,
 		VMType:             config.VMType,
 		Zone:               config.Zone,
@@ -131,7 +131,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 
 	if config.UseExternalAddress {
 		ui.Sayf("Creating firewall rule...")
-		err = driver.CreateFirewallRule(ctx, CreateFirewallRuleParams{
+		err = driver.CreateFirewallRule(ctx, drivermws.CreateFirewallRuleParams{
 			NetworkName:                   networkName,
 			FirewallRuleName:              FirewallRuleName,
 			VirtualMachineInternalAddress: internalAddress,
@@ -162,8 +162,7 @@ func (s *StepCreateVirtualMachine) Cleanup(state multistep.StateBag) {
 	driver := state.Get(DriverKey).(Driver)
 	ui := state.Get(UIKey).(packer.Ui)
 
-	cleanupTimeout, _ := time.ParseDuration(config.CleanupTimeout)
-	ctx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), config.CleanupTimeout)
 	defer cancel()
 
 	diskName := stateGetOkString(state, DiskNameKey)

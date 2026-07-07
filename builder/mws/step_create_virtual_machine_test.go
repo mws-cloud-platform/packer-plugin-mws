@@ -5,7 +5,6 @@ package mws_test
 
 import (
 	"cmp"
-	"context"
 	"errors"
 	"fmt"
 	"path"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
 	mockmws "github.com/mws-cloud-platform/packer-plugin-mws/builder/mws/mock"
+	drivermws "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 	"go.mws.cloud/go-sdk/pkg/apimodels/cidraddress"
 	"go.mws.cloud/go-sdk/pkg/apimodels/units/bytesize"
 	computeref "go.mws.cloud/go-sdk/service/resources/references/compute"
@@ -102,7 +102,7 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 			}
 
 			driver.EXPECT().
-				CreateDisk(gomock.Any(), mws.CreateDiskParams{
+				CreateDisk(gomock.Any(), drivermws.CreateDiskParams{
 					DiskName: expectedDiskName,
 					DiskType: mws.DefaultDiskType,
 					Size:     bytesize.MustParseString(mws.DefaultDiskSize),
@@ -114,7 +114,7 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 
 			if tt.config.UseExternalAddress {
 				driver.EXPECT().
-					CreateExternalAddress(gomock.Any(), mws.CreateExternalAddressParams{
+					CreateExternalAddress(gomock.Any(), drivermws.CreateExternalAddressParams{
 						ExternalAddressName: expectedExternalAddressName,
 					}).
 					Return(testExternalAddress, nil).
@@ -122,7 +122,7 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 
 				if tt.config.NetworkName == "" {
 					driver.EXPECT().
-						CreateNetwork(gomock.Any(), mws.CreateNetworkParams{
+						CreateNetwork(gomock.Any(), drivermws.CreateNetworkParams{
 							NetworkName: expectedNetworkName,
 						}).
 						Times(1)
@@ -130,7 +130,7 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 
 				if tt.config.SubnetName == "" {
 					driver.EXPECT().
-						CreateSubnet(gomock.Any(), mws.CreateSubnetParams{
+						CreateSubnet(gomock.Any(), drivermws.CreateSubnetParams{
 							NetworkName: expectedNetworkName,
 							SubnetName:  expectedSubnetName,
 							SubnetCidr:  cidraddress.MustParseCIDR4AddressString(mws.DefaultSubnetCidr),
@@ -140,7 +140,7 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 			}
 
 			driver.EXPECT().
-				CreateVirtualMachine(gomock.Any(), mws.CreateVirtualMachineParams{
+				CreateVirtualMachine(gomock.Any(), drivermws.CreateVirtualMachineParams{
 					VirtualMachineName: expectedVirtualMachineName,
 					VMType:             mws.DefaultVMType,
 					Zone:               mws.DefaultZone,
@@ -155,7 +155,7 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 
 			if tt.config.UseExternalAddress {
 				driver.EXPECT().
-					CreateFirewallRule(gomock.Any(), mws.CreateFirewallRuleParams{
+					CreateFirewallRule(gomock.Any(), drivermws.CreateFirewallRuleParams{
 						NetworkName:                   expectedNetworkName,
 						FirewallRuleName:              mws.FirewallRuleName,
 						VirtualMachineInternalAddress: testInternalAddress,
@@ -167,7 +167,7 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 				GeneratedData: &packerbuilderdata.GeneratedData{State: state},
 			}
 
-			requireActionContinue(t, state, step.Run(context.Background(), state))
+			requireActionContinue(t, state, step.Run(t.Context(), state))
 			requireStateGets(t, state,
 				map[string]any{
 					mws.DiskNameKey:           expectedDiskName,
@@ -501,7 +501,7 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 				GeneratedData: &packerbuilderdata.GeneratedData{State: state},
 			}
 
-			requireActionHalt(t, state, step.Run(context.Background(), state))
+			requireActionHalt(t, state, step.Run(t.Context(), state))
 			requireStateGets(t, state, requireStateKV)
 
 			expectedDir.String(t, tt.name+".out", writer.String())

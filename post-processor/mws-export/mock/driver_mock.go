@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	mws "github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
+	driver "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 	model "go.mws.cloud/go-sdk/service/compute/model"
 	compute "go.mws.cloud/go-sdk/service/resources/references/compute"
 	gomock "go.uber.org/mock/gomock"
@@ -82,7 +82,7 @@ func (c *MockDriverAttachDiskToVirtualMachineCall) DoAndReturn(f func(context.Co
 }
 
 // CreateDisk mocks base method.
-func (m *MockDriver) CreateDisk(arg0 context.Context, arg1 mws.CreateDiskParams) error {
+func (m *MockDriver) CreateDisk(arg0 context.Context, arg1 driver.CreateDiskParams) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateDisk", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -108,13 +108,13 @@ func (c *MockDriverCreateDiskCall) Return(arg0 error) *MockDriverCreateDiskCall 
 }
 
 // Do rewrite *gomock.Call.Do
-func (c *MockDriverCreateDiskCall) Do(f func(context.Context, mws.CreateDiskParams) error) *MockDriverCreateDiskCall {
+func (c *MockDriverCreateDiskCall) Do(f func(context.Context, driver.CreateDiskParams) error) *MockDriverCreateDiskCall {
 	c.Call = c.Call.Do(f)
 	return c
 }
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *MockDriverCreateDiskCall) DoAndReturn(f func(context.Context, mws.CreateDiskParams) error) *MockDriverCreateDiskCall {
+func (c *MockDriverCreateDiskCall) DoAndReturn(f func(context.Context, driver.CreateDiskParams) error) *MockDriverCreateDiskCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }

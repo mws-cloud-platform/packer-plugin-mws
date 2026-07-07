@@ -14,6 +14,7 @@ import (
 
 	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
 	mockmws "github.com/mws-cloud-platform/packer-plugin-mws/builder/mws/mock"
+	drivermws "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 	"go.mws.cloud/go-sdk/pkg/optional"
 	resmodels "go.mws.cloud/go-sdk/pkg/resources/models"
 	commonmodel "go.mws.cloud/go-sdk/service/common/model"
@@ -34,7 +35,7 @@ func TestStepCreateImage(t *testing.T) {
 		}),
 	}
 
-	difkRef := new(computeref.NewDiskRef(testProjectName, testDiskName))
+	diskRef := new(computeref.NewDiskRef(testProjectName, testDiskName))
 
 	for _, tt := range []struct {
 		name             string
@@ -51,13 +52,13 @@ func TestStepCreateImage(t *testing.T) {
 			imageName:        testImageName,
 			imageDescription: testImageDescription,
 			prepare: func(state multistep.StateBag, driver *mockmws.MockDriver) {
-				state.Put(mws.DiskRefKey, difkRef)
+				state.Put(mws.DiskRefKey, diskRef)
 
 				driver.EXPECT().
-					CreateImage(gomock.Any(), mws.CreateImageParams{
+					CreateImage(gomock.Any(), drivermws.CreateImageParams{
 						ImageName:        testImageName,
 						ImageDescription: testImageDescription,
-						DiskRef:          difkRef,
+						DiskRef:          diskRef,
 					}).
 					Return(image, nil).
 					Times(1)
@@ -70,13 +71,13 @@ func TestStepCreateImage(t *testing.T) {
 			imageName:        testImageName,
 			imageDescription: testImageDescription,
 			prepare: func(state multistep.StateBag, driver *mockmws.MockDriver) {
-				state.Put(mws.DiskRefKey, difkRef)
+				state.Put(mws.DiskRefKey, diskRef)
 
 				driver.EXPECT().
-					CreateImage(gomock.Any(), mws.CreateImageParams{
+					CreateImage(gomock.Any(), drivermws.CreateImageParams{
 						ImageName:        testImageName,
 						ImageDescription: testImageDescription,
-						DiskRef:          difkRef,
+						DiskRef:          diskRef,
 					}).
 					Return(nil, errInternal).
 					Times(1)

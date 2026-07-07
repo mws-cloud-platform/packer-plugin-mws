@@ -28,6 +28,6 @@
  "SubnetCidr": "10.0.0.0/8",
  "UseExternalAddress": true,
  "ExternalAddressName": "test-external-address",
- "CleanupTimeout": "2h",
+ "CleanupTimeout": 7200000000000,
  "CloudConfig": ""
 }

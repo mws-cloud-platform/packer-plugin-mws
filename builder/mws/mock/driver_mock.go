@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	mws "github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
+	driver "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 	model "go.mws.cloud/go-sdk/service/compute/model"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -43,7 +43,7 @@ func (m *MockDriver) EXPECT() *MockDriverMockRecorder {
 }
 
 // CreateDisk mocks base method.
-func (m *MockDriver) CreateDisk(arg0 context.Context, arg1 mws.CreateDiskParams) error {
+func (m *MockDriver) CreateDisk(arg0 context.Context, arg1 driver.CreateDiskParams) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateDisk", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -69,19 +69,19 @@ func (c *MockDriverCreateDiskCall) Return(arg0 error) *MockDriverCreateDiskCall 
 }
 
 // Do rewrite *gomock.Call.Do
-func (c *MockDriverCreateDiskCall) Do(f func(context.Context, mws.CreateDiskParams) error) *MockDriverCreateDiskCall {
+func (c *MockDriverCreateDiskCall) Do(f func(context.Context, driver.CreateDiskParams) error) *MockDriverCreateDiskCall {
 	c.Call = c.Call.Do(f)
 	return c
 }
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *MockDriverCreateDiskCall) DoAndReturn(f func(context.Context, mws.CreateDiskParams) error) *MockDriverCreateDiskCall {
+func (c *MockDriverCreateDiskCall) DoAndReturn(f func(context.Context, driver.CreateDiskParams) error) *MockDriverCreateDiskCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
 
 // CreateExternalAddress mocks base method.
-func (m *MockDriver) CreateExternalAddress(arg0 context.Context, arg1 mws.CreateExternalAddressParams) (string, error) {
+func (m *MockDriver) CreateExternalAddress(arg0 context.Context, arg1 driver.CreateExternalAddressParams) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateExternalAddress", arg0, arg1)
 	ret0, _ := ret[0].(string)
@@ -108,19 +108,19 @@ func (c *MockDriverCreateExternalAddressCall) Return(arg0 string, arg1 error) *M
 }
 
 // Do rewrite *gomock.Call.Do
-func (c *MockDriverCreateExternalAddressCall) Do(f func(context.Context, mws.CreateExternalAddressParams) (string, error)) *MockDriverCreateExternalAddressCall {
+func (c *MockDriverCreateExternalAddressCall) Do(f func(context.Context, driver.CreateExternalAddressParams) (string, error)) *MockDriverCreateExternalAddressCall {
 	c.Call = c.Call.Do(f)
 	return c
 }
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *MockDriverCreateExternalAddressCall) DoAndReturn(f func(context.Context, mws.CreateExternalAddressParams) (string, error)) *MockDriverCreateExternalAddressCall {
+func (c *MockDriverCreateExternalAddressCall) DoAndReturn(f func(context.Context, driver.CreateExternalAddressParams) (string, error)) *MockDriverCreateExternalAddressCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
 
 // CreateFirewallRule mocks base method.
-func (m *MockDriver) CreateFirewallRule(arg0 context.Context, arg1 mws.CreateFirewallRuleParams) error {
+func (m *MockDriver) CreateFirewallRule(arg0 context.Context, arg1 driver.CreateFirewallRuleParams) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateFirewallRule", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -146,19 +146,19 @@ func (c *MockDriverCreateFirewallRuleCall) Return(arg0 error) *MockDriverCreateF
 }
 
 // Do rewrite *gomock.Call.Do
-func (c *MockDriverCreateFirewallRuleCall) Do(f func(context.Context, mws.CreateFirewallRuleParams) error) *MockDriverCreateFirewallRuleCall {
+func (c *MockDriverCreateFirewallRuleCall) Do(f func(context.Context, driver.CreateFirewallRuleParams) error) *MockDriverCreateFirewallRuleCall {
 	c.Call = c.Call.Do(f)
 	return c
 }
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *MockDriverCreateFirewallRuleCall) DoAndReturn(f func(context.Context, mws.CreateFirewallRuleParams) error) *MockDriverCreateFirewallRuleCall {
+func (c *MockDriverCreateFirewallRuleCall) DoAndReturn(f func(context.Context, driver.CreateFirewallRuleParams) error) *MockDriverCreateFirewallRuleCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
 
 // CreateImage mocks base method.
-func (m *MockDriver) CreateImage(arg0 context.Context, arg1 mws.CreateImageParams) (*model.ImageOptionalResponse, error) {
+func (m *MockDriver) CreateImage(arg0 context.Context, arg1 driver.CreateImageParams) (*model.ImageOptionalResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateImage", arg0, arg1)
 	ret0, _ := ret[0].(*model.ImageOptionalResponse)
@@ -185,19 +185,19 @@ func (c *MockDriverCreateImageCall) Return(arg0 *model.ImageOptionalResponse, ar
 }
 
 // Do rewrite *gomock.Call.Do
-func (c *MockDriverCreateImageCall) Do(f func(context.Context, mws.CreateImageParams) (*model.ImageOptionalResponse, error)) *MockDriverCreateImageCall {
+func (c *MockDriverCreateImageCall) Do(f func(context.Context, driver.CreateImageParams) (*model.ImageOptionalResponse, error)) *MockDriverCreateImageCall {
 	c.Call = c.Call.Do(f)
 	return c
 }
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *MockDriverCreateImageCall) DoAndReturn(f func(context.Context, mws.CreateImageParams) (*model.ImageOptionalResponse, error)) *MockDriverCreateImageCall {
+func (c *MockDriverCreateImageCall) DoAndReturn(f func(context.Context, driver.CreateImageParams) (*model.ImageOptionalResponse, error)) *MockDriverCreateImageCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
 
 // CreateNetwork mocks base method.
-func (m *MockDriver) CreateNetwork(arg0 context.Context, arg1 mws.CreateNetworkParams) error {
+func (m *MockDriver) CreateNetwork(arg0 context.Context, arg1 driver.CreateNetworkParams) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateNetwork", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -223,19 +223,19 @@ func (c *MockDriverCreateNetworkCall) Return(arg0 error) *MockDriverCreateNetwor
 }
 
 // Do rewrite *gomock.Call.Do
-func (c *MockDriverCreateNetworkCall) Do(f func(context.Context, mws.CreateNetworkParams) error) *MockDriverCreateNetworkCall {
+func (c *MockDriverCreateNetworkCall) Do(f func(context.Context, driver.CreateNetworkParams) error) *MockDriverCreateNetworkCall {
 	c.Call = c.Call.Do(f)
 	return c
 }
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *MockDriverCreateNetworkCall) DoAndReturn(f func(context.Context, mws.CreateNetworkParams) error) *MockDriverCreateNetworkCall {
+func (c *MockDriverCreateNetworkCall) DoAndReturn(f func(context.Context, driver.CreateNetworkParams) error) *MockDriverCreateNetworkCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
 
 // CreateSubnet mocks base method.
-func (m *MockDriver) CreateSubnet(arg0 context.Context, arg1 mws.CreateSubnetParams) error {
+func (m *MockDriver) CreateSubnet(arg0 context.Context, arg1 driver.CreateSubnetParams) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateSubnet", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -261,19 +261,19 @@ func (c *MockDriverCreateSubnetCall) Return(arg0 error) *MockDriverCreateSubnetC
 }
 
 // Do rewrite *gomock.Call.Do
-func (c *MockDriverCreateSubnetCall) Do(f func(context.Context, mws.CreateSubnetParams) error) *MockDriverCreateSubnetCall {
+func (c *MockDriverCreateSubnetCall) Do(f func(context.Context, driver.CreateSubnetParams) error) *MockDriverCreateSubnetCall {
 	c.Call = c.Call.Do(f)
 	return c
 }
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *MockDriverCreateSubnetCall) DoAndReturn(f func(context.Context, mws.CreateSubnetParams) error) *MockDriverCreateSubnetCall {
+func (c *MockDriverCreateSubnetCall) DoAndReturn(f func(context.Context, driver.CreateSubnetParams) error) *MockDriverCreateSubnetCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
 
 // CreateVirtualMachine mocks base method.
-func (m *MockDriver) CreateVirtualMachine(arg0 context.Context, arg1 mws.CreateVirtualMachineParams) (string, error) {
+func (m *MockDriver) CreateVirtualMachine(arg0 context.Context, arg1 driver.CreateVirtualMachineParams) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateVirtualMachine", arg0, arg1)
 	ret0, _ := ret[0].(string)
@@ -300,13 +300,13 @@ func (c *MockDriverCreateVirtualMachineCall) Return(arg0 string, arg1 error) *Mo
 }
 
 // Do rewrite *gomock.Call.Do
-func (c *MockDriverCreateVirtualMachineCall) Do(f func(context.Context, mws.CreateVirtualMachineParams) (string, error)) *MockDriverCreateVirtualMachineCall {
+func (c *MockDriverCreateVirtualMachineCall) Do(f func(context.Context, driver.CreateVirtualMachineParams) (string, error)) *MockDriverCreateVirtualMachineCall {
 	c.Call = c.Call.Do(f)
 	return c
 }
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *MockDriverCreateVirtualMachineCall) DoAndReturn(f func(context.Context, mws.CreateVirtualMachineParams) (string, error)) *MockDriverCreateVirtualMachineCall {
+func (c *MockDriverCreateVirtualMachineCall) DoAndReturn(f func(context.Context, driver.CreateVirtualMachineParams) (string, error)) *MockDriverCreateVirtualMachineCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }

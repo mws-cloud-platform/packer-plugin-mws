@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/packerbuilderdata"
+	drivermws "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 	computeref "go.mws.cloud/go-sdk/service/resources/references/compute"
 )
 
@@ -35,7 +36,7 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 		return ActionHaltWithErrorf(state, "disk ref not found in state: %w", errUnexpected)
 	}
 
-	image, err := driver.CreateImage(ctx, CreateImageParams{
+	image, err := driver.CreateImage(ctx, drivermws.CreateImageParams{
 		ImageName:        imageName,
 		ImageDescription: s.ImageDescription,
 		DiskRef:          diskRef,
