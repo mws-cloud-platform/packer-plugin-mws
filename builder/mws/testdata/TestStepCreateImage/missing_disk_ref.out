@@ -1,2 +1,2 @@
 Creating image "test-image" from virtual machine "packer-vm"...
-Image "test-image" created
+disk ref not found in state: plugin unexpected error

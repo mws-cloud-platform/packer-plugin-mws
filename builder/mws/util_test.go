@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
 	"github.com/stretchr/testify/require"
+	"go.mws.cloud/util-toolset/pkg/utils/consterr"
 )
 
 const (
@@ -35,7 +36,8 @@ const (
 	defaultNetworkName         = packerPrefix + "network"
 	defaultSubnetName          = packerPrefix + "subnet"
 	defaultVirtualMachineName  = packerPrefix + "vm"
-	defaultImageName           = packerPrefix + "image"
+
+	errInternal = consterr.Error("internal error")
 )
 
 func requireGeneratedDataGet(t *testing.T, state multistep.StateBag, key string, expected any) {
