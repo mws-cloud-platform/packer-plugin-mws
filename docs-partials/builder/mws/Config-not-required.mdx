@@ -47,7 +47,7 @@
 - `external_address_name` (string) - External address name (defaults to "packer-{{uuid}}-external-address").
   Can be specified only if external address usage is enabled.
 
-- `cleanup_timeout` (string) - Timeout for cleanup of create virtual machine step (defaults to "1h").
+- `cleanup_timeout` (duration string | ex: "1h5m2s") - Timeout for cleanup of create virtual machine step (defaults to "1h").
 
 - `cloud_config` (string) - Configuration script for initial setup of a virtual machine in the
   [#cloud-config](https://docs.cloud-init.io/en/latest/explanation/format/cloud-config.html)

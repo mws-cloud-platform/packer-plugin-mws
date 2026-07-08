@@ -1,7 +1,7 @@
 // Copyright 2026 MTS Web Services, LLC.
 // SPDX-License-Identifier: MPL-2.0
 
-package mws
+package cloudinit
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func prepareCloudConfig(sshUsername, sshPublicKey, customCloudConfig string) (string, error) {
+func PrepareCloudConfig(sshUsername, sshPublicKey, customCloudConfig string) (string, error) {
 	config := make(map[string]any)
 	if customCloudConfig != "" {
 		if err := yaml.Unmarshal([]byte(customCloudConfig), &config); err != nil {

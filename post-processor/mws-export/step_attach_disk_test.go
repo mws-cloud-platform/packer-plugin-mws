@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
+	drivermws "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 	mwsexport "github.com/mws-cloud-platform/packer-plugin-mws/post-processor/mws-export"
 	"github.com/mws-cloud-platform/packer-plugin-mws/post-processor/mws-export/mock"
 	"github.com/stretchr/testify/require"
@@ -48,7 +49,7 @@ func TestStepAttachDisk_Run(t *testing.T) {
 							MinDiskSize: &minDiskSize,
 						},
 					}, nil)
-				driver.EXPECT().CreateDisk(gomock.Any(), mws.CreateDiskParams{
+				driver.EXPECT().CreateDisk(gomock.Any(), drivermws.CreateDiskParams{
 					DiskName: diskForExportName,
 					DiskType: mws.DefaultDiskType,
 					Size:     minDiskSize,
@@ -93,7 +94,7 @@ func TestStepAttachDisk_Run(t *testing.T) {
 							MinDiskSize: &minDiskSize,
 						},
 					}, nil)
-				driver.EXPECT().CreateDisk(gomock.Any(), mws.CreateDiskParams{
+				driver.EXPECT().CreateDisk(gomock.Any(), drivermws.CreateDiskParams{
 					DiskName: diskForExportName,
 					DiskType: mws.DefaultDiskType,
 					Size:     minDiskSize,
@@ -115,7 +116,7 @@ func TestStepAttachDisk_Run(t *testing.T) {
 							MinDiskSize: &minDiskSize,
 						},
 					}, nil)
-				driver.EXPECT().CreateDisk(gomock.Any(), mws.CreateDiskParams{
+				driver.EXPECT().CreateDisk(gomock.Any(), drivermws.CreateDiskParams{
 					DiskName: diskForExportName,
 					DiskType: mws.DefaultDiskType,
 					Size:     minDiskSize,

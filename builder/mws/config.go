@@ -31,7 +31,7 @@ const (
 	DefaultDiskIOPS         = int64(1000)
 	DefaultSubnetCidr       = "192.168.0.0/16"
 	DefaultImageDescription = "Image created by Packer"
-	DefaultCleanupTimeout   = "1h"
+	DefaultCleanupTimeout   = time.Hour
 )
 
 type Config struct {
@@ -94,7 +94,7 @@ type Config struct {
 	ExternalAddressName string `mapstructure:"external_address_name" required:"false"`
 
 	// Timeout for cleanup of create virtual machine step (defaults to "1h").
-	CleanupTimeout string `mapstructure:"cleanup_timeout" required:"false"`
+	CleanupTimeout time.Duration `mapstructure:"cleanup_timeout" required:"false"`
 
 	// Configuration script for initial setup of a virtual machine in the
 	// [#cloud-config](https://docs.cloud-init.io/en/latest/explanation/format/cloud-config.html)
@@ -147,9 +147,6 @@ func (c *Config) Validate() error {
 	}
 	if c.SubnetName != "" && c.NetworkName == "" {
 		err = errors.Join(err, consterr.Error("when subnet_name is provided, network_name must be provided"))
-	}
-	if _, parseErr := time.ParseDuration(c.CleanupTimeout); parseErr != nil {
-		err = errors.Join(err, fmt.Errorf("parse cleanup timeout: %w", parseErr))
 	}
 	if !c.UseExternalAddress && c.SubnetName == "" {
 		err = errors.Join(err, consterr.Error("when use_external_address is false, subnet_name must be provided"))

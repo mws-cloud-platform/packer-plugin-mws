@@ -1,13 +1,14 @@
 // Copyright 2026 MTS Web Services, LLC.
 // SPDX-License-Identifier: MPL-2.0
 
-package mws
+package driver
 
 import (
 	"context"
 	"fmt"
 	"time"
 
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/cloudinit"
 	"go.mws.cloud/go-sdk/mws"
 	"go.mws.cloud/go-sdk/mws/wait"
 	"go.mws.cloud/go-sdk/pkg/apimodels/cidraddress"
@@ -22,15 +23,7 @@ import (
 	"go.mws.cloud/util-toolset/pkg/utils/consterr"
 )
 
-type driverMWSConfig struct {
-	project                         string
-	baseEndpoint                    string
-	serviceAccountAuthorizedKeyPath string
-	token                           string
-	cleanupTimeout                  string
-}
-
-type driverMWS struct {
+type Driver struct {
 	disks             *computesdk.Disk
 	externalAddresses *vpcsdk.ExternalAddress
 	networks          *vpcsdk.Network
@@ -41,21 +34,21 @@ type driverMWS struct {
 	cleanupTimeout    time.Duration
 }
 
-func NewDriverMWS(ctx context.Context, c driverMWSConfig) (Driver, error) {
+func NewDriver(ctx context.Context, c Config) (*Driver, error) {
 	config, err := mws.LoadConfig()
 	if err != nil {
 		return nil, fmt.Errorf("load sdk config: %w", err)
 	}
 
-	config.Project = c.project
-	if c.baseEndpoint != "" {
-		config.BaseEndpoint = c.baseEndpoint
+	config.Project = c.Project
+	if c.BaseEndpoint != "" {
+		config.BaseEndpoint = c.BaseEndpoint
 	}
-	if c.serviceAccountAuthorizedKeyPath != "" {
-		config.ServiceAccountAuthorizedKeyPath = c.serviceAccountAuthorizedKeyPath
+	if c.ServiceAccountAuthorizedKeyPath != "" {
+		config.ServiceAccountAuthorizedKeyPath = c.ServiceAccountAuthorizedKeyPath
 	}
-	if c.token != "" {
-		config.Token = c.token
+	if c.Token != "" {
+		config.Token = c.Token
 	}
 
 	sdk, err := mws.Load(ctx, mws.WithConfig(*config))
@@ -98,12 +91,7 @@ func NewDriverMWS(ctx context.Context, c driverMWSConfig) (Driver, error) {
 		return nil, fmt.Errorf("create image client: %w", err)
 	}
 
-	cleanupTimeout, err := time.ParseDuration(c.cleanupTimeout)
-	if err != nil {
-		return nil, fmt.Errorf("parse cleanup timeout: %w", err)
-	}
-
-	return &driverMWS{
+	return &Driver{
 		disks:             disks,
 		externalAddresses: externalAddresses,
 		networks:          networks,
@@ -111,11 +99,11 @@ func NewDriverMWS(ctx context.Context, c driverMWSConfig) (Driver, error) {
 		virtualMachines:   virtualMachines,
 		firewallRules:     firewallRules,
 		images:            images,
-		cleanupTimeout:    cleanupTimeout,
+		cleanupTimeout:    c.CleanupTimeout,
 	}, nil
 }
 
-func (d *driverMWS) CreateDisk(ctx context.Context, params CreateDiskParams) error {
+func (d *Driver) CreateDisk(ctx context.Context, params CreateDiskParams) error {
 	if _, err := d.disks.CreateDisk(ctx, computeclient.UpsertDiskRequest{
 		Disk: params.DiskName,
 		Body: computemodel.DiskRequest{
@@ -140,7 +128,7 @@ func (d *driverMWS) CreateDisk(ctx context.Context, params CreateDiskParams) err
 	return nil
 }
 
-func (d *driverMWS) CreateExternalAddress(ctx context.Context, params CreateExternalAddressParams) (string, error) {
+func (d *Driver) CreateExternalAddress(ctx context.Context, params CreateExternalAddressParams) (string, error) {
 	resp, err := d.externalAddresses.CreateExternalAddress(ctx, vpcclient.UpsertExternalAddressRequest{
 		ExternalAddress: params.ExternalAddressName,
 		Body: &vpcmodel.ExternalAddressRequest{
@@ -162,7 +150,7 @@ func (d *driverMWS) CreateExternalAddress(ctx context.Context, params CreateExte
 	return ipAddress.String(), nil
 }
 
-func (d *driverMWS) CreateNetwork(ctx context.Context, params CreateNetworkParams) error {
+func (d *Driver) CreateNetwork(ctx context.Context, params CreateNetworkParams) error {
 	if _, err := d.networks.CreateNetwork(ctx, vpcclient.UpsertNetworkRequest{
 		Network: params.NetworkName,
 		Body: vpcmodel.NetworkRequest{
@@ -180,7 +168,7 @@ func (d *driverMWS) CreateNetwork(ctx context.Context, params CreateNetworkParam
 	return nil
 }
 
-func (d *driverMWS) CreateSubnet(ctx context.Context, params CreateSubnetParams) error {
+func (d *Driver) CreateSubnet(ctx context.Context, params CreateSubnetParams) error {
 	if _, err := d.subnets.CreateSubnet(ctx, vpcclient.UpsertSubnetRequest{
 		Network: params.NetworkName,
 		Subnet:  params.SubnetName,
@@ -199,8 +187,8 @@ func (d *driverMWS) CreateSubnet(ctx context.Context, params CreateSubnetParams)
 	return nil
 }
 
-func (d *driverMWS) CreateVirtualMachine(ctx context.Context, params CreateVirtualMachineParams) (string, error) {
-	userData, err := prepareCloudConfig(params.SSHUsername, params.SSHPublicKey, params.CloudConfig)
+func (d *Driver) CreateVirtualMachine(ctx context.Context, params CreateVirtualMachineParams) (string, error) {
+	userData, err := cloudinit.PrepareCloudConfig(params.SSHUsername, params.SSHPublicKey, params.CloudConfig)
 	if err != nil {
 		return "", fmt.Errorf("prepare cloud-config: %w", err)
 	}
@@ -279,7 +267,7 @@ func (d *driverMWS) CreateVirtualMachine(ctx context.Context, params CreateVirtu
 	return internalAddress, nil
 }
 
-func (d *driverMWS) CreateFirewallRule(ctx context.Context, params CreateFirewallRuleParams) error {
+func (d *Driver) CreateFirewallRule(ctx context.Context, params CreateFirewallRuleParams) error {
 	destAddress, err := cidraddress.ParseCIDR4AddressString(params.VirtualMachineInternalAddress + "/32")
 	if err != nil {
 		return fmt.Errorf("parse destination CIDR for firewall rule: %w", err)
@@ -319,7 +307,7 @@ func (d *driverMWS) CreateFirewallRule(ctx context.Context, params CreateFirewal
 	return nil
 }
 
-func (d *driverMWS) CreateImage(ctx context.Context, params CreateImageParams) (*computemodel.ImageOptionalResponse, error) {
+func (d *Driver) CreateImage(ctx context.Context, params CreateImageParams) (*computemodel.ImageOptionalResponse, error) {
 	image, err := d.images.CreateImage(ctx, computeclient.UpsertImageRequest{
 		Image: params.ImageName,
 		Body: computemodel.ImageRequest{
@@ -340,7 +328,7 @@ func (d *driverMWS) CreateImage(ctx context.Context, params CreateImageParams) (
 	return image, nil
 }
 
-func (d *driverMWS) DeleteDisk(ctx context.Context, diskName string) error {
+func (d *Driver) DeleteDisk(ctx context.Context, diskName string) error {
 	if err := d.disks.DeleteDisk(ctx, computeclient.DeleteDiskRequest{
 		Disk: diskName,
 	}, computeclient.WithWait(wait.WithTimeout(d.cleanupTimeout))); err != nil {
@@ -350,7 +338,7 @@ func (d *driverMWS) DeleteDisk(ctx context.Context, diskName string) error {
 	return nil
 }
 
-func (d *driverMWS) DeleteExternalAddress(ctx context.Context, externalAddressName string) error {
+func (d *Driver) DeleteExternalAddress(ctx context.Context, externalAddressName string) error {
 	if err := d.externalAddresses.DeleteExternalAddress(ctx, vpcclient.DeleteExternalAddressRequest{
 		ExternalAddress: externalAddressName,
 	}, vpcclient.WithWait(wait.WithTimeout(d.cleanupTimeout))); err != nil {
@@ -360,7 +348,7 @@ func (d *driverMWS) DeleteExternalAddress(ctx context.Context, externalAddressNa
 	return nil
 }
 
-func (d *driverMWS) DeleteNetwork(ctx context.Context, networkName string) error {
+func (d *Driver) DeleteNetwork(ctx context.Context, networkName string) error {
 	if err := d.networks.DeleteNetwork(ctx, vpcclient.DeleteNetworkRequest{
 		Network: networkName,
 	}, vpcclient.WithWait(wait.WithTimeout(d.cleanupTimeout))); err != nil {
@@ -370,7 +358,7 @@ func (d *driverMWS) DeleteNetwork(ctx context.Context, networkName string) error
 	return nil
 }
 
-func (d *driverMWS) DeleteSubnet(ctx context.Context, networkName, subnetName string) error {
+func (d *Driver) DeleteSubnet(ctx context.Context, networkName, subnetName string) error {
 	if err := d.subnets.DeleteSubnet(ctx, vpcclient.DeleteSubnetRequest{
 		Network: networkName,
 		Subnet:  subnetName,
@@ -381,7 +369,7 @@ func (d *driverMWS) DeleteSubnet(ctx context.Context, networkName, subnetName st
 	return nil
 }
 
-func (d *driverMWS) DeleteVirtualMachine(ctx context.Context, virtualMachineName string) error {
+func (d *Driver) DeleteVirtualMachine(ctx context.Context, virtualMachineName string) error {
 	if err := d.virtualMachines.DeleteVirtualMachine(ctx, computeclient.DeleteVirtualMachineRequest{
 		VirtualMachine: virtualMachineName,
 	}, computeclient.WithWait(wait.WithTimeout(d.cleanupTimeout))); err != nil {
@@ -391,7 +379,7 @@ func (d *driverMWS) DeleteVirtualMachine(ctx context.Context, virtualMachineName
 	return nil
 }
 
-func (d *driverMWS) DeleteFirewallRule(ctx context.Context, networkName, firewallRuleName string) error {
+func (d *Driver) DeleteFirewallRule(ctx context.Context, networkName, firewallRuleName string) error {
 	if err := d.firewallRules.DeleteFirewallRule(ctx, vpcclient.DeleteFirewallRuleRequest{
 		Network:      networkName,
 		FirewallRule: firewallRuleName,
@@ -402,7 +390,7 @@ func (d *driverMWS) DeleteFirewallRule(ctx context.Context, networkName, firewal
 	return nil
 }
 
-func (d *driverMWS) DeleteImage(ctx context.Context, imageName string) error {
+func (d *Driver) DeleteImage(ctx context.Context, imageName string) error {
 	if err := d.images.DeleteImage(ctx, computeclient.DeleteImageRequest{
 		Image: imageName,
 	}, computeclient.WithWait(wait.WithTimeout(d.cleanupTimeout))); err != nil {

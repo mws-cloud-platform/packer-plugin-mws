@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep/commonsteps"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/packerbuilderdata"
+	drivermws "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 	computemodel "go.mws.cloud/go-sdk/service/compute/model"
 	"go.mws.cloud/util-toolset/pkg/utils/consterr"
 )
@@ -47,12 +48,12 @@ func (b *Builder) Prepare(raws ...any) ([]string, []string, error) {
 }
 
 func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (packer.Artifact, error) {
-	driver, err := NewDriverMWS(ctx, driverMWSConfig{
-		project:                         b.config.Project,
-		baseEndpoint:                    b.config.BaseEndpoint,
-		serviceAccountAuthorizedKeyPath: b.config.ServiceAccountAuthorizedKeyPath,
-		token:                           b.config.Token,
-		cleanupTimeout:                  b.config.CleanupTimeout,
+	driver, err := drivermws.NewDriver(ctx, drivermws.Config{
+		Project:                         b.config.Project,
+		BaseEndpoint:                    b.config.BaseEndpoint,
+		ServiceAccountAuthorizedKeyPath: b.config.ServiceAccountAuthorizedKeyPath,
+		Token:                           b.config.Token,
+		CleanupTimeout:                  b.config.CleanupTimeout,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("create driver mws: %w", err)

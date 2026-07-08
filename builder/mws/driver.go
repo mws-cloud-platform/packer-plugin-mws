@@ -6,23 +6,20 @@ package mws
 import (
 	"context"
 
-	"go.mws.cloud/go-sdk/pkg/apimodels/cidraddress"
-	"go.mws.cloud/go-sdk/pkg/apimodels/units/bytesize"
+	drivermws "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 	computemodel "go.mws.cloud/go-sdk/service/compute/model"
-	computeref "go.mws.cloud/go-sdk/service/resources/references/compute"
-	vpcref "go.mws.cloud/go-sdk/service/resources/references/vpc"
 )
 
 //go:generate go run go.uber.org/mock/mockgen@v0.6.0 -typed -destination=mock/driver_mock.go . Driver
 
 type Driver interface {
-	CreateDisk(context.Context, CreateDiskParams) error
-	CreateExternalAddress(context.Context, CreateExternalAddressParams) (string, error)
-	CreateNetwork(context.Context, CreateNetworkParams) error
-	CreateSubnet(context.Context, CreateSubnetParams) error
-	CreateVirtualMachine(context.Context, CreateVirtualMachineParams) (string, error)
-	CreateFirewallRule(context.Context, CreateFirewallRuleParams) error
-	CreateImage(context.Context, CreateImageParams) (*computemodel.ImageOptionalResponse, error)
+	CreateDisk(context.Context, drivermws.CreateDiskParams) error
+	CreateExternalAddress(context.Context, drivermws.CreateExternalAddressParams) (string, error)
+	CreateNetwork(context.Context, drivermws.CreateNetworkParams) error
+	CreateSubnet(context.Context, drivermws.CreateSubnetParams) error
+	CreateVirtualMachine(context.Context, drivermws.CreateVirtualMachineParams) (string, error)
+	CreateFirewallRule(context.Context, drivermws.CreateFirewallRuleParams) error
+	CreateImage(context.Context, drivermws.CreateImageParams) (*computemodel.ImageOptionalResponse, error)
 
 	DeleteDisk(context.Context, string) error
 	DeleteExternalAddress(context.Context, string) error
@@ -31,52 +28,4 @@ type Driver interface {
 	DeleteVirtualMachine(context.Context, string) error
 	DeleteFirewallRule(context.Context, string, string) error
 	DeleteImage(context.Context, string) error
-}
-
-type CreateDiskParams struct {
-	DiskName    string
-	DiskType    string
-	Size        bytesize.ByteSize
-	Iops        int64
-	ImageRef    *computeref.ImageRef
-	SnapshotRef *computeref.SnapshotRef
-	Zone        string
-}
-
-type CreateExternalAddressParams struct {
-	ExternalAddressName string
-}
-
-type CreateNetworkParams struct {
-	NetworkName string
-}
-
-type CreateSubnetParams struct {
-	NetworkName string
-	SubnetName  string
-	SubnetCidr  cidraddress.CIDR4Address
-}
-
-type CreateVirtualMachineParams struct {
-	VirtualMachineName string
-	VMType             string
-	Zone               string
-	SSHUsername        string
-	SSHPublicKey       string
-	CloudConfig        string
-	DiskRef            *computeref.DiskRef
-	ExternalAddressRef *vpcref.ExternalAddressRef
-	SubnetRef          *vpcref.SubnetRef
-}
-
-type CreateImageParams struct {
-	ImageName        string
-	ImageDescription string
-	DiskRef          *computeref.DiskRef
-}
-
-type CreateFirewallRuleParams struct {
-	NetworkName                   string
-	FirewallRuleName              string
-	VirtualMachineInternalAddress string
 }
