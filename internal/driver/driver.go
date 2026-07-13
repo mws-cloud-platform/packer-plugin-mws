@@ -12,10 +12,14 @@ import (
 	"go.mws.cloud/go-sdk/mws"
 	"go.mws.cloud/go-sdk/mws/wait"
 	"go.mws.cloud/go-sdk/pkg/apimodels/cidraddress"
+	"go.mws.cloud/go-sdk/pkg/optional"
 	commonmodel "go.mws.cloud/go-sdk/service/common/model"
 	computeclient "go.mws.cloud/go-sdk/service/compute/client"
 	computemodel "go.mws.cloud/go-sdk/service/compute/model"
 	computesdk "go.mws.cloud/go-sdk/service/compute/sdk"
+	iamclient "go.mws.cloud/go-sdk/service/iam/client"
+	iammodel "go.mws.cloud/go-sdk/service/iam/model"
+	iamsdk "go.mws.cloud/go-sdk/service/iam/sdk"
 	computeref "go.mws.cloud/go-sdk/service/resources/references/compute"
 	vpcclient "go.mws.cloud/go-sdk/service/vpc/client"
 	vpcmodel "go.mws.cloud/go-sdk/service/vpc/model"
@@ -31,7 +35,9 @@ type Driver struct {
 	virtualMachines   *computesdk.VirtualMachine
 	firewallRules     *vpcsdk.FirewallRule
 	images            *computesdk.Image
-	cleanupTimeout    time.Duration
+	hmacKeys          *iamsdk.ServiceAccountHmacKey
+
+	cleanupTimeout time.Duration
 }
 
 func NewDriver(ctx context.Context, c Config) (*Driver, error) {
@@ -91,6 +97,11 @@ func NewDriver(ctx context.Context, c Config) (*Driver, error) {
 		return nil, fmt.Errorf("create image client: %w", err)
 	}
 
+	hmacKeys, err := iamsdk.NewServiceAccountHmacKey(ctx, sdk)
+	if err != nil {
+		return nil, fmt.Errorf("create hmac keys client: %w", err)
+	}
+
 	return &Driver{
 		disks:             disks,
 		externalAddresses: externalAddresses,
@@ -99,6 +110,7 @@ func NewDriver(ctx context.Context, c Config) (*Driver, error) {
 		virtualMachines:   virtualMachines,
 		firewallRules:     firewallRules,
 		images:            images,
+		hmacKeys:          hmacKeys,
 		cleanupTimeout:    c.CleanupTimeout,
 	}, nil
 }
@@ -328,6 +340,79 @@ func (d *Driver) CreateImage(ctx context.Context, params CreateImageParams) (*co
 	return image, nil
 }
 
+func (d *Driver) CreateHMACKey(ctx context.Context, serviceAccount, name string) (string, string, error) {
+	hmacKey, err := d.hmacKeys.CreateHmacKey(ctx, iamclient.UpsertHmacKeyRequest{
+		ServiceAccount: serviceAccount,
+		KeyName:        name,
+		Body: iammodel.HmacKeyRequest{
+			Spec: iammodel.HmacKeySpecRequest{
+				ExpirationTime: new(time.Now().Add(time.Hour)),
+			},
+		},
+	})
+	if err != nil {
+		return "", "", fmt.Errorf("create hmac key: %w", err)
+	}
+
+	return hmacKey.GetStatus().GetAccessKeyIdOr(""), hmacKey.GetStatus().GetSecretAccessKeyOr(""), nil
+}
+
+func (d *Driver) GetImage(ctx context.Context, imageRef computeref.ImageRef) (*computemodel.ImageOptionalResponse, error) {
+	image, err := d.images.GetImage(ctx, computeclient.GetImageRequest{
+		Project: imageRef.GetProject(),
+		Image:   imageRef.GetImage(),
+	}, computeclient.WithWait())
+	if err != nil {
+		return nil, fmt.Errorf("get image: %w", err)
+	}
+
+	return image, nil
+}
+
+func (d *Driver) AttachDiskToVirtualMachine(ctx context.Context, vmName string, diskRef computeref.DiskRef) error {
+	_, err := d.virtualMachines.UpdateVirtualMachine(ctx, computeclient.UpdateVirtualMachineRequest{
+		VirtualMachine: vmName,
+		Body: computemodel.UpdateVirtualMachineRequest{
+			Spec: optional.NewOptional(computemodel.UpdateVirtualMachineSpecRequest{
+				Storage: optional.NewOptional(computemodel.UpdateStorageSpecRequest{
+					Disks: optional.NewOptional([]computemodel.UpdateStorageDiskSpecOrRefWithAttachmentsRequest{
+						{Name: optional.NewOptional("boot")},
+						{
+							Name: optional.NewOptional("image-for-export"),
+							Disk: optional.NewOptional(computemodel.UpdateStorageDiskSpecOrRefRequest{
+								Ref: optional.NewOptional(diskRef),
+							}),
+						},
+					}),
+				}),
+			}),
+		},
+	}, computeclient.WithWait())
+	if err != nil {
+		return fmt.Errorf("attach disk to virtual machine: %w", err)
+	}
+	return nil
+}
+
+func (d *Driver) DetachSecondaryDisksFromVirtualMachine(ctx context.Context, virtualMachineName string) error {
+	_, err := d.virtualMachines.UpdateVirtualMachine(ctx, computeclient.UpdateVirtualMachineRequest{
+		VirtualMachine: virtualMachineName,
+		Body: computemodel.UpdateVirtualMachineRequest{
+			Spec: optional.NewOptional(computemodel.UpdateVirtualMachineSpecRequest{
+				Storage: optional.NewOptional(computemodel.UpdateStorageSpecRequest{
+					Disks: optional.NewOptional([]computemodel.UpdateStorageDiskSpecOrRefWithAttachmentsRequest{
+						{Name: optional.NewOptional("boot")},
+					}),
+				}),
+			}),
+		},
+	}, computeclient.WithWait())
+	if err != nil {
+		return fmt.Errorf("detach disk from virtual machine: %w", err)
+	}
+	return nil
+}
+
 func (d *Driver) DeleteDisk(ctx context.Context, diskName string) error {
 	if err := d.disks.DeleteDisk(ctx, computeclient.DeleteDiskRequest{
 		Disk: diskName,
@@ -395,6 +480,17 @@ func (d *Driver) DeleteImage(ctx context.Context, imageName string) error {
 		Image: imageName,
 	}, computeclient.WithWait(wait.WithTimeout(d.cleanupTimeout))); err != nil {
 		return fmt.Errorf("delete image: %w", err)
+	}
+
+	return nil
+}
+
+func (d *Driver) DeleteHMACKey(ctx context.Context, serviceAccount string, name string) error {
+	if err := d.hmacKeys.DeleteHmacKey(ctx, iamclient.DeleteHmacKeyRequest{
+		ServiceAccount: serviceAccount,
+		KeyName:        name,
+	}, iamclient.WithWait(wait.WithTimeout(d.cleanupTimeout))); err != nil {
+		return fmt.Errorf("delete hmac key: %w", err)
 	}
 
 	return nil

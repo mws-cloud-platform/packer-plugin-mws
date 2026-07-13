@@ -119,6 +119,83 @@ func (c *MockDriverCreateDiskCall) DoAndReturn(f func(context.Context, driver.Cr
 	return c
 }
 
+// CreateExternalAddress mocks base method.
+func (m *MockDriver) CreateExternalAddress(arg0 context.Context, arg1 driver.CreateExternalAddressParams) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateExternalAddress", arg0, arg1)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateExternalAddress indicates an expected call of CreateExternalAddress.
+func (mr *MockDriverMockRecorder) CreateExternalAddress(arg0, arg1 any) *MockDriverCreateExternalAddressCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateExternalAddress", reflect.TypeOf((*MockDriver)(nil).CreateExternalAddress), arg0, arg1)
+	return &MockDriverCreateExternalAddressCall{Call: call}
+}
+
+// MockDriverCreateExternalAddressCall wrap *gomock.Call
+type MockDriverCreateExternalAddressCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockDriverCreateExternalAddressCall) Return(arg0 string, arg1 error) *MockDriverCreateExternalAddressCall {
+	c.Call = c.Call.Return(arg0, arg1)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockDriverCreateExternalAddressCall) Do(f func(context.Context, driver.CreateExternalAddressParams) (string, error)) *MockDriverCreateExternalAddressCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockDriverCreateExternalAddressCall) DoAndReturn(f func(context.Context, driver.CreateExternalAddressParams) (string, error)) *MockDriverCreateExternalAddressCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
+// CreateFirewallRule mocks base method.
+func (m *MockDriver) CreateFirewallRule(arg0 context.Context, arg1 driver.CreateFirewallRuleParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateFirewallRule", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateFirewallRule indicates an expected call of CreateFirewallRule.
+func (mr *MockDriverMockRecorder) CreateFirewallRule(arg0, arg1 any) *MockDriverCreateFirewallRuleCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateFirewallRule", reflect.TypeOf((*MockDriver)(nil).CreateFirewallRule), arg0, arg1)
+	return &MockDriverCreateFirewallRuleCall{Call: call}
+}
+
+// MockDriverCreateFirewallRuleCall wrap *gomock.Call
+type MockDriverCreateFirewallRuleCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockDriverCreateFirewallRuleCall) Return(arg0 error) *MockDriverCreateFirewallRuleCall {
+	c.Call = c.Call.Return(arg0)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockDriverCreateFirewallRuleCall) Do(f func(context.Context, driver.CreateFirewallRuleParams) error) *MockDriverCreateFirewallRuleCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockDriverCreateFirewallRuleCall) DoAndReturn(f func(context.Context, driver.CreateFirewallRuleParams) error) *MockDriverCreateFirewallRuleCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
 // CreateHMACKey mocks base method.
 func (m *MockDriver) CreateHMACKey(ctx context.Context, serviceAccount, name string) (string, string, error) {
 	m.ctrl.T.Helper()
@@ -155,6 +232,121 @@ func (c *MockDriverCreateHMACKeyCall) Do(f func(context.Context, string, string)
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
 func (c *MockDriverCreateHMACKeyCall) DoAndReturn(f func(context.Context, string, string) (string, string, error)) *MockDriverCreateHMACKeyCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
+// CreateNetwork mocks base method.
+func (m *MockDriver) CreateNetwork(arg0 context.Context, arg1 driver.CreateNetworkParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateNetwork", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateNetwork indicates an expected call of CreateNetwork.
+func (mr *MockDriverMockRecorder) CreateNetwork(arg0, arg1 any) *MockDriverCreateNetworkCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateNetwork", reflect.TypeOf((*MockDriver)(nil).CreateNetwork), arg0, arg1)
+	return &MockDriverCreateNetworkCall{Call: call}
+}
+
+// MockDriverCreateNetworkCall wrap *gomock.Call
+type MockDriverCreateNetworkCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockDriverCreateNetworkCall) Return(arg0 error) *MockDriverCreateNetworkCall {
+	c.Call = c.Call.Return(arg0)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockDriverCreateNetworkCall) Do(f func(context.Context, driver.CreateNetworkParams) error) *MockDriverCreateNetworkCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockDriverCreateNetworkCall) DoAndReturn(f func(context.Context, driver.CreateNetworkParams) error) *MockDriverCreateNetworkCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
+// CreateSubnet mocks base method.
+func (m *MockDriver) CreateSubnet(arg0 context.Context, arg1 driver.CreateSubnetParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateSubnet", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateSubnet indicates an expected call of CreateSubnet.
+func (mr *MockDriverMockRecorder) CreateSubnet(arg0, arg1 any) *MockDriverCreateSubnetCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSubnet", reflect.TypeOf((*MockDriver)(nil).CreateSubnet), arg0, arg1)
+	return &MockDriverCreateSubnetCall{Call: call}
+}
+
+// MockDriverCreateSubnetCall wrap *gomock.Call
+type MockDriverCreateSubnetCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockDriverCreateSubnetCall) Return(arg0 error) *MockDriverCreateSubnetCall {
+	c.Call = c.Call.Return(arg0)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockDriverCreateSubnetCall) Do(f func(context.Context, driver.CreateSubnetParams) error) *MockDriverCreateSubnetCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockDriverCreateSubnetCall) DoAndReturn(f func(context.Context, driver.CreateSubnetParams) error) *MockDriverCreateSubnetCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
+// CreateVirtualMachine mocks base method.
+func (m *MockDriver) CreateVirtualMachine(arg0 context.Context, arg1 driver.CreateVirtualMachineParams) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateVirtualMachine", arg0, arg1)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateVirtualMachine indicates an expected call of CreateVirtualMachine.
+func (mr *MockDriverMockRecorder) CreateVirtualMachine(arg0, arg1 any) *MockDriverCreateVirtualMachineCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateVirtualMachine", reflect.TypeOf((*MockDriver)(nil).CreateVirtualMachine), arg0, arg1)
+	return &MockDriverCreateVirtualMachineCall{Call: call}
+}
+
+// MockDriverCreateVirtualMachineCall wrap *gomock.Call
+type MockDriverCreateVirtualMachineCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockDriverCreateVirtualMachineCall) Return(arg0 string, arg1 error) *MockDriverCreateVirtualMachineCall {
+	c.Call = c.Call.Return(arg0, arg1)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockDriverCreateVirtualMachineCall) Do(f func(context.Context, driver.CreateVirtualMachineParams) (string, error)) *MockDriverCreateVirtualMachineCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockDriverCreateVirtualMachineCall) DoAndReturn(f func(context.Context, driver.CreateVirtualMachineParams) (string, error)) *MockDriverCreateVirtualMachineCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
@@ -197,6 +389,82 @@ func (c *MockDriverDeleteDiskCall) DoAndReturn(f func(context.Context, string) e
 	return c
 }
 
+// DeleteExternalAddress mocks base method.
+func (m *MockDriver) DeleteExternalAddress(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteExternalAddress", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteExternalAddress indicates an expected call of DeleteExternalAddress.
+func (mr *MockDriverMockRecorder) DeleteExternalAddress(arg0, arg1 any) *MockDriverDeleteExternalAddressCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteExternalAddress", reflect.TypeOf((*MockDriver)(nil).DeleteExternalAddress), arg0, arg1)
+	return &MockDriverDeleteExternalAddressCall{Call: call}
+}
+
+// MockDriverDeleteExternalAddressCall wrap *gomock.Call
+type MockDriverDeleteExternalAddressCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockDriverDeleteExternalAddressCall) Return(arg0 error) *MockDriverDeleteExternalAddressCall {
+	c.Call = c.Call.Return(arg0)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockDriverDeleteExternalAddressCall) Do(f func(context.Context, string) error) *MockDriverDeleteExternalAddressCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockDriverDeleteExternalAddressCall) DoAndReturn(f func(context.Context, string) error) *MockDriverDeleteExternalAddressCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
+// DeleteFirewallRule mocks base method.
+func (m *MockDriver) DeleteFirewallRule(arg0 context.Context, arg1, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteFirewallRule", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteFirewallRule indicates an expected call of DeleteFirewallRule.
+func (mr *MockDriverMockRecorder) DeleteFirewallRule(arg0, arg1, arg2 any) *MockDriverDeleteFirewallRuleCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteFirewallRule", reflect.TypeOf((*MockDriver)(nil).DeleteFirewallRule), arg0, arg1, arg2)
+	return &MockDriverDeleteFirewallRuleCall{Call: call}
+}
+
+// MockDriverDeleteFirewallRuleCall wrap *gomock.Call
+type MockDriverDeleteFirewallRuleCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockDriverDeleteFirewallRuleCall) Return(arg0 error) *MockDriverDeleteFirewallRuleCall {
+	c.Call = c.Call.Return(arg0)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockDriverDeleteFirewallRuleCall) Do(f func(context.Context, string, string) error) *MockDriverDeleteFirewallRuleCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockDriverDeleteFirewallRuleCall) DoAndReturn(f func(context.Context, string, string) error) *MockDriverDeleteFirewallRuleCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
 // DeleteHMACKey mocks base method.
 func (m *MockDriver) DeleteHMACKey(ctx context.Context, serviceAccount, name string) error {
 	m.ctrl.T.Helper()
@@ -231,6 +499,120 @@ func (c *MockDriverDeleteHMACKeyCall) Do(f func(context.Context, string, string)
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
 func (c *MockDriverDeleteHMACKeyCall) DoAndReturn(f func(context.Context, string, string) error) *MockDriverDeleteHMACKeyCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
+// DeleteNetwork mocks base method.
+func (m *MockDriver) DeleteNetwork(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteNetwork", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteNetwork indicates an expected call of DeleteNetwork.
+func (mr *MockDriverMockRecorder) DeleteNetwork(arg0, arg1 any) *MockDriverDeleteNetworkCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteNetwork", reflect.TypeOf((*MockDriver)(nil).DeleteNetwork), arg0, arg1)
+	return &MockDriverDeleteNetworkCall{Call: call}
+}
+
+// MockDriverDeleteNetworkCall wrap *gomock.Call
+type MockDriverDeleteNetworkCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockDriverDeleteNetworkCall) Return(arg0 error) *MockDriverDeleteNetworkCall {
+	c.Call = c.Call.Return(arg0)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockDriverDeleteNetworkCall) Do(f func(context.Context, string) error) *MockDriverDeleteNetworkCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockDriverDeleteNetworkCall) DoAndReturn(f func(context.Context, string) error) *MockDriverDeleteNetworkCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
+// DeleteSubnet mocks base method.
+func (m *MockDriver) DeleteSubnet(arg0 context.Context, arg1, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSubnet", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteSubnet indicates an expected call of DeleteSubnet.
+func (mr *MockDriverMockRecorder) DeleteSubnet(arg0, arg1, arg2 any) *MockDriverDeleteSubnetCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSubnet", reflect.TypeOf((*MockDriver)(nil).DeleteSubnet), arg0, arg1, arg2)
+	return &MockDriverDeleteSubnetCall{Call: call}
+}
+
+// MockDriverDeleteSubnetCall wrap *gomock.Call
+type MockDriverDeleteSubnetCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockDriverDeleteSubnetCall) Return(arg0 error) *MockDriverDeleteSubnetCall {
+	c.Call = c.Call.Return(arg0)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockDriverDeleteSubnetCall) Do(f func(context.Context, string, string) error) *MockDriverDeleteSubnetCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockDriverDeleteSubnetCall) DoAndReturn(f func(context.Context, string, string) error) *MockDriverDeleteSubnetCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
+// DeleteVirtualMachine mocks base method.
+func (m *MockDriver) DeleteVirtualMachine(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteVirtualMachine", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteVirtualMachine indicates an expected call of DeleteVirtualMachine.
+func (mr *MockDriverMockRecorder) DeleteVirtualMachine(arg0, arg1 any) *MockDriverDeleteVirtualMachineCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteVirtualMachine", reflect.TypeOf((*MockDriver)(nil).DeleteVirtualMachine), arg0, arg1)
+	return &MockDriverDeleteVirtualMachineCall{Call: call}
+}
+
+// MockDriverDeleteVirtualMachineCall wrap *gomock.Call
+type MockDriverDeleteVirtualMachineCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockDriverDeleteVirtualMachineCall) Return(arg0 error) *MockDriverDeleteVirtualMachineCall {
+	c.Call = c.Call.Return(arg0)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockDriverDeleteVirtualMachineCall) Do(f func(context.Context, string) error) *MockDriverDeleteVirtualMachineCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockDriverDeleteVirtualMachineCall) DoAndReturn(f func(context.Context, string) error) *MockDriverDeleteVirtualMachineCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
