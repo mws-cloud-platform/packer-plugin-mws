@@ -80,8 +80,6 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 		&StepCreateVirtualMachine{
 			Communicator:         b.config.Communicator,
 			AccessConfig:         b.config.AccessConfig,
-			DiskConfig:           b.config.DiskConfig,
-			NetworkConfig:        b.config.NetworkConfig,
 			VirtualMachineConfig: b.config.VirtualMachineConfig,
 			GeneratedData:        generatedData,
 		},

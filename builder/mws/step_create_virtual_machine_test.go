@@ -38,17 +38,17 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 				AccessConfig: commonconfig.AccessConfig{
 					Project: testProjectName,
 				},
-				DiskConfig: commonconfig.DiskConfig{
-					DiskName:    testDiskName,
-					SourceImage: testSourceImage,
-				},
-				NetworkConfig: commonconfig.NetworkConfig{
-					NetworkName:         testNetworkName,
-					SubnetName:          testSubnetName,
-					ExternalAddressName: testExternalAddressName,
-					UseExternalAddress:  true,
-				},
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						DiskName:    testDiskName,
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						NetworkName:         testNetworkName,
+						SubnetName:          testSubnetName,
+						ExternalAddressName: testExternalAddressName,
+						UseExternalAddress:  true,
+					},
 					VirtualMachineName: testVirtualMachineName,
 				},
 			},
@@ -59,12 +59,14 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 				AccessConfig: commonconfig.AccessConfig{
 					Project: testProjectName,
 				},
-				DiskConfig: commonconfig.DiskConfig{
-					SourceImage: testSourceImage,
-				},
-				NetworkConfig: commonconfig.NetworkConfig{
-					NetworkName:        testNetworkName,
-					UseExternalAddress: true,
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						NetworkName:        testNetworkName,
+						UseExternalAddress: true,
+					},
 				},
 			},
 		},
@@ -74,11 +76,13 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 				AccessConfig: commonconfig.AccessConfig{
 					Project: testProjectName,
 				},
-				DiskConfig: commonconfig.DiskConfig{
-					SourceImage: testSourceImage,
-				},
-				NetworkConfig: commonconfig.NetworkConfig{
-					UseExternalAddress: true,
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
 				},
 			},
 		},
@@ -88,16 +92,16 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 				AccessConfig: commonconfig.AccessConfig{
 					Project: testProjectName,
 				},
-				DiskConfig: commonconfig.DiskConfig{
-					DiskName:    testDiskName,
-					SourceImage: testSourceImage,
-				},
-				NetworkConfig: commonconfig.NetworkConfig{
-					NetworkName:        testNetworkName,
-					SubnetName:         testSubnetName,
-					UseExternalAddress: false,
-				},
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						DiskName:    testDiskName,
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						NetworkName:        testNetworkName,
+						SubnetName:         testSubnetName,
+						UseExternalAddress: false,
+					},
 					VirtualMachineName: testVirtualMachineName,
 				},
 			},
@@ -108,13 +112,15 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 				AccessConfig: commonconfig.AccessConfig{
 					Project: testProjectName,
 				},
-				DiskConfig: commonconfig.DiskConfig{
-					SourceImage: testSourceImage,
-				},
-				NetworkConfig: commonconfig.NetworkConfig{
-					NetworkName:        testNetworkName,
-					SubnetName:         testSubnetName,
-					UseExternalAddress: false,
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						NetworkName:        testNetworkName,
+						SubnetName:         testSubnetName,
+						UseExternalAddress: false,
+					},
 				},
 			},
 		},
@@ -140,11 +146,11 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 			driver.EXPECT().
 				CreateDisk(gomock.Any(), drivermws.CreateDiskParams{
 					DiskName: expectedDiskName,
-					DiskType: mws.DefaultDiskType,
-					Size:     bytesize.MustParseString(mws.DefaultDiskSize),
-					Iops:     mws.DefaultDiskIOPS,
+					DiskType: commonconfig.DefaultDiskType,
+					Size:     bytesize.MustParseString(commonconfig.DefaultDiskSize),
+					Iops:     commonconfig.DefaultDiskIOPS,
 					ImageRef: new(computeref.NewImageRef(tt.config.Project, testSourceImage)),
-					Zone:     mws.DefaultZone,
+					Zone:     commonconfig.DefaultZone,
 				}).
 				Times(1)
 
@@ -169,7 +175,7 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 						CreateSubnet(gomock.Any(), drivermws.CreateSubnetParams{
 							NetworkName: expectedNetworkName,
 							SubnetName:  expectedSubnetName,
-							SubnetCidr:  cidraddress.MustParseCIDR4AddressString(mws.DefaultSubnetCidr),
+							SubnetCidr:  cidraddress.MustParseCIDR4AddressString(commonconfig.DefaultSubnetCidr),
 						}).
 						Times(1)
 				}
@@ -178,9 +184,9 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 			driver.EXPECT().
 				CreateVirtualMachine(gomock.Any(), drivermws.CreateVirtualMachineParams{
 					VirtualMachineName: expectedVirtualMachineName,
-					VMType:             mws.DefaultVMType,
-					Zone:               mws.DefaultZone,
-					SSHUsername:        mws.DefaultSSHUsername,
+					VMType:             commonconfig.DefaultVMType,
+					Zone:               commonconfig.DefaultZone,
+					SSHUsername:        commonconfig.DefaultSSHUsername,
 					SSHPublicKey:       testSSHPublicKey,
 					DiskRef:            expectedDiskRef,
 					ExternalAddressRef: expectedExternalAddressRef,
@@ -202,8 +208,6 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 			step := &mws.StepCreateVirtualMachine{
 				Communicator:         tt.config.Communicator,
 				AccessConfig:         tt.config.AccessConfig,
-				DiskConfig:           tt.config.DiskConfig,
-				NetworkConfig:        tt.config.NetworkConfig,
 				VirtualMachineConfig: tt.config.VirtualMachineConfig,
 				GeneratedData:        &packerbuilderdata.GeneratedData{State: state},
 			}
@@ -250,19 +254,18 @@ func TestStepCreateVirtualMachine_Cleanup_Success(t *testing.T) {
 				AccessConfig: commonconfig.AccessConfig{
 					Project: testProjectName,
 				},
-				DiskConfig: commonconfig.DiskConfig{
-					DiskName: testDiskName,
-
-					SourceImage: testSourceImage,
-				},
-				NetworkConfig: commonconfig.NetworkConfig{
-					NetworkName:         testNetworkName,
-					SubnetName:          testSubnetName,
-					ExternalAddressName: testExternalAddressName,
-					UseExternalAddress:  true,
-				},
-
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						DiskName: testDiskName,
+
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						NetworkName:         testNetworkName,
+						SubnetName:          testSubnetName,
+						ExternalAddressName: testExternalAddressName,
+						UseExternalAddress:  true,
+					},
 					VirtualMachineName: testVirtualMachineName,
 				},
 			},
@@ -273,12 +276,15 @@ func TestStepCreateVirtualMachine_Cleanup_Success(t *testing.T) {
 				AccessConfig: commonconfig.AccessConfig{
 					Project: testProjectName,
 				},
-				DiskConfig: commonconfig.DiskConfig{
-					SourceImage: testSourceImage,
-				},
-				NetworkConfig: commonconfig.NetworkConfig{
-					NetworkName:        testNetworkName,
-					UseExternalAddress: true,
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						NetworkName:        testNetworkName,
+						UseExternalAddress: true,
+					},
 				},
 			},
 		},
@@ -288,11 +294,13 @@ func TestStepCreateVirtualMachine_Cleanup_Success(t *testing.T) {
 				AccessConfig: commonconfig.AccessConfig{
 					Project: testProjectName,
 				},
-				DiskConfig: commonconfig.DiskConfig{
-					SourceImage: testSourceImage,
-				},
-				NetworkConfig: commonconfig.NetworkConfig{
-					UseExternalAddress: true,
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
 				},
 			},
 		},
@@ -302,16 +310,16 @@ func TestStepCreateVirtualMachine_Cleanup_Success(t *testing.T) {
 				AccessConfig: commonconfig.AccessConfig{
 					Project: testProjectName,
 				},
-				DiskConfig: commonconfig.DiskConfig{
-					DiskName:    testDiskName,
-					SourceImage: testSourceImage,
-				},
-				NetworkConfig: commonconfig.NetworkConfig{
-					NetworkName:        testNetworkName,
-					SubnetName:         testSubnetName,
-					UseExternalAddress: false,
-				},
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						DiskName:    testDiskName,
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						NetworkName:        testNetworkName,
+						SubnetName:         testSubnetName,
+						UseExternalAddress: false,
+					},
 					VirtualMachineName: testVirtualMachineName,
 				},
 			},
@@ -322,13 +330,15 @@ func TestStepCreateVirtualMachine_Cleanup_Success(t *testing.T) {
 				AccessConfig: commonconfig.AccessConfig{
 					Project: testProjectName,
 				},
-				DiskConfig: commonconfig.DiskConfig{
-					SourceImage: testSourceImage,
-				},
-				NetworkConfig: commonconfig.NetworkConfig{
-					NetworkName:        testNetworkName,
-					SubnetName:         testSubnetName,
-					UseExternalAddress: false,
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						NetworkName:        testNetworkName,
+						SubnetName:         testSubnetName,
+						UseExternalAddress: false,
+					},
 				},
 			},
 		},
@@ -410,8 +420,6 @@ func TestStepCreateVirtualMachine_Cleanup_Success(t *testing.T) {
 				step := &mws.StepCreateVirtualMachine{
 					Communicator:         tt.config.Communicator,
 					AccessConfig:         tt.config.AccessConfig,
-					DiskConfig:           tt.config.DiskConfig,
-					NetworkConfig:        tt.config.NetworkConfig,
 					VirtualMachineConfig: tt.config.VirtualMachineConfig,
 					GeneratedData:        &packerbuilderdata.GeneratedData{State: state},
 				}
@@ -438,11 +446,13 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 				AccessConfig: commonconfig.AccessConfig{
 					Project: testProjectName,
 				},
-				DiskConfig: commonconfig.DiskConfig{
-					SourceImage: testSourceImage,
-				},
-				NetworkConfig: commonconfig.NetworkConfig{
-					UseExternalAddress: true,
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
 				},
 			},
 			errorStep: "CreateDisk",
@@ -453,11 +463,13 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 				AccessConfig: commonconfig.AccessConfig{
 					Project: testProjectName,
 				},
-				DiskConfig: commonconfig.DiskConfig{
-					SourceImage: testSourceImage,
-				},
-				NetworkConfig: commonconfig.NetworkConfig{
-					UseExternalAddress: true,
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
 				},
 			},
 			errorStep: "CreateExternalAddress",
@@ -468,11 +480,13 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 				AccessConfig: commonconfig.AccessConfig{
 					Project: testProjectName,
 				},
-				DiskConfig: commonconfig.DiskConfig{
-					SourceImage: testSourceImage,
-				},
-				NetworkConfig: commonconfig.NetworkConfig{
-					UseExternalAddress: true,
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
 				},
 			},
 			errorStep: "CreateNetwork",
@@ -483,11 +497,13 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 				AccessConfig: commonconfig.AccessConfig{
 					Project: testProjectName,
 				},
-				DiskConfig: commonconfig.DiskConfig{
-					SourceImage: testSourceImage,
-				},
-				NetworkConfig: commonconfig.NetworkConfig{
-					UseExternalAddress: true,
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
 				},
 			},
 			errorStep: "CreateSubnet",
@@ -498,11 +514,13 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 				AccessConfig: commonconfig.AccessConfig{
 					Project: testProjectName,
 				},
-				DiskConfig: commonconfig.DiskConfig{
-					SourceImage: testSourceImage,
-				},
-				NetworkConfig: commonconfig.NetworkConfig{
-					UseExternalAddress: true,
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
 				},
 			},
 			errorStep: "CreateVirtualMachine",
@@ -513,11 +531,13 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 				AccessConfig: commonconfig.AccessConfig{
 					Project: testProjectName,
 				},
-				DiskConfig: commonconfig.DiskConfig{
-					SourceImage: testSourceImage,
-				},
-				NetworkConfig: commonconfig.NetworkConfig{
-					UseExternalAddress: true,
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
 				},
 			},
 			errorStep: "CreateFirewallRule",
@@ -528,13 +548,15 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 				AccessConfig: commonconfig.AccessConfig{
 					Project: testProjectName,
 				},
-				DiskConfig: commonconfig.DiskConfig{
-					SourceImage: testSourceImage,
-				},
-				NetworkConfig: commonconfig.NetworkConfig{
-					NetworkName:        testNetworkName,
-					SubnetName:         testSubnetName,
-					UseExternalAddress: false,
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						NetworkName:        testNetworkName,
+						SubnetName:         testSubnetName,
+						UseExternalAddress: false,
+					},
 				},
 			},
 			errorStep: "CreateDisk",
@@ -545,13 +567,15 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 				AccessConfig: commonconfig.AccessConfig{
 					Project: testProjectName,
 				},
-				DiskConfig: commonconfig.DiskConfig{
-					SourceImage: testSourceImage,
-				},
-				NetworkConfig: commonconfig.NetworkConfig{
-					NetworkName:        testNetworkName,
-					SubnetName:         testSubnetName,
-					UseExternalAddress: false,
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						NetworkName:        testNetworkName,
+						SubnetName:         testSubnetName,
+						UseExternalAddress: false,
+					},
 				},
 			},
 			errorStep: "CreateVirtualMachine",
@@ -631,8 +655,6 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 			step := &mws.StepCreateVirtualMachine{
 				Communicator:         tt.config.Communicator,
 				AccessConfig:         tt.config.AccessConfig,
-				DiskConfig:           tt.config.DiskConfig,
-				NetworkConfig:        tt.config.NetworkConfig,
 				VirtualMachineConfig: tt.config.VirtualMachineConfig,
 				GeneratedData:        &packerbuilderdata.GeneratedData{State: state},
 			}
@@ -660,11 +682,13 @@ func TestStepCreateVirtualMachine_Cleanup_Error(t *testing.T) {
 				AccessConfig: commonconfig.AccessConfig{
 					Project: testProjectName,
 				},
-				DiskConfig: commonconfig.DiskConfig{
-					SourceImage: testSourceImage,
-				},
-				NetworkConfig: commonconfig.NetworkConfig{
-					UseExternalAddress: true,
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
 				},
 			},
 			errorStep: "DeleteFirewallRule",
@@ -675,11 +699,13 @@ func TestStepCreateVirtualMachine_Cleanup_Error(t *testing.T) {
 				AccessConfig: commonconfig.AccessConfig{
 					Project: testProjectName,
 				},
-				DiskConfig: commonconfig.DiskConfig{
-					SourceImage: testSourceImage,
-				},
-				NetworkConfig: commonconfig.NetworkConfig{
-					UseExternalAddress: true,
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
 				},
 			},
 			errorStep: "DeleteVirtualMachine",
@@ -690,11 +716,13 @@ func TestStepCreateVirtualMachine_Cleanup_Error(t *testing.T) {
 				AccessConfig: commonconfig.AccessConfig{
 					Project: testProjectName,
 				},
-				DiskConfig: commonconfig.DiskConfig{
-					SourceImage: testSourceImage,
-				},
-				NetworkConfig: commonconfig.NetworkConfig{
-					UseExternalAddress: true,
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
 				},
 			},
 			errorStep: "DeleteSubnet",
@@ -705,11 +733,13 @@ func TestStepCreateVirtualMachine_Cleanup_Error(t *testing.T) {
 				AccessConfig: commonconfig.AccessConfig{
 					Project: testProjectName,
 				},
-				DiskConfig: commonconfig.DiskConfig{
-					SourceImage: testSourceImage,
-				},
-				NetworkConfig: commonconfig.NetworkConfig{
-					UseExternalAddress: true,
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
 				},
 			},
 			errorStep: "DeleteNetwork",
@@ -720,11 +750,13 @@ func TestStepCreateVirtualMachine_Cleanup_Error(t *testing.T) {
 				AccessConfig: commonconfig.AccessConfig{
 					Project: testProjectName,
 				},
-				DiskConfig: commonconfig.DiskConfig{
-					SourceImage: testSourceImage,
-				},
-				NetworkConfig: commonconfig.NetworkConfig{
-					UseExternalAddress: true,
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
 				},
 			},
 			errorStep: "DeleteExternalAddress",
@@ -735,11 +767,13 @@ func TestStepCreateVirtualMachine_Cleanup_Error(t *testing.T) {
 				AccessConfig: commonconfig.AccessConfig{
 					Project: testProjectName,
 				},
-				DiskConfig: commonconfig.DiskConfig{
-					SourceImage: testSourceImage,
-				},
-				NetworkConfig: commonconfig.NetworkConfig{
-					UseExternalAddress: true,
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
 				},
 			},
 			errorStep: "DeleteDisk",
@@ -750,13 +784,15 @@ func TestStepCreateVirtualMachine_Cleanup_Error(t *testing.T) {
 				AccessConfig: commonconfig.AccessConfig{
 					Project: testProjectName,
 				},
-				DiskConfig: commonconfig.DiskConfig{
-					SourceImage: testSourceImage,
-				},
-				NetworkConfig: commonconfig.NetworkConfig{
-					NetworkName:        testNetworkName,
-					SubnetName:         testSubnetName,
-					UseExternalAddress: false,
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						NetworkName:        testNetworkName,
+						SubnetName:         testSubnetName,
+						UseExternalAddress: false,
+					},
 				},
 			},
 			errorStep: "DeleteVirtualMachine",
@@ -767,13 +803,15 @@ func TestStepCreateVirtualMachine_Cleanup_Error(t *testing.T) {
 				AccessConfig: commonconfig.AccessConfig{
 					Project: testProjectName,
 				},
-				DiskConfig: commonconfig.DiskConfig{
-					SourceImage: testSourceImage,
-				},
-				NetworkConfig: commonconfig.NetworkConfig{
-					NetworkName:        testNetworkName,
-					SubnetName:         testSubnetName,
-					UseExternalAddress: false,
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						NetworkName:        testNetworkName,
+						SubnetName:         testSubnetName,
+						UseExternalAddress: false,
+					},
 				},
 			},
 			errorStep: "DeleteDisk",
@@ -821,8 +859,6 @@ func TestStepCreateVirtualMachine_Cleanup_Error(t *testing.T) {
 			step := &mws.StepCreateVirtualMachine{
 				Communicator:         tt.config.Communicator,
 				AccessConfig:         tt.config.AccessConfig,
-				DiskConfig:           tt.config.DiskConfig,
-				NetworkConfig:        tt.config.NetworkConfig,
 				VirtualMachineConfig: tt.config.VirtualMachineConfig,
 				GeneratedData:        &packerbuilderdata.GeneratedData{State: state},
 			}

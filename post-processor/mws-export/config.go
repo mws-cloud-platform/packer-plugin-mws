@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/communicator"
 	"github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
-	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
 	commonconfig "github.com/mws-cloud-platform/packer-plugin-mws/internal/config"
 	"go.mws.cloud/util-toolset/pkg/utils/consterr"
 )
@@ -28,8 +27,6 @@ type Config struct {
 	common.PackerConfig               `mapstructure:",squash"`
 	Communicator                      communicator.Config `mapstructure:",squash" json:"-"`
 	commonconfig.AccessConfig         `mapstructure:",squash"`
-	commonconfig.DiskConfig           `mapstructure:",squash"`
-	commonconfig.NetworkConfig        `mapstructure:",squash"`
 	commonconfig.VirtualMachineConfig `mapstructure:",squash"`
 
 	DiskForExportConfig `mapstructure:",squash"`
@@ -38,7 +35,7 @@ type Config struct {
 	ctx interpolate.Context
 }
 
-func (c *Config) Prepare(raws ...interface{}) error {
+func (c *Config) Prepare(raws ...any) error {
 	err := config.Decode(c, &config.DecodeOpts{
 		PluginType:         BuilderId,
 		Interpolate:        true,
@@ -53,7 +50,7 @@ func (c *Config) Prepare(raws ...interface{}) error {
 }
 
 func (c *Config) SetDefaults() {
-	c.Communicator.SSHUsername = cmp.Or(c.Communicator.SSHUsername, mws.DefaultSSHUsername)
+	c.Communicator.SSHUsername = cmp.Or(c.Communicator.SSHUsername, commonconfig.DefaultSSHUsername)
 
 	c.AccessConfig.SetDefaults()
 	c.VirtualMachineConfig.SetDefaults()
@@ -123,8 +120,8 @@ type DiskForExportConfig struct {
 }
 
 func (c *DiskForExportConfig) SetDefaults() {
-	c.DiskForExportType = cmp.Or(c.DiskForExportType, mws.DefaultDiskType)
-	c.DiskForExportIOPS = cmp.Or(c.DiskForExportIOPS, mws.DefaultDiskIOPS)
+	c.DiskForExportType = cmp.Or(c.DiskForExportType, commonconfig.DefaultDiskType)
+	c.DiskForExportIOPS = cmp.Or(c.DiskForExportIOPS, commonconfig.DefaultDiskIOPS)
 }
 
 func (c *DiskForExportConfig) Validate() error {

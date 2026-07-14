@@ -74,6 +74,8 @@ func (c *ImageConfig) Validate() error {
 }
 
 type VirtualMachineConfig struct {
+	DiskConfig    `mapstructure:",squash"`
+	NetworkConfig `mapstructure:",squash"`
 	// Name for the temporary build VM (defaults to "packer-{{uuid}}-vm").
 	VirtualMachineName string `mapstructure:"virtual_machine_name" required:"false"`
 	// The VM type (defaults to "gen-2-8").

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
+	commonconfig "github.com/mws-cloud-platform/packer-plugin-mws/internal/config"
 	drivermws "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 	mwsexport "github.com/mws-cloud-platform/packer-plugin-mws/post-processor/mws-export"
 	"github.com/mws-cloud-platform/packer-plugin-mws/post-processor/mws-export/mock"
@@ -51,11 +52,11 @@ func TestStepAttachDisk_Run(t *testing.T) {
 					}, nil)
 				driver.EXPECT().CreateDisk(gomock.Any(), drivermws.CreateDiskParams{
 					DiskName: diskForExportName,
-					DiskType: mws.DefaultDiskType,
+					DiskType: commonconfig.DefaultDiskType,
 					Size:     minDiskSize,
-					Iops:     mws.DefaultDiskIOPS,
+					Iops:     commonconfig.DefaultDiskIOPS,
 					ImageRef: &imageForExportRef,
-					Zone:     mws.DefaultZone,
+					Zone:     commonconfig.DefaultZone,
 				}).Return(nil)
 				driver.EXPECT().
 					AttachDiskToVirtualMachine(gomock.Any(), vmName, diskForExportRef).
@@ -96,11 +97,11 @@ func TestStepAttachDisk_Run(t *testing.T) {
 					}, nil)
 				driver.EXPECT().CreateDisk(gomock.Any(), drivermws.CreateDiskParams{
 					DiskName: diskForExportName,
-					DiskType: mws.DefaultDiskType,
+					DiskType: commonconfig.DefaultDiskType,
 					Size:     minDiskSize,
-					Iops:     mws.DefaultDiskIOPS,
+					Iops:     commonconfig.DefaultDiskIOPS,
 					ImageRef: &imageForExportRef,
-					Zone:     mws.DefaultZone,
+					Zone:     commonconfig.DefaultZone,
 				}).Return(errInternal)
 				return driver
 			},
@@ -118,11 +119,11 @@ func TestStepAttachDisk_Run(t *testing.T) {
 					}, nil)
 				driver.EXPECT().CreateDisk(gomock.Any(), drivermws.CreateDiskParams{
 					DiskName: diskForExportName,
-					DiskType: mws.DefaultDiskType,
+					DiskType: commonconfig.DefaultDiskType,
 					Size:     minDiskSize,
-					Iops:     mws.DefaultDiskIOPS,
+					Iops:     commonconfig.DefaultDiskIOPS,
 					ImageRef: &imageForExportRef,
-					Zone:     mws.DefaultZone,
+					Zone:     commonconfig.DefaultZone,
 				}).Return(nil)
 				driver.EXPECT().
 					AttachDiskToVirtualMachine(gomock.Any(), vmName, diskForExportRef).
@@ -147,9 +148,9 @@ func TestStepAttachDisk_Run(t *testing.T) {
 
 			step := &mwsexport.StepAttachDisk{
 				Project:        project,
-				Zone:           mws.DefaultZone,
-				DiskType:       mws.DefaultDiskType,
-				DiskIOPS:       mws.DefaultDiskIOPS,
+				Zone:           commonconfig.DefaultZone,
+				DiskType:       commonconfig.DefaultDiskType,
+				DiskIOPS:       commonconfig.DefaultDiskIOPS,
 				ImageRef:       imageForExportRef,
 				CleanupTimeout: cleanupTimeout,
 			}
@@ -239,9 +240,9 @@ func TestStepAttachDisk_Cleanup(t *testing.T) {
 			}
 
 			step := &mwsexport.StepAttachDisk{
-				Zone:           mws.DefaultZone,
-				DiskType:       mws.DefaultDiskType,
-				DiskIOPS:       mws.DefaultDiskIOPS,
+				Zone:           commonconfig.DefaultZone,
+				DiskType:       commonconfig.DefaultDiskType,
+				DiskIOPS:       commonconfig.DefaultDiskIOPS,
 				ImageRef:       imageForExportRef,
 				CleanupTimeout: cleanupTimeout,
 			}
