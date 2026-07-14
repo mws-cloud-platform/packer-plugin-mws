@@ -27,7 +27,7 @@ type StepCreateVirtualMachine struct {
 
 func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	config := state.Get(ConfigKey).(*Config)
-	driver := state.Get(DriverKey).(Driver)
+	driver := state.Get(DriverKey).(StepCreateVirtualMachineDriver)
 	prefix := state.Get(PrefixKey).(string)
 	ui := state.Get(UIKey).(packer.Ui)
 
@@ -159,7 +159,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 
 func (s *StepCreateVirtualMachine) Cleanup(state multistep.StateBag) {
 	config := state.Get(ConfigKey).(*Config)
-	driver := state.Get(DriverKey).(Driver)
+	driver := state.Get(DriverKey).(StepCreateVirtualMachineDriver)
 	ui := state.Get(UIKey).(packer.Ui)
 
 	ctx, cancel := context.WithTimeout(context.Background(), config.CleanupTimeout)

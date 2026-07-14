@@ -12,20 +12,10 @@ import (
 
 //go:generate go run go.uber.org/mock/mockgen@v0.6.0 -typed -destination=mock/driver_mock.go . Driver
 
-type Driver interface {
-	CreateDisk(context.Context, drivermws.CreateDiskParams) error
-	CreateExternalAddress(context.Context, drivermws.CreateExternalAddressParams) (string, error)
-	CreateNetwork(context.Context, drivermws.CreateNetworkParams) error
-	CreateSubnet(context.Context, drivermws.CreateSubnetParams) error
-	CreateVirtualMachine(context.Context, drivermws.CreateVirtualMachineParams) (string, error)
-	CreateFirewallRule(context.Context, drivermws.CreateFirewallRuleParams) error
-	CreateImage(context.Context, drivermws.CreateImageParams) (*computemodel.ImageOptionalResponse, error)
+var _ Driver = &drivermws.Driver{}
 
-	DeleteDisk(context.Context, string) error
-	DeleteExternalAddress(context.Context, string) error
-	DeleteNetwork(context.Context, string) error
-	DeleteSubnet(context.Context, string, string) error
-	DeleteVirtualMachine(context.Context, string) error
-	DeleteFirewallRule(context.Context, string, string) error
+type Driver interface {
+	StepCreateVirtualMachineDriver
+	CreateImage(context.Context, drivermws.CreateImageParams) (*computemodel.ImageOptionalResponse, error)
 	DeleteImage(context.Context, string) error
 }
