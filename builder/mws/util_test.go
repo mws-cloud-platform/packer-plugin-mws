@@ -80,13 +80,14 @@ func requireActionHalt(t *testing.T, state multistep.StateBag, action multistep.
 	require.NotNil(t, state.Get(mws.ErrorKey), "Expected error to be stored in state")
 }
 
-func prepareState(t *testing.T, config *mws.Config, driver mws.Driver) (*bytes.Buffer, multistep.StateBag) {
-	state := new(multistep.BasicStateBag)
-
+func prepareConfig(t *testing.T, config *mws.Config) {
 	config.SetDefaults()
 	require.NoError(t, config.Validate())
 	config.Communicator.SSHPublicKey = []byte(testSSHPublicKey)
-	state.Put(mws.ConfigKey, config)
+}
+
+func prepareState(driver mws.Driver) (*bytes.Buffer, multistep.StateBag) {
+	state := new(multistep.BasicStateBag)
 	state.Put(mws.DriverKey, driver)
 	state.Put(mws.PrefixKey, packerPrefix)
 	writer := new(bytes.Buffer)

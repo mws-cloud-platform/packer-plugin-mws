@@ -19,8 +19,6 @@
  "SourceProject": "source-project",
  "SourceImage": "source-image",
  "SourceSnapshot": "",
- "ImageName": "test-image",
- "ImageDescription": "Custom image description",
  "NetworkName": "test-network",
  "SubnetName": "test-subnet",
  "SubnetCidr": "10.0.0.0/8",
@@ -29,5 +27,16 @@
  "VirtualMachineName": "test-vm",
  "VMType": "gen-2-16",
  "CleanupTimeout": 7200000000000,
- "CloudConfig": ""
+ "CloudConfig": "",
+ "DiskForExportType": "nbs-pl2",
+ "DiskForExportIOPS": 1000,
+ "ProjectForExport": "test-project",
+ "ImageForExport": "",
+ "ServiceAccount": "test-service-account",
+ "AccessKey": "",
+ "SecretKey": "",
+ "S3Region": "ru-central1",
+ "S3Bucket": "test-bucket",
+ "S3Path": "",
+ "S3Endpoint": "https://storage.mwsapis.ru"
 }

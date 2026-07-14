@@ -4,7 +4,6 @@
 package mws
 
 const (
-	ConfigKey       = "config"
 	DriverKey       = "driver"
 	HookKey         = "hook"
 	UIKey           = "ui"
