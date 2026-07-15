@@ -94,12 +94,17 @@ type VirtualMachineConfig struct {
 }
 
 func (c *VirtualMachineConfig) SetDefaults() {
+	c.DiskConfig.SetDefaults()
+	c.NetworkConfig.SetDefaults()
 	c.VMType = cmp.Or(c.VMType, DefaultVMType)
 	c.CleanupTimeout = cmp.Or(c.CleanupTimeout, DefaultCleanupTimeout)
 }
 
 func (c *VirtualMachineConfig) Validate() error {
-	return nil
+	return errors.Join(
+		c.DiskConfig.Validate(),
+		c.NetworkConfig.Validate(),
+	)
 }
 
 type DiskConfig struct {

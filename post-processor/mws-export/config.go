@@ -54,8 +54,6 @@ func (c *Config) SetDefaults() {
 
 	c.AccessConfig.SetDefaults()
 	c.VirtualMachineConfig.SetDefaults()
-	c.DiskConfig.SetDefaults()
-	c.NetworkConfig.SetDefaults()
 	c.DiskForExportConfig.SetDefaults()
 	c.ObjectStorageConfig.SetDefaults()
 
@@ -68,8 +66,6 @@ func (c *Config) Validate() error {
 		c.Communicator.Prepare(&c.ctx),
 		c.AccessConfig.Validate(),
 		c.VirtualMachineConfig.Validate(),
-		c.DiskConfig.Validate(),
-		c.NetworkConfig.Validate(),
 		c.DiskForExportConfig.Validate(),
 		c.ObjectStorageConfig.Validate(),
 	)

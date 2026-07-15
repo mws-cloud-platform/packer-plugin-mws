@@ -44,9 +44,7 @@ func (c *Config) SetDefaults() {
 	c.Communicator.SSHUsername = cmp.Or(c.Communicator.SSHUsername, commonconfig.DefaultSSHUsername)
 
 	c.AccessConfig.SetDefaults()
-	c.DiskConfig.SetDefaults()
 	c.ImageConfig.SetDefaults()
-	c.NetworkConfig.SetDefaults()
 	c.VirtualMachineConfig.SetDefaults()
 
 	c.SourceProject = cmp.Or(c.SourceProject, c.Project)
@@ -56,9 +54,7 @@ func (c *Config) Validate() error {
 	errs := append(
 		c.Communicator.Prepare(&c.ctx),
 		c.AccessConfig.Validate(),
-		c.DiskConfig.Validate(),
 		c.ImageConfig.Validate(),
-		c.NetworkConfig.Validate(),
 		c.VirtualMachineConfig.Validate(),
 	)
 
