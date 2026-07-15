@@ -35,8 +35,8 @@
  "ServiceAccount": "test-service-account",
  "AccessKey": "",
  "SecretKey": "",
- "S3Region": "ru-central1",
- "S3Bucket": "test-bucket",
- "S3Path": "",
- "S3Endpoint": "https://storage.mwsapis.ru"
+ "ObjectStorageRegion": "ru-central1",
+ "ObjectStorageBucket": "test-bucket",
+ "ObjectStoragePath": "",
+ "ObjectStorageEndpoint": "https://storage.mwsapis.ru"
 }

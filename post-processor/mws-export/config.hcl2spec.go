@@ -95,10 +95,10 @@ type FlatConfig struct {
 	ServiceAccount                  *string           `mapstructure:"service_account" required:"false" cty:"service_account" hcl:"service_account"`
 	AccessKey                       *string           `mapstructure:"access_key" required:"false" cty:"access_key" hcl:"access_key"`
 	SecretKey                       *string           `mapstructure:"secret_key" required:"false" cty:"secret_key" hcl:"secret_key"`
-	S3Region                        *string           `mapstructure:"s3_region" required:"false" cty:"s3_region" hcl:"s3_region"`
-	S3Bucket                        *string           `mapstructure:"s3_bucket" required:"true" cty:"s3_bucket" hcl:"s3_bucket"`
-	S3Path                          *string           `mapstructure:"s3_key" required:"false" cty:"s3_key" hcl:"s3_key"`
-	S3Endpoint                      *string           `mapstructure:"s3_endpoint" required:"false" cty:"s3_endpoint" hcl:"s3_endpoint"`
+	ObjectStorageRegion             *string           `mapstructure:"object_storage_region" required:"false" cty:"object_storage_region" hcl:"object_storage_region"`
+	ObjectStorageBucket             *string           `mapstructure:"object_storage_bucket" required:"true" cty:"object_storage_bucket" hcl:"object_storage_bucket"`
+	ObjectStoragePath               *string           `mapstructure:"object_storage_key" required:"false" cty:"object_storage_key" hcl:"object_storage_key"`
+	ObjectStorageEndpoint           *string           `mapstructure:"object_storage_endpoint" required:"false" cty:"object_storage_endpoint" hcl:"object_storage_endpoint"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -198,10 +198,10 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"service_account":                     &hcldec.AttrSpec{Name: "service_account", Type: cty.String, Required: false},
 		"access_key":                          &hcldec.AttrSpec{Name: "access_key", Type: cty.String, Required: false},
 		"secret_key":                          &hcldec.AttrSpec{Name: "secret_key", Type: cty.String, Required: false},
-		"s3_region":                           &hcldec.AttrSpec{Name: "s3_region", Type: cty.String, Required: false},
-		"s3_bucket":                           &hcldec.AttrSpec{Name: "s3_bucket", Type: cty.String, Required: false},
-		"s3_key":                              &hcldec.AttrSpec{Name: "s3_key", Type: cty.String, Required: false},
-		"s3_endpoint":                         &hcldec.AttrSpec{Name: "s3_endpoint", Type: cty.String, Required: false},
+		"object_storage_region":               &hcldec.AttrSpec{Name: "object_storage_region", Type: cty.String, Required: false},
+		"object_storage_bucket":               &hcldec.AttrSpec{Name: "object_storage_bucket", Type: cty.String, Required: false},
+		"object_storage_key":                  &hcldec.AttrSpec{Name: "object_storage_key", Type: cty.String, Required: false},
+		"object_storage_endpoint":             &hcldec.AttrSpec{Name: "object_storage_endpoint", Type: cty.String, Required: false},
 	}
 	return s
 }

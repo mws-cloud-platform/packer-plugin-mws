@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	DefaultS3Bucket   = "ru-central1"
-	DefaultS3Endpoint = "https://storage.mwsapis.ru"
+	DefaultObjectStorageBucket   = "ru-central1"
+	DefaultObjectStorageEndpoint = "https://storage.mwsapis.ru"
 )
 
 type Config struct {
@@ -30,7 +30,7 @@ type Config struct {
 	commonconfig.VirtualMachineConfig `mapstructure:",squash"`
 
 	DiskForExportConfig `mapstructure:",squash"`
-	S3Config            `mapstructure:",squash"`
+	ObjectStorageConfig `mapstructure:",squash"`
 
 	ctx interpolate.Context
 }
@@ -57,7 +57,7 @@ func (c *Config) SetDefaults() {
 	c.DiskConfig.SetDefaults()
 	c.NetworkConfig.SetDefaults()
 	c.DiskForExportConfig.SetDefaults()
-	c.S3Config.SetDefaults()
+	c.ObjectStorageConfig.SetDefaults()
 
 	c.SourceProject = cmp.Or(c.SourceProject, c.Project)
 	c.ProjectForExport = cmp.Or(c.ProjectForExport, c.Project)
@@ -71,39 +71,39 @@ func (c *Config) Validate() error {
 		c.DiskConfig.Validate(),
 		c.NetworkConfig.Validate(),
 		c.DiskForExportConfig.Validate(),
-		c.S3Config.Validate(),
+		c.ObjectStorageConfig.Validate(),
 	)
 
 	err := errors.Join(errs...)
 	return err
 }
 
-type S3Config struct {
+type ObjectStorageConfig struct {
 	// MWS Service Account for generation of temporal hmac-key.
 	// Required, unless access_key and secret_key are provided
 	ServiceAccount string `mapstructure:"service_account" required:"false"`
-	// AccessKey is part of hmac-key pair for S3.
+	// AccessKey is part of hmac-key pair for object storage.
 	AccessKey string `mapstructure:"access_key" required:"false"`
-	// SecretKey is part of hmac-key pair for S3.
+	// SecretKey is part of hmac-key pair for object storage.
 	SecretKey string `mapstructure:"secret_key" required:"false"`
-	// S3 region where the bucket is located (defaults to "ru-central1").
-	S3Region string `mapstructure:"s3_region" required:"false"`
-	// S3 bucket where the image will be exported
-	S3Bucket string `mapstructure:"s3_bucket" required:"true"`
-	// S3 path where the image will be stored (defaults to "packer-images/{{image_for_export}}.qcow2")
-	S3Path string `mapstructure:"s3_key" required:"false"`
-	// Endpoint of S3 to upload image (defaults to "https://storage.mwsapis.ru").
-	S3Endpoint string `mapstructure:"s3_endpoint" required:"false"`
+	// Object storage region where the bucket is located (defaults to "ru-central1").
+	ObjectStorageRegion string `mapstructure:"object_storage_region" required:"false"`
+	// Object storage bucket where the image will be exported
+	ObjectStorageBucket string `mapstructure:"object_storage_bucket" required:"true"`
+	// Object storage path where the image will be stored (defaults to "packer-images/{{image_for_export}}.qcow2")
+	ObjectStoragePath string `mapstructure:"object_storage_key" required:"false"`
+	// Endpoint of object storage to upload image (defaults to "https://storage.mwsapis.ru").
+	ObjectStorageEndpoint string `mapstructure:"object_storage_endpoint" required:"false"`
 }
 
-func (c *S3Config) SetDefaults() {
-	c.S3Region = cmp.Or(c.S3Region, DefaultS3Bucket)
-	c.S3Endpoint = cmp.Or(c.S3Endpoint, DefaultS3Endpoint)
+func (c *ObjectStorageConfig) SetDefaults() {
+	c.ObjectStorageRegion = cmp.Or(c.ObjectStorageRegion, DefaultObjectStorageBucket)
+	c.ObjectStorageEndpoint = cmp.Or(c.ObjectStorageEndpoint, DefaultObjectStorageEndpoint)
 }
 
-func (c *S3Config) Validate() error {
+func (c *ObjectStorageConfig) Validate() error {
 	if (c.SecretKey == "" || c.AccessKey == "") && c.ServiceAccount == "" {
-		return consterr.Error("S3 authentication is not provided, provide service_account for hmac-key generation (recommended) or pair access_key, secret_key")
+		return consterr.Error("Object Storage authentication is not provided, provide service_account for hmac-key generation (recommended) or pair access_key, secret_key")
 	}
 	return nil
 }
