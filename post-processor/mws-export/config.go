@@ -103,7 +103,8 @@ func (c *ObjectStorageConfig) SetDefaults() {
 
 func (c *ObjectStorageConfig) Validate() error {
 	if (c.SecretKey == "" || c.AccessKey == "") && c.ServiceAccount == "" {
-		return consterr.Error("Object Storage authentication is not provided, provide service_account for hmac-key generation (recommended) or pair access_key, secret_key")
+		return consterr.Error("Object Storage authentication is not provided, " +
+			"provide service_account for hmac-key generation (recommended) or pair access_key, secret_key")
 	}
 	return nil
 }
