@@ -198,6 +198,7 @@ func TestConfig_Prepare(t *testing.T) {
 
 			if tt.wantErr {
 				require.Error(t, err)
+				expectedDir.String(t, tt.name+".txt", err.Error())
 			} else {
 				require.NoError(t, err)
 				expectedDir.JSON(t, tt.name+".json", c)

@@ -7,9 +7,11 @@ import (
 	"cmp"
 	"context"
 
+	"github.com/hashicorp/packer-plugin-sdk/communicator"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/packerbuilderdata"
+	commonconfig "github.com/mws-cloud-platform/packer-plugin-mws/internal/config"
 	drivermws "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 	"go.mws.cloud/go-sdk/pkg/apimodels/cidraddress"
 	"go.mws.cloud/go-sdk/pkg/apimodels/units/bytesize"
@@ -22,11 +24,14 @@ const (
 )
 
 type StepCreateVirtualMachine struct {
+	Communicator communicator.Config `mapstructure:",squash" json:"-"`
+	commonconfig.AccessConfig
+	commonconfig.VirtualMachineConfig
+
 	GeneratedData *packerbuilderdata.GeneratedData
 }
 
 func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	config := state.Get(ConfigKey).(*Config)
 	driver := state.Get(DriverKey).(StepCreateVirtualMachineDriver)
 	prefix := state.Get(PrefixKey).(string)
 	ui := state.Get(UIKey).(packer.Ui)
@@ -37,23 +42,23 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 		externalAddressRef *vpcref.ExternalAddressRef
 	)
 
-	if config.SourceImage != "" {
-		imageRef = new(computeref.NewImageRef(config.SourceProject, config.SourceImage))
+	if s.SourceImage != "" {
+		imageRef = new(computeref.NewImageRef(s.SourceProject, s.SourceImage))
 	}
-	if config.SourceSnapshot != "" {
-		snapshotRef = new(computeref.NewSnapshotRef(config.SourceProject, config.SourceSnapshot))
+	if s.SourceSnapshot != "" {
+		snapshotRef = new(computeref.NewSnapshotRef(s.SourceProject, s.SourceSnapshot))
 	}
 
-	diskName := cmp.Or(config.DiskName, prefix+"disk")
+	diskName := cmp.Or(s.DiskName, prefix+"disk")
 	ui.Sayf("Creating disk...")
 	if err := driver.CreateDisk(ctx, drivermws.CreateDiskParams{
 		DiskName:    diskName,
-		DiskType:    config.DiskType,
-		Size:        bytesize.MustParseString(config.DiskSize),
-		Iops:        config.DiskIOPS,
+		DiskType:    s.DiskType,
+		Size:        bytesize.MustParseString(s.DiskSize),
+		Iops:        s.DiskIOPS,
 		ImageRef:    imageRef,
 		SnapshotRef: snapshotRef,
-		Zone:        config.Zone,
+		Zone:        s.Zone,
 	}); err != nil {
 		return ActionHaltWithErrorf(state, "create disk %q: %w", diskName, err)
 	}
@@ -61,11 +66,11 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	ui.Sayf("Disk %q created", diskName)
 	state.Put(DiskNameKey, diskName)
 
-	diskRef := new(computeref.NewDiskRef(config.Project, diskName))
+	diskRef := new(computeref.NewDiskRef(s.Project, diskName))
 	state.Put(DiskRefKey, diskRef)
 
-	if config.UseExternalAddress {
-		externalAddressName := cmp.Or(config.ExternalAddressName, prefix+"external-address")
+	if s.UseExternalAddress {
+		externalAddressName := cmp.Or(s.ExternalAddressName, prefix+"external-address")
 		ui.Sayf("Creating external address...")
 		externalAddress, err := driver.CreateExternalAddress(ctx, drivermws.CreateExternalAddressParams{
 			ExternalAddressName: externalAddressName,
@@ -77,11 +82,11 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 		ui.Sayf("External Address %q created", externalAddressName)
 		state.Put(ExternalAddressNameKey, externalAddressName)
 		state.Put(InstanceIPKey, externalAddress)
-		externalAddressRef = new(vpcref.NewExternalAddressRef(config.Project, externalAddressName))
+		externalAddressRef = new(vpcref.NewExternalAddressRef(s.Project, externalAddressName))
 	}
 
-	networkName := cmp.Or(config.NetworkName, prefix+"network")
-	if config.NetworkName == "" {
+	networkName := cmp.Or(s.NetworkName, prefix+"network")
+	if s.NetworkName == "" {
 		ui.Sayf("Creating network...")
 		if err := driver.CreateNetwork(ctx, drivermws.CreateNetworkParams{
 			NetworkName: networkName,
@@ -93,13 +98,13 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	}
 	state.Put(NetworkNameKey, networkName)
 
-	subnetName := cmp.Or(config.SubnetName, prefix+"subnet")
-	if config.SubnetName == "" {
+	subnetName := cmp.Or(s.SubnetName, prefix+"subnet")
+	if s.SubnetName == "" {
 		ui.Sayf("Creating subnet...")
 		if err := driver.CreateSubnet(ctx, drivermws.CreateSubnetParams{
 			NetworkName: networkName,
 			SubnetName:  subnetName,
-			SubnetCidr:  cidraddress.MustParseCIDR4AddressString(config.SubnetCidr),
+			SubnetCidr:  cidraddress.MustParseCIDR4AddressString(s.SubnetCidr),
 		}); err != nil {
 			return ActionHaltWithErrorf(state, "create subnet %q: %w", subnetName, err)
 		}
@@ -107,17 +112,17 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 		ui.Sayf("Subnet %q created", subnetName)
 	}
 	state.Put(SubnetNameKey, subnetName)
-	subnetRef := new(vpcref.NewSubnetRef(config.Project, networkName, subnetName))
+	subnetRef := new(vpcref.NewSubnetRef(s.Project, networkName, subnetName))
 
-	virtualMachineName := cmp.Or(config.VirtualMachineName, prefix+"vm")
+	virtualMachineName := cmp.Or(s.VirtualMachineName, prefix+"vm")
 	ui.Sayf("Creating virtual machine...")
 	internalAddress, err := driver.CreateVirtualMachine(ctx, drivermws.CreateVirtualMachineParams{
 		VirtualMachineName: virtualMachineName,
-		VMType:             config.VMType,
-		Zone:               config.Zone,
-		SSHUsername:        config.Communicator.SSHUsername,
-		SSHPublicKey:       string(config.Communicator.SSHPublicKey),
-		CloudConfig:        config.CloudConfig,
+		VMType:             s.VMType,
+		Zone:               s.Zone,
+		SSHUsername:        s.Communicator.SSHUsername,
+		SSHPublicKey:       string(s.Communicator.SSHPublicKey),
+		CloudConfig:        s.CloudConfig,
 		DiskRef:            diskRef,
 		ExternalAddressRef: externalAddressRef,
 		SubnetRef:          subnetRef,
@@ -129,7 +134,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	ui.Sayf("Virtual Machine %q created", virtualMachineName)
 	state.Put(VirtualMachineNameKey, virtualMachineName)
 
-	if config.UseExternalAddress {
+	if s.UseExternalAddress {
 		ui.Sayf("Creating firewall rule...")
 		err = driver.CreateFirewallRule(ctx, drivermws.CreateFirewallRuleParams{
 			NetworkName:                   networkName,
@@ -150,19 +155,18 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	// instance id inside of the provisioners, used in step_provision.
 	state.Put(InstanceIDKey, virtualMachineName)
 
-	s.GeneratedData.Put("SourceProject", config.SourceProject)
-	s.GeneratedData.Put("SourceImageName", config.SourceImage)
-	s.GeneratedData.Put("SourceSnapshotName", config.SourceSnapshot)
+	s.GeneratedData.Put("SourceProject", s.SourceProject)
+	s.GeneratedData.Put("SourceImageName", s.SourceImage)
+	s.GeneratedData.Put("SourceSnapshotName", s.SourceSnapshot)
 
 	return multistep.ActionContinue
 }
 
 func (s *StepCreateVirtualMachine) Cleanup(state multistep.StateBag) {
-	config := state.Get(ConfigKey).(*Config)
 	driver := state.Get(DriverKey).(StepCreateVirtualMachineDriver)
 	ui := state.Get(UIKey).(packer.Ui)
 
-	ctx, cancel := context.WithTimeout(context.Background(), config.CleanupTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), s.CleanupTimeout)
 	defer cancel()
 
 	diskName := stateGetOkString(state, DiskNameKey)
@@ -190,7 +194,7 @@ func (s *StepCreateVirtualMachine) Cleanup(state multistep.StateBag) {
 		}
 	}
 
-	if subnetName != "" && config.SubnetName == "" {
+	if subnetName != "" && s.SubnetName == "" {
 		if err := driver.DeleteSubnet(ctx, networkName, subnetName); err != nil {
 			ui.Errorf("Error deleting subnet %q in network %q. Please delete it manually.\n"+
 				"Error: %v.", subnetName, networkName, err)
@@ -199,7 +203,7 @@ func (s *StepCreateVirtualMachine) Cleanup(state multistep.StateBag) {
 		}
 	}
 
-	if networkName != "" && config.NetworkName == "" {
+	if networkName != "" && s.NetworkName == "" {
 		if err := driver.DeleteNetwork(ctx, networkName); err != nil {
 			ui.Errorf("Error deleting network %q. Please delete it manually.\n"+
 				"Error: %v.", networkName, err)

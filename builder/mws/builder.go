@@ -60,7 +60,6 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 	}
 
 	state := new(multistep.BasicStateBag)
-	state.Put(ConfigKey, &b.config)
 	state.Put(DriverKey, driver)
 	state.Put(HookKey, hook)
 	state.Put(UIKey, ui)
@@ -79,7 +78,10 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			},
 		),
 		&StepCreateVirtualMachine{
-			GeneratedData: generatedData,
+			Communicator:         b.config.Communicator,
+			AccessConfig:         b.config.AccessConfig,
+			VirtualMachineConfig: b.config.VirtualMachineConfig,
+			GeneratedData:        generatedData,
 		},
 		&communicator.StepConnect{
 			Config:    &b.config.Communicator,

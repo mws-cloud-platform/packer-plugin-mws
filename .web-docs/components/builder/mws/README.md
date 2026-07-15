@@ -61,16 +61,16 @@ configured for this builder.
   noted in the description of the field
 -->
 
-<!-- Code generated from the comments of the Config struct in builder/mws/config.go; DO NOT EDIT MANUALLY -->
+<!-- Code generated from the comments of the AccessConfig struct in internal/config/config.go; DO NOT EDIT MANUALLY -->
 
 - `project` (string) - The project identifier where resources will be created.
 
-<!-- End of code generated from the comments of the Config struct in builder/mws/config.go; -->
+<!-- End of code generated from the comments of the AccessConfig struct in internal/config/config.go; -->
 
 
 **Optional**
 
-<!-- Code generated from the comments of the Config struct in builder/mws/config.go; DO NOT EDIT MANUALLY -->
+<!-- Code generated from the comments of the AccessConfig struct in internal/config/config.go; DO NOT EDIT MANUALLY -->
 
 - `zone` (string) - The zone in which the VM will be created (defaults to "ru-central1-a")
 
@@ -84,13 +84,9 @@ configured for this builder.
 - `token` (string) - IAM token used for authentication.
   Can be specified using the `MWS_TOKEN` environment variable.
 
-- `virtual_machine_name` (string) - Name for the temporary build VM (defaults to "packer-{{uuid}}-vm").
+<!-- End of code generated from the comments of the AccessConfig struct in internal/config/config.go; -->
 
-- `vm_type` (string) - The VM type (defaults to "gen-2-8").
-
-- `image_name` (string) - Name for the resulting image (defaults to "packer-{{uuid}}-image").
-
-- `image_description` (string) - Description for the resulting image. (defaults to "Image created by Packer").
+<!-- Code generated from the comments of the DiskConfig struct in internal/config/config.go; DO NOT EDIT MANUALLY -->
 
 - `disk_name` (string) - Name for the disk (defaults to "packer-{{uuid}}-disk").
 
@@ -106,6 +102,10 @@ configured for this builder.
 
 - `source_snapshot` (string) - ID of an existing snapshot to use as a base (required unless using `source_image`).
 
+<!-- End of code generated from the comments of the DiskConfig struct in internal/config/config.go; -->
+
+<!-- Code generated from the comments of the NetworkConfig struct in internal/config/config.go; DO NOT EDIT MANUALLY -->
+
 - `network_name` (string) - Name for the network (defaults to "packer-{{uuid}}-network").
   If specified, Packer will use existing network.
 
@@ -119,6 +119,14 @@ configured for this builder.
 - `external_address_name` (string) - External address name (defaults to "packer-{{uuid}}-external-address").
   Can be specified only if external address usage is enabled.
 
+<!-- End of code generated from the comments of the NetworkConfig struct in internal/config/config.go; -->
+
+<!-- Code generated from the comments of the VirtualMachineConfig struct in internal/config/config.go; DO NOT EDIT MANUALLY -->
+
+- `virtual_machine_name` (string) - Name for the temporary build VM (defaults to "packer-{{uuid}}-vm").
+
+- `vm_type` (string) - The VM type (defaults to "gen-2-8").
+
 - `cleanup_timeout` (duration string | ex: "1h5m2s") - Timeout for cleanup of create virtual machine step (defaults to "1h").
 
 - `cloud_config` (string) - Configuration script for initial setup of a virtual machine in the
@@ -126,7 +134,15 @@ configured for this builder.
   format. Note that this configuration would be extended with SSH key used
   for Packer communicator.
 
-<!-- End of code generated from the comments of the Config struct in builder/mws/config.go; -->
+<!-- End of code generated from the comments of the VirtualMachineConfig struct in internal/config/config.go; -->
+
+<!-- Code generated from the comments of the ImageConfig struct in internal/config/config.go; DO NOT EDIT MANUALLY -->
+
+- `image_name` (string) - Name for the resulting image (defaults to "packer-{{uuid}}-image").
+
+- `image_description` (string) - Description for the resulting image. (defaults to "Image created by Packer").
+
+<!-- End of code generated from the comments of the ImageConfig struct in internal/config/config.go; -->
 
 
 <!--

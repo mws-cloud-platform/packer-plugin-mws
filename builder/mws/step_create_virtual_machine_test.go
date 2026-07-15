@@ -14,6 +14,7 @@ import (
 
 	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
 	mockmws "github.com/mws-cloud-platform/packer-plugin-mws/builder/mws/mock"
+	commonconfig "github.com/mws-cloud-platform/packer-plugin-mws/internal/config"
 	drivermws "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 	"go.mws.cloud/go-sdk/pkg/apimodels/cidraddress"
 	"go.mws.cloud/go-sdk/pkg/apimodels/units/bytesize"
@@ -34,60 +35,101 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 		{
 			name: "all_set",
 			config: &mws.Config{
-				Project:             testProjectName,
-				DiskName:            testDiskName,
-				NetworkName:         testNetworkName,
-				SubnetName:          testSubnetName,
-				ExternalAddressName: testExternalAddressName,
-				VirtualMachineName:  testVirtualMachineName,
-				SourceImage:         testSourceImage,
-				UseExternalAddress:  true,
+				AccessConfig: commonconfig.AccessConfig{
+					Project: testProjectName,
+				},
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						DiskName:    testDiskName,
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						NetworkName:         testNetworkName,
+						SubnetName:          testSubnetName,
+						ExternalAddressName: testExternalAddressName,
+						UseExternalAddress:  true,
+					},
+					VirtualMachineName: testVirtualMachineName,
+				},
 			},
 		},
 		{
 			name: "network_set",
 			config: &mws.Config{
-				Project:            testProjectName,
-				SourceImage:        testSourceImage,
-				NetworkName:        testNetworkName,
-				UseExternalAddress: true,
+				AccessConfig: commonconfig.AccessConfig{
+					Project: testProjectName,
+				},
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						NetworkName:        testNetworkName,
+						UseExternalAddress: true,
+					},
+				},
 			},
 		},
 		{
 			name: "all_default",
 			config: &mws.Config{
-				Project:            testProjectName,
-				SourceImage:        testSourceImage,
-				UseExternalAddress: true,
+				AccessConfig: commonconfig.AccessConfig{
+					Project: testProjectName,
+				},
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
+				},
 			},
 		},
 		{
 			name: "no_external_address_all_set",
 			config: &mws.Config{
-				Project:            testProjectName,
-				DiskName:           testDiskName,
-				NetworkName:        testNetworkName,
-				SubnetName:         testSubnetName,
-				VirtualMachineName: testVirtualMachineName,
-				SourceImage:        testSourceImage,
-				UseExternalAddress: false,
+				AccessConfig: commonconfig.AccessConfig{
+					Project: testProjectName,
+				},
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						DiskName:    testDiskName,
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						NetworkName:        testNetworkName,
+						SubnetName:         testSubnetName,
+						UseExternalAddress: false,
+					},
+					VirtualMachineName: testVirtualMachineName,
+				},
 			},
 		},
 		{
 			name: "no_external_address_default",
 			config: &mws.Config{
-				Project:            testProjectName,
-				SourceImage:        testSourceImage,
-				NetworkName:        testNetworkName,
-				SubnetName:         testSubnetName,
-				UseExternalAddress: false,
+				AccessConfig: commonconfig.AccessConfig{
+					Project: testProjectName,
+				},
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						NetworkName:        testNetworkName,
+						SubnetName:         testSubnetName,
+						UseExternalAddress: false,
+					},
+				},
 			},
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			driver := mockmws.NewMockDriver(ctrl)
-			writer, state := prepareState(t, tt.config, driver)
+			writer, state := prepareState(driver)
+			prepareConfig(t, tt.config)
 
 			expectedDiskName := cmp.Or(tt.config.DiskName, defaultDiskName)
 			expectedExternalAddressName := cmp.Or(tt.config.ExternalAddressName, defaultExternalAddressName)
@@ -104,11 +146,11 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 			driver.EXPECT().
 				CreateDisk(gomock.Any(), drivermws.CreateDiskParams{
 					DiskName: expectedDiskName,
-					DiskType: mws.DefaultDiskType,
-					Size:     bytesize.MustParseString(mws.DefaultDiskSize),
-					Iops:     mws.DefaultDiskIOPS,
+					DiskType: commonconfig.DefaultDiskType,
+					Size:     bytesize.MustParseString(commonconfig.DefaultDiskSize),
+					Iops:     commonconfig.DefaultDiskIOPS,
 					ImageRef: new(computeref.NewImageRef(tt.config.Project, testSourceImage)),
-					Zone:     mws.DefaultZone,
+					Zone:     commonconfig.DefaultZone,
 				}).
 				Times(1)
 
@@ -133,7 +175,7 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 						CreateSubnet(gomock.Any(), drivermws.CreateSubnetParams{
 							NetworkName: expectedNetworkName,
 							SubnetName:  expectedSubnetName,
-							SubnetCidr:  cidraddress.MustParseCIDR4AddressString(mws.DefaultSubnetCidr),
+							SubnetCidr:  cidraddress.MustParseCIDR4AddressString(commonconfig.DefaultSubnetCidr),
 						}).
 						Times(1)
 				}
@@ -142,9 +184,9 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 			driver.EXPECT().
 				CreateVirtualMachine(gomock.Any(), drivermws.CreateVirtualMachineParams{
 					VirtualMachineName: expectedVirtualMachineName,
-					VMType:             mws.DefaultVMType,
-					Zone:               mws.DefaultZone,
-					SSHUsername:        mws.DefaultSSHUsername,
+					VMType:             commonconfig.DefaultVMType,
+					Zone:               commonconfig.DefaultZone,
+					SSHUsername:        commonconfig.DefaultSSHUsername,
 					SSHPublicKey:       testSSHPublicKey,
 					DiskRef:            expectedDiskRef,
 					ExternalAddressRef: expectedExternalAddressRef,
@@ -164,7 +206,10 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 			}
 
 			step := &mws.StepCreateVirtualMachine{
-				GeneratedData: &packerbuilderdata.GeneratedData{State: state},
+				Communicator:         tt.config.Communicator,
+				AccessConfig:         tt.config.AccessConfig,
+				VirtualMachineConfig: tt.config.VirtualMachineConfig,
+				GeneratedData:        &packerbuilderdata.GeneratedData{State: state},
 			}
 
 			requireActionContinue(t, state, step.Run(t.Context(), state))
@@ -206,53 +251,95 @@ func TestStepCreateVirtualMachine_Cleanup_Success(t *testing.T) {
 		{
 			name: "all_set",
 			config: &mws.Config{
-				Project:             testProjectName,
-				DiskName:            testDiskName,
-				NetworkName:         testNetworkName,
-				SubnetName:          testSubnetName,
-				ExternalAddressName: testExternalAddressName,
-				VirtualMachineName:  testVirtualMachineName,
-				SourceImage:         testSourceImage,
-				UseExternalAddress:  true,
+				AccessConfig: commonconfig.AccessConfig{
+					Project: testProjectName,
+				},
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						DiskName: testDiskName,
+
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						NetworkName:         testNetworkName,
+						SubnetName:          testSubnetName,
+						ExternalAddressName: testExternalAddressName,
+						UseExternalAddress:  true,
+					},
+					VirtualMachineName: testVirtualMachineName,
+				},
 			},
 		},
 		{
 			name: "network_set",
 			config: &mws.Config{
-				Project:            testProjectName,
-				SourceImage:        testSourceImage,
-				NetworkName:        testNetworkName,
-				UseExternalAddress: true,
+				AccessConfig: commonconfig.AccessConfig{
+					Project: testProjectName,
+				},
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						NetworkName:        testNetworkName,
+						UseExternalAddress: true,
+					},
+				},
 			},
 		},
 		{
 			name: "all_default",
 			config: &mws.Config{
-				Project:            testProjectName,
-				SourceImage:        testSourceImage,
-				UseExternalAddress: true,
+				AccessConfig: commonconfig.AccessConfig{
+					Project: testProjectName,
+				},
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
+				},
 			},
 		},
 		{
 			name: "no_external_address_all_set",
 			config: &mws.Config{
-				Project:            testProjectName,
-				DiskName:           testDiskName,
-				NetworkName:        testNetworkName,
-				SubnetName:         testSubnetName,
-				VirtualMachineName: testVirtualMachineName,
-				SourceImage:        testSourceImage,
-				UseExternalAddress: false,
+				AccessConfig: commonconfig.AccessConfig{
+					Project: testProjectName,
+				},
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						DiskName:    testDiskName,
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						NetworkName:        testNetworkName,
+						SubnetName:         testSubnetName,
+						UseExternalAddress: false,
+					},
+					VirtualMachineName: testVirtualMachineName,
+				},
 			},
 		},
 		{
 			name: "no_external_address_default",
 			config: &mws.Config{
-				Project:            testProjectName,
-				SourceImage:        testSourceImage,
-				NetworkName:        testNetworkName,
-				SubnetName:         testSubnetName,
-				UseExternalAddress: false,
+				AccessConfig: commonconfig.AccessConfig{
+					Project: testProjectName,
+				},
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						NetworkName:        testNetworkName,
+						SubnetName:         testSubnetName,
+						UseExternalAddress: false,
+					},
+				},
 			},
 		},
 	} {
@@ -276,7 +363,8 @@ func TestStepCreateVirtualMachine_Cleanup_Success(t *testing.T) {
 			t.Run(tt.name, func(t *testing.T) {
 				ctrl := gomock.NewController(t)
 				driver := mockmws.NewMockDriver(ctrl)
-				writer, state := prepareState(t, tt.config, driver)
+				writer, state := prepareState(driver)
+				prepareConfig(t, tt.config)
 
 				expectedDiskName := cmp.Or(tt.config.DiskName, defaultDiskName)
 				expectedExternalAddressName := cmp.Or(tt.config.ExternalAddressName, defaultExternalAddressName)
@@ -330,7 +418,10 @@ func TestStepCreateVirtualMachine_Cleanup_Success(t *testing.T) {
 				}()
 
 				step := &mws.StepCreateVirtualMachine{
-					GeneratedData: &packerbuilderdata.GeneratedData{State: state},
+					Communicator:         tt.config.Communicator,
+					AccessConfig:         tt.config.AccessConfig,
+					VirtualMachineConfig: tt.config.VirtualMachineConfig,
+					GeneratedData:        &packerbuilderdata.GeneratedData{State: state},
 				}
 
 				step.Cleanup(state)
@@ -352,76 +443,140 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 		{
 			name: "CreateDisk_use_external_address",
 			config: &mws.Config{
-				Project:            testProjectName,
-				SourceImage:        testSourceImage,
-				UseExternalAddress: true,
+				AccessConfig: commonconfig.AccessConfig{
+					Project: testProjectName,
+				},
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
+				},
 			},
 			errorStep: "CreateDisk",
 		},
 		{
 			name: "CreateExternalAddress_use_external_address",
 			config: &mws.Config{
-				Project:            testProjectName,
-				SourceImage:        testSourceImage,
-				UseExternalAddress: true,
+				AccessConfig: commonconfig.AccessConfig{
+					Project: testProjectName,
+				},
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
+				},
 			},
 			errorStep: "CreateExternalAddress",
 		},
 		{
 			name: "CreateNetwork_use_external_address",
 			config: &mws.Config{
-				Project:            testProjectName,
-				SourceImage:        testSourceImage,
-				UseExternalAddress: true,
+				AccessConfig: commonconfig.AccessConfig{
+					Project: testProjectName,
+				},
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
+				},
 			},
 			errorStep: "CreateNetwork",
 		},
 		{
 			name: "CreateSubnet_use_external_address",
 			config: &mws.Config{
-				Project:            testProjectName,
-				SourceImage:        testSourceImage,
-				UseExternalAddress: true,
+				AccessConfig: commonconfig.AccessConfig{
+					Project: testProjectName,
+				},
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
+				},
 			},
 			errorStep: "CreateSubnet",
 		},
 		{
 			name: "CreateVirtualMachine_use_external_address",
 			config: &mws.Config{
-				Project:            testProjectName,
-				SourceImage:        testSourceImage,
-				UseExternalAddress: true,
+				AccessConfig: commonconfig.AccessConfig{
+					Project: testProjectName,
+				},
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
+				},
 			},
 			errorStep: "CreateVirtualMachine",
 		},
 		{
 			name: "CreateFirewallRule_use_external_address",
 			config: &mws.Config{
-				Project:            testProjectName,
-				SourceImage:        testSourceImage,
-				UseExternalAddress: true,
+				AccessConfig: commonconfig.AccessConfig{
+					Project: testProjectName,
+				},
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
+				},
 			},
 			errorStep: "CreateFirewallRule",
 		},
 		{
 			name: "CreateDisk_no_external_address",
 			config: &mws.Config{
-				Project:            testProjectName,
-				SourceImage:        testSourceImage,
-				NetworkName:        testNetworkName,
-				SubnetName:         testSubnetName,
-				UseExternalAddress: false,
+				AccessConfig: commonconfig.AccessConfig{
+					Project: testProjectName,
+				},
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						NetworkName:        testNetworkName,
+						SubnetName:         testSubnetName,
+						UseExternalAddress: false,
+					},
+				},
 			},
 			errorStep: "CreateDisk",
 		},
 		{
 			name: "CreateVirtualMachine_no_external_address",
 			config: &mws.Config{
-				Project:            testProjectName,
-				SourceImage:        testSourceImage,
-				NetworkName:        testNetworkName,
-				SubnetName:         testSubnetName,
-				UseExternalAddress: false,
+				AccessConfig: commonconfig.AccessConfig{
+					Project: testProjectName,
+				},
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						NetworkName:        testNetworkName,
+						SubnetName:         testSubnetName,
+						UseExternalAddress: false,
+					},
+				},
 			},
 			errorStep: "CreateVirtualMachine",
 		},
@@ -429,8 +584,8 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			driver := mockmws.NewMockDriver(ctrl)
-
-			writer, state := prepareState(t, tt.config, driver)
+			writer, state := prepareState(driver)
+			prepareConfig(t, tt.config)
 
 			expectedDiskName := defaultDiskName
 			expectedExternalAddressName := defaultExternalAddressName
@@ -498,7 +653,10 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 			}()
 
 			step := &mws.StepCreateVirtualMachine{
-				GeneratedData: &packerbuilderdata.GeneratedData{State: state},
+				Communicator:         tt.config.Communicator,
+				AccessConfig:         tt.config.AccessConfig,
+				VirtualMachineConfig: tt.config.VirtualMachineConfig,
+				GeneratedData:        &packerbuilderdata.GeneratedData{State: state},
 			}
 
 			requireActionHalt(t, state, step.Run(t.Context(), state))
@@ -521,76 +679,140 @@ func TestStepCreateVirtualMachine_Cleanup_Error(t *testing.T) {
 		{
 			name: "DeleteFirewallRule_use_external_address",
 			config: &mws.Config{
-				Project:            testProjectName,
-				SourceImage:        testSourceImage,
-				UseExternalAddress: true,
+				AccessConfig: commonconfig.AccessConfig{
+					Project: testProjectName,
+				},
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
+				},
 			},
 			errorStep: "DeleteFirewallRule",
 		},
 		{
 			name: "DeleteVirtualMachine_use_external_address",
 			config: &mws.Config{
-				Project:            testProjectName,
-				SourceImage:        testSourceImage,
-				UseExternalAddress: true,
+				AccessConfig: commonconfig.AccessConfig{
+					Project: testProjectName,
+				},
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
+				},
 			},
 			errorStep: "DeleteVirtualMachine",
 		},
 		{
 			name: "DeleteSubnet_use_external_address",
 			config: &mws.Config{
-				Project:            testProjectName,
-				SourceImage:        testSourceImage,
-				UseExternalAddress: true,
+				AccessConfig: commonconfig.AccessConfig{
+					Project: testProjectName,
+				},
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
+				},
 			},
 			errorStep: "DeleteSubnet",
 		},
 		{
 			name: "DeleteNetwork_use_external_address",
 			config: &mws.Config{
-				Project:            testProjectName,
-				SourceImage:        testSourceImage,
-				UseExternalAddress: true,
+				AccessConfig: commonconfig.AccessConfig{
+					Project: testProjectName,
+				},
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
+				},
 			},
 			errorStep: "DeleteNetwork",
 		},
 		{
 			name: "DeleteExternalAddress_use_external_address",
 			config: &mws.Config{
-				Project:            testProjectName,
-				SourceImage:        testSourceImage,
-				UseExternalAddress: true,
+				AccessConfig: commonconfig.AccessConfig{
+					Project: testProjectName,
+				},
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
+				},
 			},
 			errorStep: "DeleteExternalAddress",
 		},
 		{
 			name: "DeleteDisk_use_external_address",
 			config: &mws.Config{
-				Project:            testProjectName,
-				SourceImage:        testSourceImage,
-				UseExternalAddress: true,
+				AccessConfig: commonconfig.AccessConfig{
+					Project: testProjectName,
+				},
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
+				},
 			},
 			errorStep: "DeleteDisk",
 		},
 		{
 			name: "DeleteVirtualMachine_no_external_address",
 			config: &mws.Config{
-				Project:            testProjectName,
-				SourceImage:        testSourceImage,
-				NetworkName:        testNetworkName,
-				SubnetName:         testSubnetName,
-				UseExternalAddress: false,
+				AccessConfig: commonconfig.AccessConfig{
+					Project: testProjectName,
+				},
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						NetworkName:        testNetworkName,
+						SubnetName:         testSubnetName,
+						UseExternalAddress: false,
+					},
+				},
 			},
 			errorStep: "DeleteVirtualMachine",
 		},
 		{
 			name: "DeleteDisk_no_external_address",
 			config: &mws.Config{
-				Project:            testProjectName,
-				SourceImage:        testSourceImage,
-				NetworkName:        testNetworkName,
-				SubnetName:         testSubnetName,
-				UseExternalAddress: false,
+				AccessConfig: commonconfig.AccessConfig{
+					Project: testProjectName,
+				},
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceImage: testSourceImage,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						NetworkName:        testNetworkName,
+						SubnetName:         testSubnetName,
+						UseExternalAddress: false,
+					},
+				},
 			},
 			errorStep: "DeleteDisk",
 		},
@@ -598,8 +820,8 @@ func TestStepCreateVirtualMachine_Cleanup_Error(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			driver := mockmws.NewMockDriver(ctrl)
-
-			writer, state := prepareState(t, tt.config, driver)
+			writer, state := prepareState(driver)
+			prepareConfig(t, tt.config)
 
 			expectedDiskName := defaultDiskName
 			expectedExternalAddressName := defaultExternalAddressName
@@ -635,7 +857,10 @@ func TestStepCreateVirtualMachine_Cleanup_Error(t *testing.T) {
 			}
 
 			step := &mws.StepCreateVirtualMachine{
-				GeneratedData: &packerbuilderdata.GeneratedData{State: state},
+				Communicator:         tt.config.Communicator,
+				AccessConfig:         tt.config.AccessConfig,
+				VirtualMachineConfig: tt.config.VirtualMachineConfig,
+				GeneratedData:        &packerbuilderdata.GeneratedData{State: state},
 			}
 
 			step.Cleanup(state)

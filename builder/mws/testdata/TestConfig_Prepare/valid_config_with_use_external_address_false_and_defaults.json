@@ -12,8 +12,6 @@
  "BaseEndpoint": "",
  "ServiceAccountAuthorizedKeyPath": "",
  "Token": "",
- "VirtualMachineName": "",
- "VMType": "gen-2-8",
  "ImageName": "",
  "ImageDescription": "Image created by Packer",
  "DiskName": "",
@@ -28,6 +26,8 @@
  "SubnetCidr": "192.168.0.0/16",
  "UseExternalAddress": false,
  "ExternalAddressName": "",
+ "VirtualMachineName": "",
+ "VMType": "gen-2-8",
  "CleanupTimeout": 3600000000000,
  "CloudConfig": ""
 }
