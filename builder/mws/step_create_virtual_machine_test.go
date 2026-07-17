@@ -206,7 +206,7 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 			}
 
 			step := &mws.StepCreateVirtualMachine{
-				Communicator:         tt.config.Communicator,
+				Communicator:         &tt.config.Communicator,
 				AccessConfig:         tt.config.AccessConfig,
 				VirtualMachineConfig: tt.config.VirtualMachineConfig,
 				GeneratedData:        &packerbuilderdata.GeneratedData{State: state},
@@ -418,7 +418,7 @@ func TestStepCreateVirtualMachine_Cleanup_Success(t *testing.T) {
 				}()
 
 				step := &mws.StepCreateVirtualMachine{
-					Communicator:         tt.config.Communicator,
+					Communicator:         &tt.config.Communicator,
 					AccessConfig:         tt.config.AccessConfig,
 					VirtualMachineConfig: tt.config.VirtualMachineConfig,
 					GeneratedData:        &packerbuilderdata.GeneratedData{State: state},
@@ -653,7 +653,7 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 			}()
 
 			step := &mws.StepCreateVirtualMachine{
-				Communicator:         tt.config.Communicator,
+				Communicator:         &tt.config.Communicator,
 				AccessConfig:         tt.config.AccessConfig,
 				VirtualMachineConfig: tt.config.VirtualMachineConfig,
 				GeneratedData:        &packerbuilderdata.GeneratedData{State: state},
@@ -857,7 +857,7 @@ func TestStepCreateVirtualMachine_Cleanup_Error(t *testing.T) {
 			}
 
 			step := &mws.StepCreateVirtualMachine{
-				Communicator:         tt.config.Communicator,
+				Communicator:         &tt.config.Communicator,
 				AccessConfig:         tt.config.AccessConfig,
 				VirtualMachineConfig: tt.config.VirtualMachineConfig,
 				GeneratedData:        &packerbuilderdata.GeneratedData{State: state},

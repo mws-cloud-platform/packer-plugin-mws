@@ -24,7 +24,7 @@ const (
 )
 
 type StepCreateVirtualMachine struct {
-	Communicator communicator.Config `mapstructure:",squash" json:"-"`
+	Communicator *communicator.Config
 	commonconfig.AccessConfig
 	commonconfig.VirtualMachineConfig
 
