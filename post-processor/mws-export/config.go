@@ -40,6 +40,11 @@ func (c *Config) Prepare(raws ...any) error {
 		PluginType:         BuilderId,
 		Interpolate:        true,
 		InterpolateContext: &c.ctx,
+		InterpolateFilter: &interpolate.RenderFilter{
+			Exclude: []string{
+				"object_storage_path",
+			},
+		},
 	}, raws...)
 	if err != nil {
 		return err
@@ -68,6 +73,7 @@ func (c *Config) Validate() error {
 		c.VirtualMachineConfig.Validate(),
 		c.DiskForExportConfig.Validate(),
 		c.ObjectStorageConfig.Validate(),
+		interpolate.Validate(c.ObjectStoragePath, &c.ctx),
 	)
 
 	err := errors.Join(errs...)
