@@ -14,6 +14,8 @@ import (
 
 type StepCreateHMACKey struct {
 	ServiceAccount string
+	AccessKey      string
+	SecretKey      string
 	CleanupTimeout time.Duration
 }
 
@@ -22,14 +24,23 @@ func (s *StepCreateHMACKey) Run(ctx context.Context, state multistep.StateBag) m
 	ui := state.Get(mws.UIKey).(packer.Ui)
 	name := s.hmacKeyName(state)
 
-	ui.Say("Creating temporary HMAC key...")
+	accessKey := s.AccessKey
+	secretKey := s.SecretKey
 
-	accessKey, secretKey, err := driver.CreateHMACKey(ctx, s.ServiceAccount, name)
-	if err != nil {
-		return mws.ActionHaltWithErrorf(state, "create hmac key: %w", err)
+	if s.ServiceAccount == "" {
+		ui.Say("Using provided HMAC key...")
+	} else {
+		ui.Say("Creating temporary HMAC key...")
+
+		var err error
+		accessKey, secretKey, err = driver.CreateHMACKey(ctx, s.ServiceAccount, name)
+		if err != nil {
+			return mws.ActionHaltWithErrorf(state, "create hmac key: %w", err)
+		}
+
+		ui.Say("HMAC key created")
 	}
 
-	ui.Say("HMAC key created")
 	state.Put(HMACAccessKeyStateKey, accessKey)
 	state.Put(HMACSecretKeyStateKey, secretKey)
 
@@ -40,7 +51,11 @@ func (s *StepCreateHMACKey) Cleanup(state multistep.StateBag) {
 	driver := state.Get(mws.DriverKey).(Driver)
 	ui := state.Get(mws.UIKey).(packer.Ui)
 
-	if _, ok := state.GetOk(HMACAccessKeyStateKey); !ok {
+	if s.ServiceAccount == "" {
+		return
+	}
+
+	if _, ok := state.GetOk(HMACAccessKeyStateKey); ok {
 		ctx, cancel := context.WithTimeout(context.Background(), s.CleanupTimeout)
 		defer cancel()
 
