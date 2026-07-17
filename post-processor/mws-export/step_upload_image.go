@@ -15,7 +15,6 @@ import (
 type StepUploadImage struct {
 	Endpoint string
 	Region   string
-	Bucket   string
 	Path     string
 }
 
@@ -25,13 +24,12 @@ func (s *StepUploadImage) Run(ctx context.Context, state multistep.StateBag) mul
 
 	uploadCmd := &packer.RemoteCmd{
 		Command: fmt.Sprintf(
-			"%s=%s aws s3 --region=%s --endpoint-url=%s cp %s s3://%s/%s",
+			"%s=%s aws s3 --region=%s --endpoint-url=%s cp %s s3://%s",
 			"AWS_SHARED_CREDENTIALS_FILE",
 			awsSharedCredsFile,
 			s.Region,
 			s.Endpoint,
 			diskImageFile,
-			s.Bucket,
 			s.Path,
 		),
 	}

@@ -96,8 +96,7 @@ type FlatConfig struct {
 	AccessKey                       *string           `mapstructure:"access_key" required:"false" cty:"access_key" hcl:"access_key"`
 	SecretKey                       *string           `mapstructure:"secret_key" required:"false" cty:"secret_key" hcl:"secret_key"`
 	ObjectStorageRegion             *string           `mapstructure:"object_storage_region" required:"false" cty:"object_storage_region" hcl:"object_storage_region"`
-	ObjectStorageBucket             *string           `mapstructure:"object_storage_bucket" required:"true" cty:"object_storage_bucket" hcl:"object_storage_bucket"`
-	ObjectStoragePath               *string           `mapstructure:"object_storage_key" required:"false" cty:"object_storage_key" hcl:"object_storage_key"`
+	ObjectStoragePath               *string           `mapstructure:"object_storage_path" required:"true" cty:"object_storage_path" hcl:"object_storage_path"`
 	ObjectStorageEndpoint           *string           `mapstructure:"object_storage_endpoint" required:"false" cty:"object_storage_endpoint" hcl:"object_storage_endpoint"`
 }
 
@@ -199,8 +198,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"access_key":                          &hcldec.AttrSpec{Name: "access_key", Type: cty.String, Required: false},
 		"secret_key":                          &hcldec.AttrSpec{Name: "secret_key", Type: cty.String, Required: false},
 		"object_storage_region":               &hcldec.AttrSpec{Name: "object_storage_region", Type: cty.String, Required: false},
-		"object_storage_bucket":               &hcldec.AttrSpec{Name: "object_storage_bucket", Type: cty.String, Required: false},
-		"object_storage_key":                  &hcldec.AttrSpec{Name: "object_storage_key", Type: cty.String, Required: false},
+		"object_storage_path":                 &hcldec.AttrSpec{Name: "object_storage_path", Type: cty.String, Required: false},
 		"object_storage_endpoint":             &hcldec.AttrSpec{Name: "object_storage_endpoint", Type: cty.String, Required: false},
 	}
 	return s
