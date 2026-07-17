@@ -29,11 +29,15 @@ func TestStepCreateHMACKey_Run(t *testing.T) {
 	dir := golden.NewDir(t, golden.WithPath(path.Join("testdata", t.Name())), golden.WithRecreateOnUpdate())
 
 	for _, tc := range []struct {
-		name string
-		err  error
+		name           string
+		err            error
+		serviceAccount string
+		accessKey      string
+		secretKey      string
 	}{
-		{name: "ok"},
-		{name: "error", err: errInternal},
+		{name: "ok", serviceAccount: serviceAccount},
+		{name: "error", err: errInternal, serviceAccount: serviceAccount},
+		{name: "unset-service-account", accessKey: "test-access-key", secretKey: "test-secret-key"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
@@ -45,19 +49,32 @@ func TestStepCreateHMACKey_Run(t *testing.T) {
 			state.Put(mws.UIKey, ui)
 			state.Put(mws.PrefixKey, prefix)
 			driver := mock.NewMockDriver(ctrl)
-			driver.EXPECT().
-				CreateHMACKey(gomock.Any(), serviceAccount, hmacKeyName).
-				Return("accessKey", "secretKey", tc.err)
+			if tc.serviceAccount != "" {
+				driver.EXPECT().
+					CreateHMACKey(gomock.Any(), tc.serviceAccount, hmacKeyName).
+					Return("accessKey", "secretKey", tc.err)
+			}
 			state.Put(mws.DriverKey, driver)
 
 			step := &mwsexport.StepCreateHMACKey{
-				ServiceAccount: serviceAccount,
+				ObjectStorageConfig: mwsexport.ObjectStorageConfig{
+					ServiceAccount: tc.serviceAccount,
+					AccessKey:      tc.accessKey,
+					SecretKey:      tc.secretKey,
+				},
 				CleanupTimeout: cleanupTimeout,
 			}
 
 			action := step.Run(t.Context(), state)
 			if tc.err == nil {
 				require.Equal(t, multistep.ActionContinue, action)
+				if tc.serviceAccount != "" {
+					require.Equal(t, "accessKey", state.Get(mwsexport.HMACAccessKeyStateKey))
+					require.Equal(t, "secretKey", state.Get(mwsexport.HMACSecretKeyStateKey))
+				} else {
+					require.Equal(t, tc.accessKey, state.Get(mwsexport.HMACAccessKeyStateKey))
+					require.Equal(t, tc.secretKey, state.Get(mwsexport.HMACSecretKeyStateKey))
+				}
 			} else {
 				require.Equal(t, multistep.ActionHalt, action)
 				require.ErrorIs(t, state.Get(mws.ErrorKey).(error), tc.err)
@@ -73,11 +90,13 @@ func TestStepCreateHMACKey_Cleanup(t *testing.T) {
 	dir := golden.NewDir(t, golden.WithPath(path.Join("testdata", t.Name())), golden.WithRecreateOnUpdate())
 
 	for _, tc := range []struct {
-		name string
-		err  error
+		name           string
+		err            error
+		serviceAccount string
 	}{
-		{name: "ok"},
-		{name: "error", err: errInternal},
+		{name: "ok", serviceAccount: serviceAccount},
+		{name: "error", err: errInternal, serviceAccount: serviceAccount},
+		{name: "unset-service-account", serviceAccount: ""},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
@@ -88,14 +107,21 @@ func TestStepCreateHMACKey_Cleanup(t *testing.T) {
 			ui := &packer.BasicUi{Writer: writer}
 			state.Put(mws.UIKey, ui)
 			state.Put(mws.PrefixKey, prefix)
+
 			driver := mock.NewMockDriver(ctrl)
-			driver.EXPECT().
-				DeleteHMACKey(gomock.Any(), serviceAccount, hmacKeyName).
-				Return(tc.err)
+			if tc.serviceAccount != "" {
+				driver.EXPECT().
+					DeleteHMACKey(gomock.Any(), tc.serviceAccount, hmacKeyName).
+					Return(tc.err)
+				state.Put(mwsexport.HMACAccessKeyStateKey, "accessKey")
+				state.Put(mwsexport.HMACSecretKeyStateKey, "secretKey")
+			}
 			state.Put(mws.DriverKey, driver)
 
 			step := &mwsexport.StepCreateHMACKey{
-				ServiceAccount: serviceAccount,
+				ObjectStorageConfig: mwsexport.ObjectStorageConfig{
+					ServiceAccount: tc.serviceAccount,
+				},
 				CleanupTimeout: cleanupTimeout,
 			}
 
