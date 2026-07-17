@@ -36,7 +36,6 @@
  "AccessKey": "",
  "SecretKey": "",
  "ObjectStorageRegion": "ru-central1",
- "ObjectStorageBucket": "test-bucket",
- "ObjectStoragePath": "",
+ "ObjectStoragePath": "test-bucker/path/to/image.qcow2",
  "ObjectStorageEndpoint": "https://storage.mwsapis.ru"
 }

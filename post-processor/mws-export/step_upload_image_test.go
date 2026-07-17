@@ -30,7 +30,7 @@ func TestStepUploadImage_Run(t *testing.T) {
 	step := &mwsexport.StepUploadImage{
 		Region:   "ru-central1",
 		Endpoint: "storage.mwsapis.ru",
-		Path:     "path/to/image",
+		Path:     "bucket/path/to/image",
 	}
 
 	action := step.Run(t.Context(), state)

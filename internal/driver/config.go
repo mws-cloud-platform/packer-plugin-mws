@@ -5,6 +5,10 @@ package driver
 
 import "time"
 
+const (
+	DiskForExportName = "disk-for-export"
+)
+
 type Config struct {
 	Project                         string
 	BaseEndpoint                    string

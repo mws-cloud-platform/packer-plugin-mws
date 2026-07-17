@@ -38,7 +38,17 @@ func (a *Artifact) String() string {
 }
 
 func (a *Artifact) State(name string) any {
-	return a.StateData[name]
+	if _, ok := a.StateData[name]; ok {
+		return a.StateData[name]
+	}
+	data, ok := a.StateData[GeneratedDataKey]
+	if !ok {
+		return nil
+	}
+	if dataMap, ok := data.(map[string]any); ok {
+		return dataMap[name]
+	}
+	return nil
 }
 
 func (a *Artifact) Destroy() error {

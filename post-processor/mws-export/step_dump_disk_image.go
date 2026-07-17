@@ -10,10 +10,11 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 )
 
 const (
-	device        = "/dev/disk/by-id/mws-disk-for-export"
+	device        = "/dev/disk/by-id/mws-" + driver.DiskForExportName
 	diskImageFile = "image.qcow2"
 )
 
@@ -30,7 +31,7 @@ func (s *StepDumpDiskImage) Run(ctx context.Context, state multistep.StateBag) m
 	}
 
 	ui.Say("Checking access...")
-	if err := checkAccessCmd.RunWithUi(ctx, comm, ui); err != nil {
+	if err := comm.Start(ctx, checkAccessCmd); err != nil {
 		return mws.ActionHaltWithError(state, err)
 	}
 	if code := checkAccessCmd.ExitStatus(); code != 0 {

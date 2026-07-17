@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	DefaultObjectStorageBucket   = "ru-central1"
+	DefaultObjectStorageRegion   = "ru-central1"
 	DefaultObjectStorageEndpoint = "https://storage.mwsapis.ru"
 )
 
@@ -84,16 +84,14 @@ type ObjectStorageConfig struct {
 	SecretKey string `mapstructure:"secret_key" required:"false"`
 	// Object storage region where the bucket is located (defaults to "ru-central1").
 	ObjectStorageRegion string `mapstructure:"object_storage_region" required:"false"`
-	// Object storage bucket where the image will be exported
-	ObjectStorageBucket string `mapstructure:"object_storage_bucket" required:"true"`
-	// Object storage path where the image will be stored (defaults to "packer-images/{{image_for_export}}.qcow2")
-	ObjectStoragePath string `mapstructure:"object_storage_key" required:"false"`
+	// Object storage path where the image will be stored.
+	ObjectStoragePath string `mapstructure:"object_storage_path" required:"true"`
 	// Endpoint of object storage to upload image (defaults to "https://storage.mwsapis.ru").
 	ObjectStorageEndpoint string `mapstructure:"object_storage_endpoint" required:"false"`
 }
 
 func (c *ObjectStorageConfig) SetDefaults() {
-	c.ObjectStorageRegion = cmp.Or(c.ObjectStorageRegion, DefaultObjectStorageBucket)
+	c.ObjectStorageRegion = cmp.Or(c.ObjectStorageRegion, DefaultObjectStorageRegion)
 	c.ObjectStorageEndpoint = cmp.Or(c.ObjectStorageEndpoint, DefaultObjectStorageEndpoint)
 }
 
