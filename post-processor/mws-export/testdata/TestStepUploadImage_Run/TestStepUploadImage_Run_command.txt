@@ -1,1 +1,1 @@
-AWS_SHARED_CREDENTIALS_FILE=/tmp/aws_credentials aws s3 --region=ru-central1 --endpoint-url=https://storage.mwsapis.ru cp image.qcow2 path/to/image
+AWS_SHARED_CREDENTIALS_FILE=/tmp/aws_credentials aws s3 --region=ru-central1 --endpoint-url=storage.mwsapis.ru cp image.qcow2 s3:///path/to/image
