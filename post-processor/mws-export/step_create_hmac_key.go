@@ -13,7 +13,9 @@ import (
 )
 
 type StepCreateHMACKey struct {
-	ObjectStorageConfig
+	ServiceAccount string
+	AccessKey      string
+	SecretKey      string
 	CleanupTimeout time.Duration
 }
 

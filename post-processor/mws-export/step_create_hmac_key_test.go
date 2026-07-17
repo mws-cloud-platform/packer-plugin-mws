@@ -57,11 +57,9 @@ func TestStepCreateHMACKey_Run(t *testing.T) {
 			state.Put(mws.DriverKey, driver)
 
 			step := &mwsexport.StepCreateHMACKey{
-				ObjectStorageConfig: mwsexport.ObjectStorageConfig{
-					ServiceAccount: tc.serviceAccount,
-					AccessKey:      tc.accessKey,
-					SecretKey:      tc.secretKey,
-				},
+				ServiceAccount: tc.serviceAccount,
+				AccessKey:      tc.accessKey,
+				SecretKey:      tc.secretKey,
 				CleanupTimeout: cleanupTimeout,
 			}
 
@@ -119,9 +117,7 @@ func TestStepCreateHMACKey_Cleanup(t *testing.T) {
 			state.Put(mws.DriverKey, driver)
 
 			step := &mwsexport.StepCreateHMACKey{
-				ObjectStorageConfig: mwsexport.ObjectStorageConfig{
-					ServiceAccount: tc.serviceAccount,
-				},
+				ServiceAccount: tc.serviceAccount,
 				CleanupTimeout: cleanupTimeout,
 			}
 
