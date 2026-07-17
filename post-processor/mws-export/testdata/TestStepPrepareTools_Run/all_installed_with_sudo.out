@@ -1,5 +1,9 @@
 Checking for required tools...
-Installing missing tools: [qemu-img aws]
+Installing missing tools: [qemu-img curl unzip aws]
+Command failed with exit code 1, trying with sudo
+Command failed with exit code 1, trying with sudo
+Command failed with exit code 1, trying with sudo
+Command failed with exit code 1, trying with sudo
 Command failed with exit code 1, trying with sudo
 Command failed with exit code 1, trying with sudo
 Command failed with exit code 1, trying with sudo
