@@ -42,10 +42,16 @@ func TestStepPrepareTools_Run(t *testing.T) {
 			configureCommMock: func(t *testing.T, comm *mock.MockCommunicator) *mock.MockCommunicator {
 				expectRemoteCmd(comm, "which qemu-img", nil, 1)
 				expectRemoteCmd(comm, "which aws", nil, 1)
+				expectRemoteCmd(comm, "which curl", nil, 1)
+				expectRemoteCmd(comm, "which unzip", nil, 1)
 				expectRemoteCmd(comm, "which apt", nil, 0)
 				expectRemoteCmd(comm, "apt update", nil, 0)
 				expectRemoteCmd(comm, "apt install -y qemu-utils", nil, 0)
-				expectRemoteCmd(comm, "apt install -y awscli", nil, 0)
+				expectRemoteCmd(comm, "apt install -y curl", nil, 0)
+				expectRemoteCmd(comm, "apt install -y unzip", nil, 0)
+				expectRemoteCmd(comm, `curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv.zip"`, nil, 0)
+				expectRemoteCmd(comm, `unzip awscliv.zip`, nil, 0)
+				expectRemoteCmd(comm, `./aws/install`, nil, 0)
 				return comm
 			},
 			expectedAction: multistep.ActionContinue,
@@ -55,13 +61,23 @@ func TestStepPrepareTools_Run(t *testing.T) {
 			configureCommMock: func(t *testing.T, comm *mock.MockCommunicator) *mock.MockCommunicator {
 				expectRemoteCmd(comm, "which qemu-img", nil, 1)
 				expectRemoteCmd(comm, "which aws", nil, 1)
+				expectRemoteCmd(comm, "which curl", nil, 1)
+				expectRemoteCmd(comm, "which unzip", nil, 1)
 				expectRemoteCmd(comm, "which apt", nil, 0)
 				expectRemoteCmd(comm, "apt update", nil, 1)
 				expectRemoteCmd(comm, "sudo apt update", nil, 0)
 				expectRemoteCmd(comm, "apt install -y qemu-utils", nil, 1)
 				expectRemoteCmd(comm, "sudo apt install -y qemu-utils", nil, 0)
-				expectRemoteCmd(comm, "apt install -y awscli", nil, 1)
-				expectRemoteCmd(comm, "sudo apt install -y awscli", nil, 0)
+				expectRemoteCmd(comm, "apt install -y curl", nil, 1)
+				expectRemoteCmd(comm, "sudo apt install -y curl", nil, 0)
+				expectRemoteCmd(comm, "apt install -y unzip", nil, 1)
+				expectRemoteCmd(comm, "sudo apt install -y unzip", nil, 0)
+				expectRemoteCmd(comm, `curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv.zip"`, nil, 1)
+				expectRemoteCmd(comm, `sudo curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv.zip"`, nil, 0)
+				expectRemoteCmd(comm, `unzip awscliv.zip`, nil, 1)
+				expectRemoteCmd(comm, `sudo unzip awscliv.zip`, nil, 0)
+				expectRemoteCmd(comm, `./aws/install`, nil, 1)
+				expectRemoteCmd(comm, `sudo ./aws/install`, nil, 0)
 				return comm
 			},
 			expectedAction: multistep.ActionContinue,
@@ -79,6 +95,8 @@ func TestStepPrepareTools_Run(t *testing.T) {
 			configureCommMock: func(t *testing.T, comm *mock.MockCommunicator) *mock.MockCommunicator {
 				expectRemoteCmd(comm, "which qemu-img", nil, 1)
 				expectRemoteCmd(comm, "which aws", nil, 1)
+				expectRemoteCmd(comm, "which curl", nil, 1)
+				expectRemoteCmd(comm, "which unzip", nil, 1)
 				expectRemoteCmd(comm, "which apt", nil, 1)
 				return comm
 			},
