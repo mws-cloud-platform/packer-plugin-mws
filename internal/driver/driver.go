@@ -378,7 +378,7 @@ func (d *Driver) AttachDiskToVirtualMachine(ctx context.Context, vmName string, 
 					Disks: optional.NewOptional([]computemodel.UpdateStorageDiskSpecOrRefWithAttachmentsRequest{
 						{Name: optional.NewOptional("boot")},
 						{
-							Name: optional.NewOptional("image-for-export"),
+							Name: optional.NewOptional(DiskForExportName),
 							Disk: optional.NewOptional(computemodel.UpdateStorageDiskSpecOrRefRequest{
 								Ref: optional.NewOptional(diskRef),
 							}),
