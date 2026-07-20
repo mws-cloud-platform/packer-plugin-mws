@@ -88,8 +88,8 @@ type FlatConfig struct {
 	ExternalAddressName             *string           `mapstructure:"external_address_name" required:"false" cty:"external_address_name" hcl:"external_address_name"`
 	VirtualMachineName              *string           `mapstructure:"virtual_machine_name" required:"false" cty:"virtual_machine_name" hcl:"virtual_machine_name"`
 	VMType                          *string           `mapstructure:"vm_type" required:"false" cty:"vm_type" hcl:"vm_type"`
-	CleanupTimeout                  *string           `mapstructure:"cleanup_timeout" required:"false" cty:"cleanup_timeout" hcl:"cleanup_timeout"`
 	CloudConfig                     *string           `mapstructure:"cloud_config" required:"false" cty:"cloud_config" hcl:"cloud_config"`
+	CleanupTimeout                  *string           `mapstructure:"cleanup_timeout" required:"false" cty:"cleanup_timeout" hcl:"cleanup_timeout"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -182,8 +182,8 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"external_address_name":               &hcldec.AttrSpec{Name: "external_address_name", Type: cty.String, Required: false},
 		"virtual_machine_name":                &hcldec.AttrSpec{Name: "virtual_machine_name", Type: cty.String, Required: false},
 		"vm_type":                             &hcldec.AttrSpec{Name: "vm_type", Type: cty.String, Required: false},
-		"cleanup_timeout":                     &hcldec.AttrSpec{Name: "cleanup_timeout", Type: cty.String, Required: false},
 		"cloud_config":                        &hcldec.AttrSpec{Name: "cloud_config", Type: cty.String, Required: false},
+		"cleanup_timeout":                     &hcldec.AttrSpec{Name: "cleanup_timeout", Type: cty.String, Required: false},
 	}
 	return s
 }

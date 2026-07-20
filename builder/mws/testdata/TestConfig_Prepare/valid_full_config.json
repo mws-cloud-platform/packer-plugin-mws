@@ -28,6 +28,6 @@
  "ExternalAddressName": "test-external-address",
  "VirtualMachineName": "test-vm",
  "VMType": "gen-2-16",
- "CleanupTimeout": 7200000000000,
- "CloudConfig": ""
+ "CloudConfig": "",
+ "CleanupTimeout": 7200000000000
 }

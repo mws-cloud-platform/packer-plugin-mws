@@ -310,6 +310,7 @@ func (d *Driver) CreateFirewallRule(ctx context.Context, params CreateFirewallRu
 						},
 					},
 				},
+				ProtoPorts: []string{"TCP:22"},
 			},
 		},
 	}, vpcclient.WithWait()); err != nil {

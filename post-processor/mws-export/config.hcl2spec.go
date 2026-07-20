@@ -86,18 +86,18 @@ type FlatConfig struct {
 	ExternalAddressName             *string           `mapstructure:"external_address_name" required:"false" cty:"external_address_name" hcl:"external_address_name"`
 	VirtualMachineName              *string           `mapstructure:"virtual_machine_name" required:"false" cty:"virtual_machine_name" hcl:"virtual_machine_name"`
 	VMType                          *string           `mapstructure:"vm_type" required:"false" cty:"vm_type" hcl:"vm_type"`
-	CleanupTimeout                  *string           `mapstructure:"cleanup_timeout" required:"false" cty:"cleanup_timeout" hcl:"cleanup_timeout"`
 	CloudConfig                     *string           `mapstructure:"cloud_config" required:"false" cty:"cloud_config" hcl:"cloud_config"`
+	CleanupTimeout                  *string           `mapstructure:"cleanup_timeout" required:"false" cty:"cleanup_timeout" hcl:"cleanup_timeout"`
 	DiskForExportType               *string           `mapstructure:"disk_for_export_type" required:"false" cty:"disk_for_export_type" hcl:"disk_for_export_type"`
 	DiskForExportIOPS               *int64            `mapstructure:"disk_for_export_iops" required:"false" cty:"disk_for_export_iops" hcl:"disk_for_export_iops"`
-	ProjectForExport                *string           `mapstructure:"project_for_export" required:"false" cty:"project_for_export" hcl:"project_for_export"`
+	ImageForExportProject           *string           `mapstructure:"image_for_export_project" required:"false" cty:"image_for_export_project" hcl:"image_for_export_project"`
 	ImageForExport                  *string           `mapstructure:"image_for_export" required:"false" cty:"image_for_export" hcl:"image_for_export"`
 	ServiceAccount                  *string           `mapstructure:"service_account" required:"false" cty:"service_account" hcl:"service_account"`
 	AccessKey                       *string           `mapstructure:"access_key" required:"false" cty:"access_key" hcl:"access_key"`
 	SecretKey                       *string           `mapstructure:"secret_key" required:"false" cty:"secret_key" hcl:"secret_key"`
-	ObjectStorageRegion             *string           `mapstructure:"object_storage_region" required:"false" cty:"object_storage_region" hcl:"object_storage_region"`
 	ObjectStoragePath               *string           `mapstructure:"object_storage_path" required:"true" cty:"object_storage_path" hcl:"object_storage_path"`
 	ObjectStorageEndpoint           *string           `mapstructure:"object_storage_endpoint" required:"false" cty:"object_storage_endpoint" hcl:"object_storage_endpoint"`
+	ObjectStorageRegion             *string           `mapstructure:"object_storage_region" required:"false" cty:"object_storage_region" hcl:"object_storage_region"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -188,18 +188,18 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"external_address_name":               &hcldec.AttrSpec{Name: "external_address_name", Type: cty.String, Required: false},
 		"virtual_machine_name":                &hcldec.AttrSpec{Name: "virtual_machine_name", Type: cty.String, Required: false},
 		"vm_type":                             &hcldec.AttrSpec{Name: "vm_type", Type: cty.String, Required: false},
-		"cleanup_timeout":                     &hcldec.AttrSpec{Name: "cleanup_timeout", Type: cty.String, Required: false},
 		"cloud_config":                        &hcldec.AttrSpec{Name: "cloud_config", Type: cty.String, Required: false},
+		"cleanup_timeout":                     &hcldec.AttrSpec{Name: "cleanup_timeout", Type: cty.String, Required: false},
 		"disk_for_export_type":                &hcldec.AttrSpec{Name: "disk_for_export_type", Type: cty.String, Required: false},
 		"disk_for_export_iops":                &hcldec.AttrSpec{Name: "disk_for_export_iops", Type: cty.Number, Required: false},
-		"project_for_export":                  &hcldec.AttrSpec{Name: "project_for_export", Type: cty.String, Required: false},
+		"image_for_export_project":            &hcldec.AttrSpec{Name: "image_for_export_project", Type: cty.String, Required: false},
 		"image_for_export":                    &hcldec.AttrSpec{Name: "image_for_export", Type: cty.String, Required: false},
 		"service_account":                     &hcldec.AttrSpec{Name: "service_account", Type: cty.String, Required: false},
 		"access_key":                          &hcldec.AttrSpec{Name: "access_key", Type: cty.String, Required: false},
 		"secret_key":                          &hcldec.AttrSpec{Name: "secret_key", Type: cty.String, Required: false},
-		"object_storage_region":               &hcldec.AttrSpec{Name: "object_storage_region", Type: cty.String, Required: false},
 		"object_storage_path":                 &hcldec.AttrSpec{Name: "object_storage_path", Type: cty.String, Required: false},
 		"object_storage_endpoint":             &hcldec.AttrSpec{Name: "object_storage_endpoint", Type: cty.String, Required: false},
+		"object_storage_region":               &hcldec.AttrSpec{Name: "object_storage_region", Type: cty.String, Required: false},
 	}
 	return s
 }

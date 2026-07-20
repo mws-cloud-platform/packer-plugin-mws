@@ -40,6 +40,11 @@ func (c *Config) Prepare(raws ...any) error {
 		PluginType:         BuilderId,
 		Interpolate:        true,
 		InterpolateContext: &c.ctx,
+		InterpolateFilter: &interpolate.RenderFilter{
+			Exclude: []string{
+				"object_storage_path",
+			},
+		},
 	}, raws...)
 	if err != nil {
 		return err
@@ -58,7 +63,7 @@ func (c *Config) SetDefaults() {
 	c.ObjectStorageConfig.SetDefaults()
 
 	c.SourceProject = cmp.Or(c.SourceProject, c.Project)
-	c.ProjectForExport = cmp.Or(c.ProjectForExport, c.Project)
+	c.ImageForExportProject = cmp.Or(c.ImageForExportProject, c.Project)
 }
 
 func (c *Config) Validate() error {
@@ -68,6 +73,7 @@ func (c *Config) Validate() error {
 		c.VirtualMachineConfig.Validate(),
 		c.DiskForExportConfig.Validate(),
 		c.ObjectStorageConfig.Validate(),
+		interpolate.Validate(c.ObjectStoragePath, &c.ctx),
 	)
 
 	err := errors.Join(errs...)
@@ -75,24 +81,30 @@ func (c *Config) Validate() error {
 }
 
 type ObjectStorageConfig struct {
-	// MWS Service Account for generation of temporal hmac-key.
-	// Required, unless access_key and secret_key are provided
+	// MWS Cloud Platform Service Account used for generating temporal HMAC key
+	// to access Object Storage. Required, unless `access_key` and `secret_key`
+	// are provided.
 	ServiceAccount string `mapstructure:"service_account" required:"false"`
-	// AccessKey is part of hmac-key pair for object storage.
+
+	// HMAC key identifier for authenticating with Object Storage. Used if
+	// `service_account` is not provided. Also requires `secret_key` to be
+	// provided.
 	AccessKey string `mapstructure:"access_key" required:"false"`
-	// SecretKey is part of hmac-key pair for object storage.
+	// HMAC key secret for accessing Object Storage. Required if `access_key` is
+	// provided.
 	SecretKey string `mapstructure:"secret_key" required:"false"`
-	// Object storage region where the bucket is located (defaults to "ru-central1").
-	ObjectStorageRegion string `mapstructure:"object_storage_region" required:"false"`
-	// Object storage path where the image will be stored.
+
+	// MWS Cloud Platform Object Storage path where the image will be stored.
 	ObjectStoragePath string `mapstructure:"object_storage_path" required:"true"`
-	// Endpoint of object storage to upload image (defaults to "https://storage.mwsapis.ru").
+	// MWS Cloud Platform Object Storage endpoint to upload image (defaults to "https://storage.mwsapis.ru").
 	ObjectStorageEndpoint string `mapstructure:"object_storage_endpoint" required:"false"`
+	// MWS Cloud Platform Object Storage region where the bucket is located (defaults to "ru-central1").
+	ObjectStorageRegion string `mapstructure:"object_storage_region" required:"false"`
 }
 
 func (c *ObjectStorageConfig) SetDefaults() {
-	c.ObjectStorageRegion = cmp.Or(c.ObjectStorageRegion, DefaultObjectStorageRegion)
 	c.ObjectStorageEndpoint = cmp.Or(c.ObjectStorageEndpoint, DefaultObjectStorageEndpoint)
+	c.ObjectStorageRegion = cmp.Or(c.ObjectStorageRegion, DefaultObjectStorageRegion)
 }
 
 func (c *ObjectStorageConfig) Validate() error {
@@ -104,13 +116,14 @@ func (c *ObjectStorageConfig) Validate() error {
 }
 
 type DiskForExportConfig struct {
-	// Type of disk for export to create (defaults to "nbs-pl2").
+	// Type of the disk used for image export (defaults to "nbs-pl2").
 	DiskForExportType string `mapstructure:"disk_for_export_type" required:"false"`
-	// IOPS for the disk for export image (defaults to 1000).
+	// IOPS for the disk used for image export (defaults to 1000).
 	DiskForExportIOPS int64 `mapstructure:"disk_for_export_iops" required:"false"`
-	// Project ID where the image_for_export exists (defaults to the `project`).
-	ProjectForExport string `mapstructure:"project_for_export" required:"false"`
-	// ID of an existing image to export (required when post processor used without mws builder).
+	// The project identifier where the image for export exists (defaults to the `project`).
+	ImageForExportProject string `mapstructure:"image_for_export_project" required:"false"`
+	// Identifier of the image to export. Required only when post processor used
+	// without mws builder.
 	ImageForExport string `mapstructure:"image_for_export" required:"false"`
 }
 

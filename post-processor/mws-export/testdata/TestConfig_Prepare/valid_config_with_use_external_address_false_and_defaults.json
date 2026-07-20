@@ -26,16 +26,16 @@
  "ExternalAddressName": "",
  "VirtualMachineName": "",
  "VMType": "gen-2-8",
- "CleanupTimeout": 3600000000000,
  "CloudConfig": "",
+ "CleanupTimeout": 3600000000000,
  "DiskForExportType": "nbs-pl2",
  "DiskForExportIOPS": 1000,
- "ProjectForExport": "test-project",
+ "ImageForExportProject": "test-project",
  "ImageForExport": "",
  "ServiceAccount": "test-service-account",
  "AccessKey": "",
  "SecretKey": "",
- "ObjectStorageRegion": "ru-central1",
  "ObjectStoragePath": "test-bucker/path/to/image.qcow2",
- "ObjectStorageEndpoint": "https://storage.mwsapis.ru"
+ "ObjectStorageEndpoint": "https://storage.mwsapis.ru",
+ "ObjectStorageRegion": "ru-central1"
 }
