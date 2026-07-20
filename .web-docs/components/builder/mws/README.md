@@ -1,12 +1,6 @@
 Artifact BuilderId: `packer.mws`
 
-<!--
-  Include a short description about the builder. This is a good place
-  to call out what the builder does, and any requirements for the given
-  builder environment. See https://www.packer.io/docs/builder/null
--->
-
-The `mws` Packer builder is able to create [images](https://mws.ru/docs/cloud-platform/compute/general/images-overview.html) for use with [MWS Cloud Platform Compute](https://mws.ru/docs/cloud-platform/compute/general/whatis-compute.html) based on existing images.
+The `mws` Packer builder creates [images](https://mws.ru/docs/cloud-platform/compute/general/images-overview.html) for use with [MWS Cloud Platform Compute](https://mws.ru/docs/cloud-platform/compute/general/whatis-compute.html) based on existing images.
 
 ## Authentication
 
@@ -42,8 +36,7 @@ for authentication.
 ## Configuration Reference
 
 Configuration options are organized below into two categories: required and
-optional. Within each category, the available options are alphabetized and
-described.
+optional.
 
 In addition to the options listed here, a
 [communicator](https://developer.hashicorp.com/packer/docs/communicators) can be
@@ -147,12 +140,6 @@ configured for this builder.
 <!-- End of code generated from the comments of the ImageConfig struct in internal/config/config.go; -->
 
 
-<!--
-  A basic example on the usage of the builder. Multiple examples
-  can be provided to highlight various build configurations.
-
--->
-
 ### Example Usage
 
 ```hcl
@@ -163,6 +150,7 @@ source "mws" "example" {
 
   source_project = "mws-ubuntu"
   source_image   = "mws-ubuntu-2404-lts-v20250529"
+  use_external_address = true
 }
 
 build {
