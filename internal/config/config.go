@@ -83,14 +83,14 @@ type VirtualMachineConfig struct {
 	// The VM type (defaults to "gen-2-8").
 	VMType string `mapstructure:"vm_type" required:"false"`
 
-	// Timeout for cleanup of create virtual machine step (defaults to "1h").
-	CleanupTimeout time.Duration `mapstructure:"cleanup_timeout" required:"false"`
-
 	// Configuration script for initial setup of a virtual machine in the
 	// [#cloud-config](https://docs.cloud-init.io/en/latest/explanation/format/cloud-config.html)
 	// format. Note that this configuration would be extended with SSH key used
 	// for Packer communicator.
 	CloudConfig string `mapstructure:"cloud_config" required:"false"`
+
+	// Timeout for resources cleanup (defaults to "1h").
+	CleanupTimeout time.Duration `mapstructure:"cleanup_timeout" required:"false"`
 }
 
 func (c *VirtualMachineConfig) SetDefaults() {

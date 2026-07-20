@@ -47,7 +47,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, artifact 
 		projectForExport, _ = artifact.State("ImageProject").(string)
 		imageForExport, _ = artifact.State("ImageName").(string)
 	default:
-		projectForExport = p.config.ProjectForExport
+		projectForExport = p.config.ImageForExportProject
 		imageForExport = p.config.ImageForExport
 	}
 
@@ -68,7 +68,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, artifact 
 
 	objectStoragePath, err := interpolate.Render(p.config.ObjectStoragePath, &p.config.ctx)
 	if err != nil {
-		return nil, false, false, fmt.Errorf("error interpolating object_storage_path: %w", err)
+		return nil, false, false, fmt.Errorf("interpolate object_storage_path: %w", err)
 	}
 
 	driver, err := driver.NewDriver(ctx, driver.Config{
