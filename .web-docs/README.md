@@ -26,3 +26,6 @@ $ packer plugins install github.com/mws-cloud-platform/mws
 
 #### Builders
 - [mws](https://github.com/mws-cloud-platform/packer-plugin-mws/blob/main/.web-docs/components/builder/mws/README.md) - The mws builder creates images from existing ones, by launching an instance, provisioning it, then exporting it as a reusable image.
+
+#### Post-Processors
+- [mws-export](https://github.com/mws-cloud-platform/packer-plugin-mws/blob/main/.web-docs/components/post-processor/mws-export/README.md) - The mws-export post-processor exports images to Object Storage as QCOW2 files.
