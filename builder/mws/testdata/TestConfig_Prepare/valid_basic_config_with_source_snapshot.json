@@ -13,6 +13,7 @@
  "ServiceAccountAuthorizedKeyPath": "",
  "Token": "",
  "ImageName": "",
+ "ImageDisplayName": "",
  "ImageDescription": "Image created by Packer",
  "DiskName": "",
  "DiskType": "nbs-pl2",

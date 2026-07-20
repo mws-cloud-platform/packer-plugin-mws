@@ -48,6 +48,7 @@ type CreateVirtualMachineParams struct {
 
 type CreateImageParams struct {
 	ImageName        string
+	ImageDisplayName string
 	ImageDescription string
 	DiskRef          *computeref.DiskRef
 }

@@ -140,6 +140,8 @@ configured for this builder.
 
 - `image_name` (string) - Name for the resulting image (defaults to "packer-{{uuid}}-image").
 
+- `image_display_name` (string) - Display name for the resulting image (defaults to the `image_name`).
+
 - `image_description` (string) - Description for the resulting image. (defaults to "Image created by Packer").
 
 <!-- End of code generated from the comments of the ImageConfig struct in internal/config/config.go; -->

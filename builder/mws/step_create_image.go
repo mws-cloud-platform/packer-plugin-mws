@@ -17,6 +17,7 @@ import (
 type StepCreateImage struct {
 	Project          string
 	ImageName        string
+	ImageDisplayName string
 	ImageDescription string
 
 	GeneratedData *packerbuilderdata.GeneratedData
@@ -38,6 +39,7 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 
 	image, err := driver.CreateImage(ctx, drivermws.CreateImageParams{
 		ImageName:        imageName,
+		ImageDisplayName: s.ImageDisplayName,
 		ImageDescription: s.ImageDescription,
 		DiskRef:          diskRef,
 	})
