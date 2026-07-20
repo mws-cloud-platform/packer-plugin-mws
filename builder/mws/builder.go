@@ -95,6 +95,7 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 		&StepCreateImage{
 			Project:          b.config.Project,
 			ImageName:        b.config.ImageName,
+			ImageDisplayName: b.config.ImageDisplayName,
 			ImageDescription: b.config.ImageDescription,
 			GeneratedData:    generatedData,
 		},

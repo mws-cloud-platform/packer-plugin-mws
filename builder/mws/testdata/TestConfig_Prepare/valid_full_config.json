@@ -13,6 +13,7 @@
  "ServiceAccountAuthorizedKeyPath": "/path/to/key",
  "Token": "",
  "ImageName": "test-image",
+ "ImageDisplayName": "Custom display name",
  "ImageDescription": "Custom image description",
  "DiskName": "test-disk",
  "DiskType": "nbs-pl3",

@@ -321,11 +321,16 @@ func (d *Driver) CreateFirewallRule(ctx context.Context, params CreateFirewallRu
 }
 
 func (d *Driver) CreateImage(ctx context.Context, params CreateImageParams) (*computemodel.ImageOptionalResponse, error) {
+	var displayName *string
+	if params.ImageDisplayName != "" {
+		displayName = new(params.ImageDisplayName)
+	}
 	image, err := d.images.CreateImage(ctx, computeclient.UpsertImageRequest{
 		Image: params.ImageName,
 		Body: computemodel.ImageRequest{
 			Metadata: &commonmodel.CommonTypedResourceMetadataRequest{
 				Description: new(params.ImageDescription),
+				DisplayName: displayName,
 			},
 			Spec: computemodel.ImageSpecRequest{
 				Source: computemodel.ImageSpecSourceRequest{

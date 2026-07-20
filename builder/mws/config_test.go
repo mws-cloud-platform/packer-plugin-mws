@@ -52,6 +52,7 @@ func TestConfig_Prepare(t *testing.T) {
 					"virtual_machine_name":                "test-vm",
 					"vm_type":                             "gen-2-16",
 					"image_name":                          "test-image",
+					"image_display_name":                  "Custom display name",
 					"image_description":                   "Custom image description",
 					"disk_name":                           "test-disk",
 					"disk_type":                           "nbs-pl3",

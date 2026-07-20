@@ -73,6 +73,7 @@ type FlatConfig struct {
 	ServiceAccountAuthorizedKeyPath *string           `mapstructure:"service_account_authorized_key_path" required:"false" cty:"service_account_authorized_key_path" hcl:"service_account_authorized_key_path"`
 	Token                           *string           `mapstructure:"token" required:"false" cty:"token" hcl:"token"`
 	ImageName                       *string           `mapstructure:"image_name" required:"false" cty:"image_name" hcl:"image_name"`
+	ImageDisplayName                *string           `mapstructure:"image_display_name" required:"false" cty:"image_display_name" hcl:"image_display_name"`
 	ImageDescription                *string           `mapstructure:"image_description" required:"false" cty:"image_description" hcl:"image_description"`
 	DiskName                        *string           `mapstructure:"disk_name" required:"false" cty:"disk_name" hcl:"disk_name"`
 	DiskType                        *string           `mapstructure:"disk_type" required:"false" cty:"disk_type" hcl:"disk_type"`
@@ -167,6 +168,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"service_account_authorized_key_path": &hcldec.AttrSpec{Name: "service_account_authorized_key_path", Type: cty.String, Required: false},
 		"token":                               &hcldec.AttrSpec{Name: "token", Type: cty.String, Required: false},
 		"image_name":                          &hcldec.AttrSpec{Name: "image_name", Type: cty.String, Required: false},
+		"image_display_name":                  &hcldec.AttrSpec{Name: "image_display_name", Type: cty.String, Required: false},
 		"image_description":                   &hcldec.AttrSpec{Name: "image_description", Type: cty.String, Required: false},
 		"disk_name":                           &hcldec.AttrSpec{Name: "disk_name", Type: cty.String, Required: false},
 		"disk_type":                           &hcldec.AttrSpec{Name: "disk_type", Type: cty.String, Required: false},

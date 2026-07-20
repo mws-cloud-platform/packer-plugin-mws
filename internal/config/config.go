@@ -63,6 +63,8 @@ func (c *AccessConfig) Validate() error {
 type ImageConfig struct {
 	// Name for the resulting image (defaults to "packer-{{uuid}}-image").
 	ImageName string `mapstructure:"image_name" required:"false"`
+	// Display name for the resulting image (defaults to same as image_name).
+	ImageDisplayName string `mapstructure:"image_display_name" required:"false"`
 	// Description for the resulting image. (defaults to "Image created by Packer").
 	ImageDescription string `mapstructure:"image_description" required:"false"`
 }
