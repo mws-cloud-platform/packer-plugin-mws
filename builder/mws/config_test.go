@@ -64,6 +64,7 @@ func TestConfig_Prepare(t *testing.T) {
 					"subnet_name":                         "test-subnet",
 					"subnet_cidr":                         "10.0.0.0/8",
 					"external_address_name":               "test-external-address",
+					"use_nat64":                           true,
 					"cleanup_timeout":                     "2h",
 					"use_external_address":                true,
 				},

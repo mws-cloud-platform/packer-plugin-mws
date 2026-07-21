@@ -27,6 +27,8 @@
  "SubnetCidr": "192.168.0.0/16",
  "UseExternalAddress": false,
  "ExternalAddressName": "",
+ "UseNat64": false,
+ "IPV6Prefix": "64:ff9b::/96",
  "VirtualMachineName": "",
  "VMType": "gen-2-8",
  "CloudConfig": "",

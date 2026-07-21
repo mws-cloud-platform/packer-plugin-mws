@@ -200,7 +200,7 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 					CreateFirewallRule(gomock.Any(), drivermws.CreateFirewallRuleParams{
 						NetworkName:                   expectedNetworkName,
 						FirewallRuleName:              mws.FirewallRuleName,
-						VirtualMachineInternalAddress: testInternalAddress,
+						VirtualMachineInternalAddress: testInternalAddress.String(),
 					}).
 					Times(1)
 			}
@@ -228,9 +228,9 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 			if tt.config.UseExternalAddress {
 				requireStateGet(t, state, mws.ExternalAddressNameKey, expectedExternalAddressName)
 				requireStateGet(t, state, mws.FirewallRuleNameKey, expectedFirewallRuleName)
-				requireStateGet(t, state, mws.InstanceIPKey, testExternalAddress)
+				requireStateGet(t, state, mws.InstanceIPKey, testExternalAddress.String())
 			} else {
-				requireStateGet(t, state, mws.InstanceIPKey, testInternalAddress)
+				requireStateGet(t, state, mws.InstanceIPKey, testInternalAddress.String())
 				requireStateNotSet(t, state, mws.ExternalAddressNameKey)
 				requireStateNotSet(t, state, mws.FirewallRuleNameKey)
 			}

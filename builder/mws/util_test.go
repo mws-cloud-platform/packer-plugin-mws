@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
 	"github.com/stretchr/testify/require"
+	"go.mws.cloud/go-sdk/pkg/apimodels/ipaddress"
 	"go.mws.cloud/util-toolset/pkg/utils/consterr"
 )
 
@@ -26,8 +27,6 @@ const (
 	testVirtualMachineName  = "test-vm"
 	testImageName           = "test-image"
 	testImageDescription    = "Test image description"
-	testInternalAddress     = "192.168.0.10"
-	testExternalAddress     = "10.20.30.40"
 	testSSHPublicKey        = "test-public-key"
 	testSourceImage         = "test-source-image"
 
@@ -38,6 +37,11 @@ const (
 	defaultVirtualMachineName  = packerPrefix + "vm"
 
 	errInternal = consterr.Error("internal error")
+)
+
+var (
+	testInternalAddress = new(ipaddress.MustParseIPAddressString("192.168.0.10"))
+	testExternalAddress = new(ipaddress.MustParseIPAddressString("10.20.30.40"))
 )
 
 func requireGeneratedDataGet(t *testing.T, state multistep.StateBag, key string, expected any) {

@@ -14,6 +14,7 @@ import (
 	reflect "reflect"
 
 	driver "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
+	ipaddress "go.mws.cloud/go-sdk/pkg/apimodels/ipaddress"
 	model "go.mws.cloud/go-sdk/service/compute/model"
 	compute "go.mws.cloud/go-sdk/service/resources/references/compute"
 	gomock "go.uber.org/mock/gomock"
@@ -120,10 +121,10 @@ func (c *MockDriverCreateDiskCall) DoAndReturn(f func(context.Context, driver.Cr
 }
 
 // CreateExternalAddress mocks base method.
-func (m *MockDriver) CreateExternalAddress(arg0 context.Context, arg1 driver.CreateExternalAddressParams) (string, error) {
+func (m *MockDriver) CreateExternalAddress(arg0 context.Context, arg1 driver.CreateExternalAddressParams) (*ipaddress.IPAddress, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateExternalAddress", arg0, arg1)
-	ret0, _ := ret[0].(string)
+	ret0, _ := ret[0].(*ipaddress.IPAddress)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -141,19 +142,19 @@ type MockDriverCreateExternalAddressCall struct {
 }
 
 // Return rewrite *gomock.Call.Return
-func (c *MockDriverCreateExternalAddressCall) Return(arg0 string, arg1 error) *MockDriverCreateExternalAddressCall {
+func (c *MockDriverCreateExternalAddressCall) Return(arg0 *ipaddress.IPAddress, arg1 error) *MockDriverCreateExternalAddressCall {
 	c.Call = c.Call.Return(arg0, arg1)
 	return c
 }
 
 // Do rewrite *gomock.Call.Do
-func (c *MockDriverCreateExternalAddressCall) Do(f func(context.Context, driver.CreateExternalAddressParams) (string, error)) *MockDriverCreateExternalAddressCall {
+func (c *MockDriverCreateExternalAddressCall) Do(f func(context.Context, driver.CreateExternalAddressParams) (*ipaddress.IPAddress, error)) *MockDriverCreateExternalAddressCall {
 	c.Call = c.Call.Do(f)
 	return c
 }
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *MockDriverCreateExternalAddressCall) DoAndReturn(f func(context.Context, driver.CreateExternalAddressParams) (string, error)) *MockDriverCreateExternalAddressCall {
+func (c *MockDriverCreateExternalAddressCall) DoAndReturn(f func(context.Context, driver.CreateExternalAddressParams) (*ipaddress.IPAddress, error)) *MockDriverCreateExternalAddressCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
@@ -313,10 +314,10 @@ func (c *MockDriverCreateSubnetCall) DoAndReturn(f func(context.Context, driver.
 }
 
 // CreateVirtualMachine mocks base method.
-func (m *MockDriver) CreateVirtualMachine(arg0 context.Context, arg1 driver.CreateVirtualMachineParams) (string, error) {
+func (m *MockDriver) CreateVirtualMachine(arg0 context.Context, arg1 driver.CreateVirtualMachineParams) (*ipaddress.IPAddress, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateVirtualMachine", arg0, arg1)
-	ret0, _ := ret[0].(string)
+	ret0, _ := ret[0].(*ipaddress.IPAddress)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -334,19 +335,19 @@ type MockDriverCreateVirtualMachineCall struct {
 }
 
 // Return rewrite *gomock.Call.Return
-func (c *MockDriverCreateVirtualMachineCall) Return(arg0 string, arg1 error) *MockDriverCreateVirtualMachineCall {
+func (c *MockDriverCreateVirtualMachineCall) Return(arg0 *ipaddress.IPAddress, arg1 error) *MockDriverCreateVirtualMachineCall {
 	c.Call = c.Call.Return(arg0, arg1)
 	return c
 }
 
 // Do rewrite *gomock.Call.Do
-func (c *MockDriverCreateVirtualMachineCall) Do(f func(context.Context, driver.CreateVirtualMachineParams) (string, error)) *MockDriverCreateVirtualMachineCall {
+func (c *MockDriverCreateVirtualMachineCall) Do(f func(context.Context, driver.CreateVirtualMachineParams) (*ipaddress.IPAddress, error)) *MockDriverCreateVirtualMachineCall {
 	c.Call = c.Call.Do(f)
 	return c
 }
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *MockDriverCreateVirtualMachineCall) DoAndReturn(f func(context.Context, driver.CreateVirtualMachineParams) (string, error)) *MockDriverCreateVirtualMachineCall {
+func (c *MockDriverCreateVirtualMachineCall) DoAndReturn(f func(context.Context, driver.CreateVirtualMachineParams) (*ipaddress.IPAddress, error)) *MockDriverCreateVirtualMachineCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }

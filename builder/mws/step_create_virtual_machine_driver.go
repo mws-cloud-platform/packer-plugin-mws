@@ -7,14 +7,15 @@ import (
 	"context"
 
 	drivermws "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
+	"go.mws.cloud/go-sdk/pkg/apimodels/ipaddress"
 )
 
 type StepCreateVirtualMachineDriver interface {
 	CreateDisk(context.Context, drivermws.CreateDiskParams) error
-	CreateExternalAddress(context.Context, drivermws.CreateExternalAddressParams) (string, error)
+	CreateExternalAddress(context.Context, drivermws.CreateExternalAddressParams) (*ipaddress.IPAddress, error)
 	CreateNetwork(context.Context, drivermws.CreateNetworkParams) error
 	CreateSubnet(context.Context, drivermws.CreateSubnetParams) error
-	CreateVirtualMachine(context.Context, drivermws.CreateVirtualMachineParams) (string, error)
+	CreateVirtualMachine(context.Context, drivermws.CreateVirtualMachineParams) (*ipaddress.IPAddress, error)
 	CreateFirewallRule(context.Context, drivermws.CreateFirewallRuleParams) error
 
 	DeleteDisk(context.Context, string) error
