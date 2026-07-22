@@ -122,7 +122,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, artifact 
 		},
 		&communicator.StepConnect{
 			Config:    &p.config.Communicator,
-			Host:      mws.CommHost,
+			Host:      mws.CommHost(p.config.Communicator.SSHHost),
 			SSHConfig: p.config.Communicator.SSHConfigFunc(),
 		},
 		&StepPrepareTools{},

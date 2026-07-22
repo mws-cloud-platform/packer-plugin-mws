@@ -14,6 +14,7 @@ import (
 	commonconfig "github.com/mws-cloud-platform/packer-plugin-mws/internal/config"
 	drivermws "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 	"go.mws.cloud/go-sdk/pkg/apimodels/cidraddress"
+	"go.mws.cloud/go-sdk/pkg/apimodels/ipaddress"
 	"go.mws.cloud/go-sdk/pkg/apimodels/units/bytesize"
 	computeref "go.mws.cloud/go-sdk/service/resources/references/compute"
 	vpcref "go.mws.cloud/go-sdk/service/resources/references/vpc"
@@ -37,9 +38,10 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	ui := state.Get(UIKey).(packer.Ui)
 
 	var (
-		imageRef           *computeref.ImageRef
-		snapshotRef        *computeref.SnapshotRef
-		externalAddressRef *vpcref.ExternalAddressRef
+		imageRef              *computeref.ImageRef
+		snapshotRef           *computeref.SnapshotRef
+		externalAddressRef    *vpcref.ExternalAddressRef
+		virtualMachineAddress *ipaddress.IPAddress
 	)
 
 	if s.SourceImage != "" {
@@ -81,7 +83,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 
 		ui.Sayf("External Address %q created", externalAddressName)
 		state.Put(ExternalAddressNameKey, externalAddressName)
-		state.Put(InstanceIPKey, externalAddress)
+		virtualMachineAddress = externalAddress
 		externalAddressRef = new(vpcref.NewExternalAddressRef(s.Project, externalAddressName))
 	}
 
@@ -139,7 +141,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 		err = driver.CreateFirewallRule(ctx, drivermws.CreateFirewallRuleParams{
 			NetworkName:                   networkName,
 			FirewallRuleName:              FirewallRuleName,
-			VirtualMachineInternalAddress: internalAddress,
+			VirtualMachineInternalAddress: internalAddress.String(),
 		})
 		if err != nil {
 			return ActionHaltWithErrorf(state, "create firewall rule %q: %w", FirewallRuleName, err)
@@ -148,8 +150,16 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 		ui.Sayf("Firewall Rule %q created", FirewallRuleName)
 		state.Put(FirewallRuleNameKey, FirewallRuleName)
 	} else {
-		state.Put(InstanceIPKey, internalAddress)
+		virtualMachineAddress = internalAddress
 	}
+
+	if s.Nat64Enable {
+		virtualMachineAddress, err = ConvertToIPv6(virtualMachineAddress, s.Nat64IPV6Prefix)
+		if err != nil {
+			return ActionHaltWithErrorf(state, "convert virtual machine ip to IPv6: %w", err)
+		}
+	}
+	state.Put(InstanceIPKey, virtualMachineAddress.String())
 
 	// instance_id is the generic term used so that users can have access to the
 	// instance id inside of the provisioners, used in step_provision.

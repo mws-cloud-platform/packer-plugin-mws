@@ -27,6 +27,8 @@
  "SubnetCidr": "10.0.0.0/8",
  "UseExternalAddress": true,
  "ExternalAddressName": "test-external-address",
+ "Nat64Enable": true,
+ "Nat64IPV6Prefix": "64:ff9b::/96",
  "VirtualMachineName": "test-vm",
  "VMType": "gen-2-16",
  "CloudConfig": "",

@@ -12,6 +12,7 @@ import (
 	"go.mws.cloud/go-sdk/mws"
 	"go.mws.cloud/go-sdk/mws/wait"
 	"go.mws.cloud/go-sdk/pkg/apimodels/cidraddress"
+	"go.mws.cloud/go-sdk/pkg/apimodels/ipaddress"
 	"go.mws.cloud/go-sdk/pkg/optional"
 	commonmodel "go.mws.cloud/go-sdk/service/common/model"
 	computeclient "go.mws.cloud/go-sdk/service/compute/client"
@@ -140,7 +141,7 @@ func (d *Driver) CreateDisk(ctx context.Context, params CreateDiskParams) error 
 	return nil
 }
 
-func (d *Driver) CreateExternalAddress(ctx context.Context, params CreateExternalAddressParams) (string, error) {
+func (d *Driver) CreateExternalAddress(ctx context.Context, params CreateExternalAddressParams) (*ipaddress.IPAddress, error) {
 	resp, err := d.externalAddresses.CreateExternalAddress(ctx, vpcclient.UpsertExternalAddressRequest{
 		ExternalAddress: params.ExternalAddressName,
 		Body: &vpcmodel.ExternalAddressRequest{
@@ -151,15 +152,15 @@ func (d *Driver) CreateExternalAddress(ctx context.Context, params CreateExterna
 		},
 	}, vpcclient.WithWait())
 	if err != nil {
-		return "", fmt.Errorf("create external address: %w", err)
+		return nil, fmt.Errorf("create external address: %w", err)
 	}
 
 	ipAddress := resp.Status.GetIpAddress()
 	if ipAddress == nil {
-		return "", consterr.Error("ip address is not available")
+		return nil, consterr.Error("ip address is not available")
 	}
 
-	return ipAddress.String(), nil
+	return ipAddress, nil
 }
 
 func (d *Driver) CreateNetwork(ctx context.Context, params CreateNetworkParams) error {
@@ -199,10 +200,10 @@ func (d *Driver) CreateSubnet(ctx context.Context, params CreateSubnetParams) er
 	return nil
 }
 
-func (d *Driver) CreateVirtualMachine(ctx context.Context, params CreateVirtualMachineParams) (string, error) {
+func (d *Driver) CreateVirtualMachine(ctx context.Context, params CreateVirtualMachineParams) (*ipaddress.IPAddress, error) {
 	userData, err := cloudinit.PrepareCloudConfig(params.SSHUsername, params.SSHPublicKey, params.CloudConfig)
 	if err != nil {
-		return "", fmt.Errorf("prepare cloud-config: %w", err)
+		return nil, fmt.Errorf("prepare cloud-config: %w", err)
 	}
 
 	var oneToOneNat *computemodel.ComputeOneToOneNatSpecRequest
@@ -272,10 +273,10 @@ func (d *Driver) CreateVirtualMachine(ctx context.Context, params CreateVirtualM
 
 	resp, err := d.virtualMachines.CreateVirtualMachine(ctx, req, computeclient.WithWait())
 	if err != nil {
-		return "", fmt.Errorf("create virtual machine: %w", err)
+		return nil, fmt.Errorf("create virtual machine: %w", err)
 	}
 
-	internalAddress := resp.Status.Network.GetNetworkInterfaces()[0].Addresses[0].IpAddress.String()
+	internalAddress := resp.Status.Network.GetNetworkInterfaces()[0].Addresses[0].IpAddress
 	return internalAddress, nil
 }
 
