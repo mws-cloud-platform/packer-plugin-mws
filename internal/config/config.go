@@ -159,17 +159,17 @@ type NetworkConfig struct {
 	// External address name (defaults to "packer-{{uuid}}-external-address").
 	// Can be specified only if external address usage is enabled.
 	ExternalAddressName string `mapstructure:"external_address_name" required:"false"`
-	// UseNat64 to convert virtual machine ip from ipv4 to ipv6 (defaults to "false").
+	// Enables virtual machine ip conversion from ipv4 to ipv6 with RFC 6052 (defaults to "false").
 	// Meant to be used when packer is in ipv6 only network.
-	UseNat64 bool `mapstructure:"use_nat64" required:"false"`
-	// IPV6Prefix used in nat64 conversion (defaults to "64:ff9b::/96" (RFC 6052 Well-Known Prefix)).
+	Nat64Enable bool `mapstructure:"nat64_enable" required:"false"`
+	// Prefix used in nat64 conversion (defaults to "64:ff9b::/96" (RFC 6052 Well-Known Prefix)).
 	// CIDR notation only.
-	IPV6Prefix string `mapstructure:"ipv6_prefix" required:"false"`
+	Nat64IPV6Prefix string `mapstructure:"nat64_ipv6_prefix" required:"false"`
 }
 
 func (c *NetworkConfig) SetDefaults() {
 	c.SubnetCidr = cmp.Or(c.SubnetCidr, DefaultSubnetCidr)
-	c.IPV6Prefix = cmp.Or(c.IPV6Prefix, DefaultIPV6Prefix)
+	c.Nat64IPV6Prefix = cmp.Or(c.Nat64IPV6Prefix, DefaultIPV6Prefix)
 }
 
 func (c *NetworkConfig) Validate() error {
@@ -186,8 +186,8 @@ func (c *NetworkConfig) Validate() error {
 	if !c.UseExternalAddress && c.ExternalAddressName != "" {
 		err = errors.Join(err, consterr.Error("when use_external_address is false, external_address_name must not be provided"))
 	}
-	if _, _, parseErr := net.ParseCIDR(c.IPV6Prefix); parseErr != nil {
-		err = errors.Join(err, fmt.Errorf("parse ipv6_prefix CIDR: %w", parseErr))
+	if _, _, parseErr := net.ParseCIDR(c.Nat64IPV6Prefix); parseErr != nil {
+		err = errors.Join(err, fmt.Errorf("parse nat64_ipv6_prefix CIDR: %w", parseErr))
 	}
 	return err
 }

@@ -112,10 +112,10 @@ configured for this builder.
 - `external_address_name` (string) - External address name (defaults to "packer-{{uuid}}-external-address").
   Can be specified only if external address usage is enabled.
 
-- `use_nat64` (bool) - UseNat64 to convert virtual machine ip from ipv4 to ipv6 (defaults to "false").
+- `nat64_enable` (bool) - Enables virtual machine ip conversion from ipv4 to ipv6 with RFC 6052 (defaults to "false").
   Meant to be used when packer is in ipv6 only network.
 
-- `ipv6_prefix` (string) - IPV6Prefix used in nat64 conversion (defaults to "64:ff9b::/96" (RFC 6052 Well-Known Prefix)).
+- `nat64_ipv6_prefix` (string) - Prefix used in nat64 conversion (defaults to "64:ff9b::/96" (RFC 6052 Well-Known Prefix)).
   CIDR notation only.
 
 <!-- End of code generated from the comments of the NetworkConfig struct in internal/config/config.go; -->

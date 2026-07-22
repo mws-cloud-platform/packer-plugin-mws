@@ -84,8 +84,8 @@ type FlatConfig struct {
 	SubnetCidr                      *string           `mapstructure:"subnet_cidr" required:"false" cty:"subnet_cidr" hcl:"subnet_cidr"`
 	UseExternalAddress              *bool             `mapstructure:"use_external_address" required:"false" cty:"use_external_address" hcl:"use_external_address"`
 	ExternalAddressName             *string           `mapstructure:"external_address_name" required:"false" cty:"external_address_name" hcl:"external_address_name"`
-	UseNat64                        *bool             `mapstructure:"use_nat64" required:"false" cty:"use_nat64" hcl:"use_nat64"`
-	IPV6Prefix                      *string           `mapstructure:"ipv6_prefix" required:"false" cty:"ipv6_prefix" hcl:"ipv6_prefix"`
+	Nat64Enable                     *bool             `mapstructure:"nat64_enable" required:"false" cty:"nat64_enable" hcl:"nat64_enable"`
+	Nat64IPV6Prefix                 *string           `mapstructure:"nat64_ipv6_prefix" required:"false" cty:"nat64_ipv6_prefix" hcl:"nat64_ipv6_prefix"`
 	VirtualMachineName              *string           `mapstructure:"virtual_machine_name" required:"false" cty:"virtual_machine_name" hcl:"virtual_machine_name"`
 	VMType                          *string           `mapstructure:"vm_type" required:"false" cty:"vm_type" hcl:"vm_type"`
 	CloudConfig                     *string           `mapstructure:"cloud_config" required:"false" cty:"cloud_config" hcl:"cloud_config"`
@@ -188,8 +188,8 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"subnet_cidr":                         &hcldec.AttrSpec{Name: "subnet_cidr", Type: cty.String, Required: false},
 		"use_external_address":                &hcldec.AttrSpec{Name: "use_external_address", Type: cty.Bool, Required: false},
 		"external_address_name":               &hcldec.AttrSpec{Name: "external_address_name", Type: cty.String, Required: false},
-		"use_nat64":                           &hcldec.AttrSpec{Name: "use_nat64", Type: cty.Bool, Required: false},
-		"ipv6_prefix":                         &hcldec.AttrSpec{Name: "ipv6_prefix", Type: cty.String, Required: false},
+		"nat64_enable":                        &hcldec.AttrSpec{Name: "nat64_enable", Type: cty.Bool, Required: false},
+		"nat64_ipv6_prefix":                   &hcldec.AttrSpec{Name: "nat64_ipv6_prefix", Type: cty.String, Required: false},
 		"virtual_machine_name":                &hcldec.AttrSpec{Name: "virtual_machine_name", Type: cty.String, Required: false},
 		"vm_type":                             &hcldec.AttrSpec{Name: "vm_type", Type: cty.String, Required: false},
 		"cloud_config":                        &hcldec.AttrSpec{Name: "cloud_config", Type: cty.String, Required: false},

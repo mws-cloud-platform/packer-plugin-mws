@@ -13,9 +13,13 @@ import (
 // ConvertToIPv6 converts an ipaddress.IPAddress containing an IPv4 address
 // to an IPv6 address according to RFC 6052.
 // https://www.rfc-editor.org/info/rfc6052/
-func ConvertToIPv6(ipv4 net.IP, prefixStr string) (*ipaddress.IPAddress, error) {
-	if ipv4 == nil {
+func ConvertToIPv6(address *ipaddress.IPAddress, prefixStr string) (*ipaddress.IPAddress, error) {
+	if address == nil {
 		return nil, fmt.Errorf("ipaddress is nil")
+	}
+	ipv4 := address.ToNetIP()
+	if ipv4 == nil {
+		return nil, fmt.Errorf("ipv4 is nil")
 	}
 
 	ipv4 = ipv4.To4()

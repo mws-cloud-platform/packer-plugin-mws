@@ -153,8 +153,8 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 		virtualMachineAddress = internalAddress
 	}
 
-	if s.UseNat64 {
-		virtualMachineAddress, err = ConvertToIPv6(virtualMachineAddress.ToNetIP(), s.IPV6Prefix)
+	if s.Nat64Enable {
+		virtualMachineAddress, err = ConvertToIPv6(virtualMachineAddress, s.Nat64IPV6Prefix)
 		if err != nil {
 			return ActionHaltWithErrorf(state, "convert virtual machine ip to IPv6: %w", err)
 		}
