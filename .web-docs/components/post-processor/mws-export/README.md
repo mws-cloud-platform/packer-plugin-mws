@@ -166,7 +166,6 @@ configured for this post-processor.
 ```hcl
 source "mws" "example" {
   project = "your-project"
-
   service_account_authorized_key_path = "/path/to/your/service_account_authorized_key.dms"
 
   source_project = "mws-ubuntu"
@@ -180,9 +179,13 @@ build {
 
   post-processor "mws-export" {
     project = "your-project"
-    
     service_account_authorized_key_path = "/path/to/your/service_account_authorized_key.dms"
     
+    source_project = "mws-ubuntu"
+    source_image   = "mws-ubuntu-2404-lts-v20260526"
+    disk_size      = "20 GB"
+    use_external_address = true
+
     service_account = "your-service-account"
     object_storage_path = "your-bucket/{{build `ImageName` }}.qcow2"
     object_storage_endpoint = "https://storage.mwsapis.ru"
@@ -195,7 +198,6 @@ build {
 ```hcl
 source "mws" "example" {
   project = "your-project"
-
   service_account_authorized_key_path = "/path/to/your/service_account_authorized_key.dms"
 
   source_project = "mws-ubuntu"
@@ -209,7 +211,6 @@ build {
 
   post-processor "mws-export" {
     project = "your-project"
-
     service_account_authorized_key_path = "/path/to/your/service_account_authorized_key.dms"
     
     source_project = "mws-ubuntu"
