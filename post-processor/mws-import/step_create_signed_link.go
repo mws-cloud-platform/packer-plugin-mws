@@ -27,7 +27,7 @@ type StepCreateSignedLink struct {
 
 func (s *StepCreateSignedLink) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get(mws.UIKey).(packer.Ui)
-	presignClient := state.Get(AWSClientKey).(AWSClient)
+	awsClient := state.Get(AWSClientKey).(AWSClient)
 
 	ui.Say("Creating presigned URL for Object Storage object...")
 
@@ -35,7 +35,7 @@ func (s *StepCreateSignedLink) Run(ctx context.Context, state multistep.StateBag
 	if !found {
 		return mws.ActionHaltWithErrorf(state, "split object_storage_path into bucket and key: %s", s.Path)
 	}
-	presignResult, err := presignClient.PresignGetObject(ctx, &s3.GetObjectInput{
+	presignResult, err := awsClient.PresignGetObject(ctx, &s3.GetObjectInput{
 		Bucket: &bucket,
 		Key:    &key,
 	}, s3.WithPresignExpires(time.Hour))

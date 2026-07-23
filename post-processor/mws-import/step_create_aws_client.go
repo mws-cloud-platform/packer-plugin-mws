@@ -24,13 +24,13 @@ type StepCreateAWSClient struct {
 func (s *StepCreateAWSClient) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get(mws.UIKey).(packer.Ui)
 
-	ui.Say("Creating AWS client for Object Storage object...")
+	ui.Say("Creating Object Storage client...")
 
 	hmacAccessKey := state.Get(mwsexport.HMACAccessKeyStateKey).(string)
 	hmacSecretKey := state.Get(mwsexport.HMACSecretKeyStateKey).(string)
 	creds := credentials.NewStaticCredentialsProvider(hmacAccessKey, hmacSecretKey, "")
 
-	s3Config, err := config.LoadDefaultConfig(ctx,
+	awsConfig, err := config.LoadDefaultConfig(ctx,
 		config.WithRegion(s.Region),
 		config.WithCredentialsProvider(creds),
 		config.WithBaseEndpoint(s.Endpoint),
@@ -39,11 +39,8 @@ func (s *StepCreateAWSClient) Run(ctx context.Context, state multistep.StateBag)
 		return mws.ActionHaltWithErrorf(state, "load AWS config: %w", err)
 	}
 
-	s3Client := s3.NewFromConfig(s3Config)
-
-	presignClient := s3.NewPresignClient(s3Client)
-
-	state.Put(AWSClientKey, presignClient)
+	awsClient := s3.NewPresignClient(s3.NewFromConfig(awsConfig))
+	state.Put(AWSClientKey, awsClient)
 
 	return multistep.ActionContinue
 }
