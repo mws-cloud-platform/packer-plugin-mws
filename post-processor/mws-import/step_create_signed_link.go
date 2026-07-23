@@ -8,42 +8,28 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
+	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
-	mwsexport "github.com/mws-cloud-platform/packer-plugin-mws/post-processor/mws-export"
 )
 
+//go:generate go run go.uber.org/mock/mockgen@v0.6.0 -typed -destination=mock/aws_mock.go . AWSClient
+
+type AWSClient interface {
+	PresignGetObject(ctx context.Context, params *s3.GetObjectInput, optFns ...func(*s3.PresignOptions)) (*v4.PresignedHTTPRequest, error)
+}
+
 type StepCreateSignedLink struct {
-	Endpoint string
-	Region   string
-	Path     string
+	Path string
 }
 
 func (s *StepCreateSignedLink) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get(mws.UIKey).(packer.Ui)
+	presignClient := state.Get(AWSClientKey).(AWSClient)
 
 	ui.Say("Creating presigned URL for Object Storage object...")
-
-	hmacAccessKey := state.Get(mwsexport.HMACAccessKeyStateKey).(string)
-	hmacSecretKey := state.Get(mwsexport.HMACSecretKeyStateKey).(string)
-	creds := credentials.NewStaticCredentialsProvider(hmacAccessKey, hmacSecretKey, "")
-
-	s3Config, err := config.LoadDefaultConfig(ctx,
-		config.WithRegion(s.Region),
-		config.WithCredentialsProvider(creds),
-		config.WithBaseEndpoint(s.Endpoint),
-	)
-	if err != nil {
-		return mws.ActionHaltWithErrorf(state, "failed to load AWS config: %w", err)
-	}
-
-	s3Client := s3.NewFromConfig(s3Config)
-
-	presignClient := s3.NewPresignClient(s3Client)
 
 	bucket, key, found := strings.Cut(s.Path, "/")
 	if !found {

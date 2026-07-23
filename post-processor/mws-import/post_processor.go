@@ -62,10 +62,12 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, _ packer.
 			ServiceAccount: p.config.ServiceAccount,
 			CleanupTimeout: p.config.CleanupTimeout,
 		},
-		&StepCreateSignedLink{
+		&StepCreateAWSClient{
 			Endpoint: p.config.ObjectStorageEndpoint,
 			Region:   p.config.ObjectStorageRegion,
-			Path:     p.config.ObjectStoragePath,
+		},
+		&StepCreateSignedLink{
+			Path: p.config.ObjectStoragePath,
 		},
 		&StepImportImage{
 			Project:          p.config.Project,

@@ -5,4 +5,5 @@ package mwsimport
 
 const (
 	ExternalURLKey = "external_url"
+	AWSClientKey   = "aws_client"
 )

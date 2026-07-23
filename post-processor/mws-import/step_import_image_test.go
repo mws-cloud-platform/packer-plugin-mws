@@ -1,7 +1,7 @@
 // Copyright 2026 MTS Web Services, LLC.
 // SPDX-License-Identifier: MPL-2.0
 
-package mwsimport
+package mwsimport_test
 
 import (
 	"bytes"
@@ -15,6 +15,7 @@ import (
 	mws "github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
 	drivermws "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 	"github.com/mws-cloud-platform/packer-plugin-mws/internal/testutil"
+	mwsimport "github.com/mws-cloud-platform/packer-plugin-mws/post-processor/mws-import"
 	mockmws "github.com/mws-cloud-platform/packer-plugin-mws/post-processor/mws-import/mock"
 	"go.mws.cloud/go-sdk/pkg/optional"
 	resmodels "go.mws.cloud/go-sdk/pkg/resources/models"
@@ -64,7 +65,7 @@ func TestStepImportImage(t *testing.T) {
 			imageDisplayName: testImageDisplayName,
 			imageDescription: testImageDescription,
 			prepare: func(state multistep.StateBag, driver *mockmws.MockDriver) {
-				state.Put(ExternalURLKey, testExternalURL)
+				state.Put(mwsimport.ExternalURLKey, testExternalURL)
 
 				driver.EXPECT().
 					ImportImage(gomock.Any(), drivermws.ImportImageParams{
@@ -85,7 +86,7 @@ func TestStepImportImage(t *testing.T) {
 			imageDisplayName: testImageDisplayName,
 			imageDescription: testImageDescription,
 			prepare: func(state multistep.StateBag, driver *mockmws.MockDriver) {
-				state.Put(ExternalURLKey, testExternalURL)
+				state.Put(mwsimport.ExternalURLKey, testExternalURL)
 
 				driver.EXPECT().
 					ImportImage(gomock.Any(), drivermws.ImportImageParams{
@@ -124,7 +125,7 @@ func TestStepImportImage(t *testing.T) {
 				tt.prepare(state, driver)
 			}
 
-			step := &StepImportImage{
+			step := &mwsimport.StepImportImage{
 				Project:          tt.project,
 				ImageName:        tt.imageName,
 				ImageDisplayName: tt.imageDisplayName,
