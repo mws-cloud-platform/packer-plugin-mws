@@ -376,6 +376,32 @@ func (d *Driver) GetImage(ctx context.Context, imageRef computeref.ImageRef) (*c
 	return image, nil
 }
 
+func (d *Driver) ImportImage(ctx context.Context, params ImportImageParams) (*computemodel.ImageOptionalResponse, error) {
+	var displayName *string
+	if params.ImageDisplayName != "" {
+		displayName = new(params.ImageDisplayName)
+	}
+	image, err := d.images.CreateImage(ctx, computeclient.UpsertImageRequest{
+		Image: params.ImageName,
+		Body: computemodel.ImageRequest{
+			Metadata: &commonmodel.CommonTypedResourceMetadataRequest{
+				Description: new(params.ImageDescription),
+				DisplayName: displayName,
+			},
+			Spec: computemodel.ImageSpecRequest{
+				Source: computemodel.ImageSpecSourceRequest{
+					ExternalUrl: new(params.ExternalURL),
+				},
+			},
+		},
+	}, computeclient.WithWait())
+	if err != nil {
+		return nil, fmt.Errorf("import image: %w", err)
+	}
+
+	return image, nil
+}
+
 func (d *Driver) AttachDiskToVirtualMachine(ctx context.Context, vmName string, diskRef computeref.DiskRef) error {
 	_, err := d.virtualMachines.UpdateVirtualMachine(ctx, computeclient.UpdateVirtualMachineRequest{
 		VirtualMachine: vmName,

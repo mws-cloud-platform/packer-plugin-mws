@@ -29,3 +29,4 @@ $ packer plugins install github.com/mws-cloud-platform/mws
 
 #### Post-Processors
 - [mws-export](https://github.com/mws-cloud-platform/packer-plugin-mws/blob/main/.web-docs/components/post-processor/mws-export/README.md) - The mws-export post-processor exports images to Object Storage as QCOW2 files.
+- [mws-import](https://github.com/mws-cloud-platform/packer-plugin-mws/blob/main/.web-docs/components/post-processor/mws-import/README.md) - The mws-import post-processor imports images from Object Storage QCOW2 files.

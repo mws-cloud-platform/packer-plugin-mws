@@ -1,0 +1,18 @@
+<!-- Code generated from the comments of the ObjectStorageConfig struct in post-processor/mws-import/config.go; DO NOT EDIT MANUALLY -->
+
+- `service_account` (string) - MWS Cloud Platform Service Account used for generating temporal HMAC key
+  to access Object Storage. Required, unless `access_key` and `secret_key`
+  are provided.
+
+- `access_key` (string) - HMAC key identifier for authenticating with Object Storage. Used if
+  `service_account` is not provided. Also requires `secret_key` to be
+  provided.
+
+- `secret_key` (string) - HMAC key secret for accessing Object Storage. Required if `access_key` is
+  provided.
+
+- `object_storage_endpoint` (string) - MWS Cloud Platform Object Storage endpoint to import image from (defaults to "https://storage.mwsapis.ru").
+
+- `object_storage_region` (string) - MWS Cloud Platform Object Storage region where the bucket is located (defaults to "ru-central1").
+
+<!-- End of code generated from the comments of the ObjectStorageConfig struct in post-processor/mws-import/config.go; -->

@@ -11,6 +11,7 @@ import (
 
 	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
 	mwsexport "github.com/mws-cloud-platform/packer-plugin-mws/post-processor/mws-export"
+	mwsimport "github.com/mws-cloud-platform/packer-plugin-mws/post-processor/mws-import"
 	"github.com/mws-cloud-platform/packer-plugin-mws/version"
 )
 
@@ -18,6 +19,7 @@ func main() {
 	pps := plugin.NewSet()
 	pps.RegisterBuilder(plugin.DEFAULT_NAME, new(mws.Builder))
 	pps.RegisterPostProcessor("export", new(mwsexport.PostProcessor))
+	pps.RegisterPostProcessor("import", new(mwsimport.PostProcessor))
 	pps.SetVersion(version.PluginVersion)
 	err := pps.Run()
 	if err != nil {

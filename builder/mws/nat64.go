@@ -29,11 +29,11 @@ func ConvertToIPv6(address *ipaddress.IPAddress, prefixStr string) (*ipaddress.I
 
 	_, prefix, err := net.ParseCIDR(prefixStr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse NAT64 prefix: %w", err)
+		return nil, fmt.Errorf("parse NAT64 prefix: %w", err)
 	}
 	ipv6, err := synthesizeRFC6052(*prefix, ipv4)
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert with RFC6052: %w", err)
+		return nil, fmt.Errorf("convert with RFC6052: %w", err)
 	}
 
 	result, err := ipaddress.NewIPAddress(ipv6)

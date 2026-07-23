@@ -276,6 +276,18 @@ func TestConfig_Prepare(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "missing_object_storage_path_error",
+			raws: []any{
+				map[string]any{
+					"project":              "test-project",
+					"source_image":         "test-image",
+					"use_external_address": true,
+					"service_account":      "test-service-account",
+				},
+			},
+			wantErr: true,
+		},
 	}
 
 	expectedDir := golden.NewDir(t, golden.WithPath(path.Join("testdata", t.Name())), golden.WithRecreateOnUpdate())

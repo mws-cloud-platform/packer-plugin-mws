@@ -1,31 +1,43 @@
 // Copyright 2026 MTS Web Services, LLC.
 // SPDX-License-Identifier: MPL-2.0
 
-package mws_test
+package mwsimport_test
 
 import (
 	"bytes"
+	"context"
 	"path"
 	"testing"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/packerbuilderdata"
-
-	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
-	mockmws "github.com/mws-cloud-platform/packer-plugin-mws/builder/mws/mock"
+	mws "github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
 	drivermws "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 	"github.com/mws-cloud-platform/packer-plugin-mws/internal/testutil"
+	mwsimport "github.com/mws-cloud-platform/packer-plugin-mws/post-processor/mws-import"
+	mockmws "github.com/mws-cloud-platform/packer-plugin-mws/post-processor/mws-import/mock"
 	"go.mws.cloud/go-sdk/pkg/optional"
 	resmodels "go.mws.cloud/go-sdk/pkg/resources/models"
 	commonmodel "go.mws.cloud/go-sdk/service/common/model"
 	computemodel "go.mws.cloud/go-sdk/service/compute/model"
-	computeref "go.mws.cloud/go-sdk/service/resources/references/compute"
 	"go.mws.cloud/util-toolset/pkg/testing/golden"
+	"go.mws.cloud/util-toolset/pkg/utils/consterr"
 	"go.uber.org/mock/gomock"
 )
 
-func TestStepCreateImage(t *testing.T) {
+const (
+	packerPrefix         = "packer-"
+	testProjectName      = "test-project"
+	testImageName        = "test-image"
+	testImageDisplayName = "Test Image Display Name"
+	testImageDescription = "Test image description"
+	testExternalURL      = "https://storage.test.mwsapis.ru/test-bucket/path/to/image.qcow2"
+
+	errInternal = consterr.Error("internal error")
+)
+
+func TestStepImportImage(t *testing.T) {
 	t.Parallel()
 	dir := golden.NewDir(t, golden.WithPath(path.Join("testdata", t.Name())), golden.WithRecreateOnUpdate())
 
@@ -36,12 +48,11 @@ func TestStepCreateImage(t *testing.T) {
 		}),
 	}
 
-	diskRef := new(computeref.NewDiskRef(testProjectName, testDiskName))
-
 	for _, tt := range []struct {
 		name             string
 		project          string
 		imageName        string
+		imageDisplayName string
 		imageDescription string
 		prepare          func(multistep.StateBag, *mockmws.MockDriver)
 		expectedError    bool
@@ -51,15 +62,17 @@ func TestStepCreateImage(t *testing.T) {
 			name:             "success",
 			project:          testProjectName,
 			imageName:        testImageName,
+			imageDisplayName: testImageDisplayName,
 			imageDescription: testImageDescription,
 			prepare: func(state multistep.StateBag, driver *mockmws.MockDriver) {
-				state.Put(mws.DiskRefKey, diskRef)
+				state.Put(mwsimport.ExternalURLKey, testExternalURL)
 
 				driver.EXPECT().
-					CreateImage(gomock.Any(), drivermws.CreateImageParams{
+					ImportImage(gomock.Any(), drivermws.ImportImageParams{
 						ImageName:        testImageName,
+						ImageDisplayName: testImageDisplayName,
 						ImageDescription: testImageDescription,
-						DiskRef:          diskRef,
+						ExternalURL:      testExternalURL,
 					}).
 					Return(image, nil).
 					Times(1)
@@ -67,18 +80,20 @@ func TestStepCreateImage(t *testing.T) {
 			expectedImage: image,
 		},
 		{
-			name:             "create_image_error",
+			name:             "import_image_error",
 			project:          testProjectName,
 			imageName:        testImageName,
+			imageDisplayName: testImageDisplayName,
 			imageDescription: testImageDescription,
 			prepare: func(state multistep.StateBag, driver *mockmws.MockDriver) {
-				state.Put(mws.DiskRefKey, diskRef)
+				state.Put(mwsimport.ExternalURLKey, testExternalURL)
 
 				driver.EXPECT().
-					CreateImage(gomock.Any(), drivermws.CreateImageParams{
+					ImportImage(gomock.Any(), drivermws.ImportImageParams{
 						ImageName:        testImageName,
+						ImageDisplayName: testImageDisplayName,
 						ImageDescription: testImageDescription,
-						DiskRef:          diskRef,
+						ExternalURL:      testExternalURL,
 					}).
 					Return(nil, errInternal).
 					Times(1)
@@ -86,9 +101,10 @@ func TestStepCreateImage(t *testing.T) {
 			expectedError: true,
 		},
 		{
-			name:             "missing_disk_ref",
+			name:             "missing_external_url",
 			project:          testProjectName,
 			imageName:        testImageName,
+			imageDisplayName: testImageDisplayName,
 			imageDescription: testImageDescription,
 			expectedError:    true,
 		},
@@ -104,20 +120,20 @@ func TestStepCreateImage(t *testing.T) {
 			writer := new(bytes.Buffer)
 			ui := &packer.BasicUi{Writer: writer}
 			state.Put(mws.UIKey, ui)
-			state.Put(mws.VirtualMachineNameKey, defaultVirtualMachineName)
 
 			if tt.prepare != nil {
 				tt.prepare(state, driver)
 			}
 
-			step := &mws.StepCreateImage{
+			step := &mwsimport.StepImportImage{
 				Project:          tt.project,
 				ImageName:        tt.imageName,
+				ImageDisplayName: tt.imageDisplayName,
 				ImageDescription: tt.imageDescription,
 				GeneratedData:    &packerbuilderdata.GeneratedData{State: state},
 			}
 
-			action := step.Run(t.Context(), state)
+			action := step.Run(context.Background(), state)
 			if tt.expectedError {
 				testutil.RequireActionHalt(t, state, action)
 			} else {

@@ -4,18 +4,23 @@
 package mws_test
 
 import (
+	"bytes"
 	"cmp"
 	"errors"
 	"fmt"
 	"path"
 	"testing"
 
+	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/packerbuilderdata"
+	"github.com/stretchr/testify/require"
 
 	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
 	mockmws "github.com/mws-cloud-platform/packer-plugin-mws/builder/mws/mock"
 	commonconfig "github.com/mws-cloud-platform/packer-plugin-mws/internal/config"
 	drivermws "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/testutil"
 	"go.mws.cloud/go-sdk/pkg/apimodels/cidraddress"
 	"go.mws.cloud/go-sdk/pkg/apimodels/units/bytesize"
 	computeref "go.mws.cloud/go-sdk/service/resources/references/compute"
@@ -212,8 +217,8 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 				GeneratedData:        &packerbuilderdata.GeneratedData{State: state},
 			}
 
-			requireActionContinue(t, state, step.Run(t.Context(), state))
-			requireStateGets(t, state,
+			testutil.RequireActionContinue(t, state, step.Run(t.Context(), state))
+			testutil.RequireStateGets(t, state,
 				map[string]any{
 					mws.DiskNameKey:           expectedDiskName,
 					mws.NetworkNameKey:        expectedNetworkName,
@@ -222,17 +227,17 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 					mws.InstanceIDKey:         expectedVirtualMachineName,
 					mws.DiskRefKey:            expectedDiskRef,
 				})
-			requireGeneratedDataGet(t, state, "SourceProject", tt.config.Project)
-			requireGeneratedDataGet(t, state, "SourceImageName", testSourceImage)
+			testutil.RequireGeneratedDataGet(t, state, "SourceProject", tt.config.Project)
+			testutil.RequireGeneratedDataGet(t, state, "SourceImageName", testSourceImage)
 
 			if tt.config.UseExternalAddress {
-				requireStateGet(t, state, mws.ExternalAddressNameKey, expectedExternalAddressName)
-				requireStateGet(t, state, mws.FirewallRuleNameKey, expectedFirewallRuleName)
-				requireStateGet(t, state, mws.InstanceIPKey, testExternalAddress.String())
+				testutil.RequireStateGet(t, state, mws.ExternalAddressNameKey, expectedExternalAddressName)
+				testutil.RequireStateGet(t, state, mws.FirewallRuleNameKey, expectedFirewallRuleName)
+				testutil.RequireStateGet(t, state, mws.InstanceIPKey, testExternalAddress.String())
 			} else {
-				requireStateGet(t, state, mws.InstanceIPKey, testInternalAddress.String())
-				requireStateNotSet(t, state, mws.ExternalAddressNameKey)
-				requireStateNotSet(t, state, mws.FirewallRuleNameKey)
+				testutil.RequireStateGet(t, state, mws.InstanceIPKey, testInternalAddress.String())
+				testutil.RequireStateNotSet(t, state, mws.ExternalAddressNameKey)
+				testutil.RequireStateNotSet(t, state, mws.FirewallRuleNameKey)
 			}
 
 			expectedDir.String(t, tt.name+".out", writer.String())
@@ -659,8 +664,8 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 				GeneratedData:        &packerbuilderdata.GeneratedData{State: state},
 			}
 
-			requireActionHalt(t, state, step.Run(t.Context(), state))
-			requireStateGets(t, state, requireStateKV)
+			testutil.RequireActionHalt(t, state, step.Run(t.Context(), state))
+			testutil.RequireStateGets(t, state, requireStateKV)
 
 			expectedDir.String(t, tt.name+".out", writer.String())
 		})
@@ -867,4 +872,23 @@ func TestStepCreateVirtualMachine_Cleanup_Error(t *testing.T) {
 			expectedDir.String(t, tt.name+".out", writer.String())
 		})
 	}
+}
+
+func prepareConfig(t *testing.T, config *mws.Config) {
+	config.SetDefaults()
+	require.NoError(t, config.Validate())
+	config.Communicator.SSHPublicKey = []byte(testSSHPublicKey)
+}
+
+func prepareState(driver mws.Driver) (*bytes.Buffer, multistep.StateBag) {
+	state := new(multistep.BasicStateBag)
+	state.Put(mws.DriverKey, driver)
+	state.Put(mws.PrefixKey, packerPrefix)
+	writer := new(bytes.Buffer)
+	ui := &packer.BasicUi{
+		Writer: writer,
+	}
+	state.Put(mws.UIKey, ui)
+
+	return writer, state
 }

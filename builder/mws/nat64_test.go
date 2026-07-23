@@ -91,14 +91,14 @@ func TestConvertToIPv6(t *testing.T) {
 			ipv4:          "192.0.2.33",
 			prefix:        "invalid-prefix",
 			expectErr:     true,
-			expectedError: "failed to parse NAT64 prefix: invalid CIDR address: invalid-prefix",
+			expectedError: "parse NAT64 prefix: invalid CIDR address: invalid-prefix",
 		},
 		{
 			name:          "unsupported_prefix_length",
 			ipv4:          "192.0.2.33",
 			prefix:        "64:ff9b:1:2::/44",
 			expectErr:     true,
-			expectedError: "failed to convert with RFC6052: unsupported RFC 6052 prefix length: 44",
+			expectedError: "convert with RFC6052: unsupported RFC 6052 prefix length: 44",
 		},
 		{
 			name:         "ipv4_loopback",
