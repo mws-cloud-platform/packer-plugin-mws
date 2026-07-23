@@ -108,6 +108,9 @@ func (c *ObjectStorageConfig) SetDefaults() {
 }
 
 func (c *ObjectStorageConfig) Validate() error {
+	if c.ObjectStoragePath == "" {
+		return consterr.Error("object_storage_path is not provided")
+	}
 	if (c.SecretKey == "" || c.AccessKey == "") && c.ServiceAccount == "" {
 		return consterr.Error("Object Storage authentication is not provided, " +
 			"provide service_account for hmac-key generation (recommended) or pair access_key, secret_key")
