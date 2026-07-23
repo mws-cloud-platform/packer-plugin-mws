@@ -33,14 +33,14 @@ func (s *StepCreateSignedLink) Run(ctx context.Context, state multistep.StateBag
 
 	bucket, key, found := strings.Cut(s.Path, "/")
 	if !found {
-		return mws.ActionHaltWithErrorf(state, "failed to split object_storage_path into bucket and key: %s", s.Path)
+		return mws.ActionHaltWithErrorf(state, "split object_storage_path into bucket and key: %s", s.Path)
 	}
 	presignResult, err := presignClient.PresignGetObject(ctx, &s3.GetObjectInput{
 		Bucket: &bucket,
 		Key:    &key,
 	}, s3.WithPresignExpires(time.Hour))
 	if err != nil {
-		return mws.ActionHaltWithErrorf(state, "failed to create presigned URL: %w", err)
+		return mws.ActionHaltWithErrorf(state, "create presigned URL: %w", err)
 	}
 
 	ui.Sayf("Presigned URL created: %s", presignResult.URL)

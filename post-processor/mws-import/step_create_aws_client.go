@@ -36,7 +36,7 @@ func (s *StepCreateAWSClient) Run(ctx context.Context, state multistep.StateBag)
 		config.WithBaseEndpoint(s.Endpoint),
 	)
 	if err != nil {
-		return mws.ActionHaltWithErrorf(state, "failed to load AWS config: %w", err)
+		return mws.ActionHaltWithErrorf(state, "load AWS config: %w", err)
 	}
 
 	s3Client := s3.NewFromConfig(s3Config)
