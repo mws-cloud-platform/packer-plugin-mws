@@ -58,3 +58,10 @@ type CreateFirewallRuleParams struct {
 	FirewallRuleName              string
 	VirtualMachineInternalAddress string
 }
+
+type ImportImageParams struct {
+	ImageName        string
+	ImageDisplayName string
+	ImageDescription string
+	ExternalURL      string
+}

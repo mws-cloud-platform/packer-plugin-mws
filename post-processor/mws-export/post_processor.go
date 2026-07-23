@@ -140,7 +140,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, artifact 
 
 	p.runner = commonsteps.NewRunner(steps, p.config.PackerConfig, ui)
 	p.runner.Run(ctx, state)
-	if rawErr, ok := state.GetOk("error"); ok {
+	if rawErr, ok := state.GetOk(mws.ErrorKey); ok {
 		return nil, false, false, rawErr.(error)
 	}
 
@@ -150,7 +150,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, artifact 
 		url:  url,
 	}
 
-	ui.Sayf("Image exported to %s", url)
+	ui.Say(result.String())
 
 	return result, false, false, nil
 }

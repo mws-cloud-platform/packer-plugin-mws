@@ -23,7 +23,7 @@ const (
 	//nolint:revive // Very special constant for packer
 	BuilderId = "packer.mws"
 
-	errUnexpected = consterr.Error("plugin unexpected error")
+	ErrUnexpected = consterr.Error("plugin unexpected error")
 )
 
 type Builder struct {
@@ -111,16 +111,16 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 
 	v, ok := state.GetOk(ImageKey)
 	if !ok {
-		return nil, fmt.Errorf("image not found in state: %w", errUnexpected)
+		return nil, fmt.Errorf("image not found in state: %w", ErrUnexpected)
 	}
 	image, ok := v.(*computemodel.ImageOptionalResponse)
 	if !ok {
-		return nil, fmt.Errorf("image found in state has wrong type %T: %w", v, errUnexpected)
+		return nil, fmt.Errorf("image found in state has wrong type %T: %w", v, ErrUnexpected)
 	}
 
-	return &Artifact{
-		StateData: map[string]any{"generated_data": state.Get(GeneratedDataKey)},
-		driver:    driver,
-		image:     image,
-	}, nil
+	result := NewArtifact(driver, image, state.Get(GeneratedDataKey))
+
+	ui.Say(result.String())
+
+	return result, nil
 }
