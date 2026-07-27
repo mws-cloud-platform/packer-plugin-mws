@@ -19,10 +19,12 @@ import (
 )
 
 type Config struct {
-	common.PackerConfig       `mapstructure:",squash"`
-	commonconfig.AccessConfig `mapstructure:",squash"`
-	commonconfig.ImageConfig  `mapstructure:",squash"`
-	ObjectStorageConfig       `mapstructure:",squash"`
+	common.PackerConfig              `mapstructure:",squash"`
+	commonconfig.AccessConfig        `mapstructure:",squash"`
+	commonconfig.ImageConfig         `mapstructure:",squash"`
+	commonconfig.ObjectStorageConfig `mapstructure:",squash"`
+	// MWS Cloud Platform Object Storage path from where the image will be imported.
+	ObjectStoragePath string `mapstructure:"object_storage_path" required:"true"`
 
 	// Timeout for resources cleanup (defaults to "1h").
 	CleanupTimeout time.Duration `mapstructure:"cleanup_timeout" required:"false"`
@@ -52,28 +54,14 @@ func (c *Config) SetDefaults() {
 }
 
 func (c *Config) Validate() error {
-	err := errors.Join(
+	errs := []error{
 		c.AccessConfig.Validate(),
 		c.ImageConfig.Validate(),
 		c.ObjectStorageConfig.Validate(),
-	)
-	return err
-}
-
-type ObjectStorageConfig struct {
-	commonconfig.ObjectStorageConfig `mapstructure:",squash"`
-	// MWS Cloud Platform Object Storage path from where the image will be imported.
-	ObjectStoragePath string `mapstructure:"object_storage_path" required:"true"`
-}
-
-func (c *ObjectStorageConfig) SetDefaults() {
-	c.ObjectStorageConfig.SetDefaults()
-}
-
-func (c *ObjectStorageConfig) Validate() error {
-	err := c.ObjectStorageConfig.Validate()
-	if c.ObjectStoragePath == "" {
-		err = errors.Join(err, consterr.Error("object_storage_path is not provided"))
 	}
-	return err
+	if c.ObjectStoragePath == "" {
+		errs = append(errs, consterr.Error("object_storage_path is not provided"))
+	}
+
+	return errors.Join(errs...)
 }

@@ -86,11 +86,11 @@ configured for this post-processor.
 
 <!-- End of code generated from the comments of the AccessConfig struct in internal/config/access.go; -->
 
-<!-- Code generated from the comments of the ObjectStorageConfig struct in post-processor/mws-export/config.go; DO NOT EDIT MANUALLY -->
+<!-- Code generated from the comments of the Config struct in post-processor/mws-export/config.go; DO NOT EDIT MANUALLY -->
 
 - `object_storage_path` (string) - MWS Cloud Platform Object Storage path where the image will be stored.
 
-<!-- End of code generated from the comments of the ObjectStorageConfig struct in post-processor/mws-export/config.go; -->
+<!-- End of code generated from the comments of the Config struct in post-processor/mws-export/config.go; -->
 
 
 **Optional**
@@ -126,7 +126,7 @@ configured for this post-processor.
 
 <!-- End of code generated from the comments of the VirtualMachineConfig struct in internal/config/virtual_machine.go; -->
 
-<!-- Code generated from the comments of the DiskForExportConfig struct in post-processor/mws-export/config.go; DO NOT EDIT MANUALLY -->
+<!-- Code generated from the comments of the DiskForExportConfig struct in internal/config/disk_for_export.go; DO NOT EDIT MANUALLY -->
 
 - `disk_for_export_type` (string) - Type of the disk used for image export (defaults to "nbs-pl2").
 
@@ -137,7 +137,7 @@ configured for this post-processor.
 - `image_for_export` (string) - Identifier of the image to export. Required only when post processor used
   without mws builder.
 
-<!-- End of code generated from the comments of the DiskForExportConfig struct in post-processor/mws-export/config.go; -->
+<!-- End of code generated from the comments of the DiskForExportConfig struct in internal/config/disk_for_export.go; -->
 
 <!-- Code generated from the comments of the ObjectStorageConfig struct in internal/config/object_storage.go; DO NOT EDIT MANUALLY -->
 

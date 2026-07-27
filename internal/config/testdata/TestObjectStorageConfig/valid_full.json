@@ -1,0 +1,7 @@
+{
+ "ServiceAccount": "test-service-account",
+ "AccessKey": "",
+ "SecretKey": "",
+ "ObjectStorageEndpoint": "https://custom.api.mwsapis.ru",
+ "ObjectStorageRegion": "ru-central2"
+}

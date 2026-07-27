@@ -1,0 +1,6 @@
+{
+ "DiskForExportType": "nbs-pl3",
+ "DiskForExportIOPS": 2000,
+ "ImageForExportProject": "export-image-project",
+ "ImageForExport": "export-image"
+}

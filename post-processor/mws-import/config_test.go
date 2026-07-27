@@ -20,44 +20,47 @@ func TestConfig_Prepare(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "valid_basic_config_with_service_account",
+			name: "valid_basic",
 			raws: []any{
 				map[string]any{
 					"project":             "test-project",
-					"object_storage_path": "test-bucket/path/to/image.qcow2",
 					"service_account":     "test-service-account",
-					"image_name":          "test-image",
+					"object_storage_path": "test-bucket/path/to/image.qcow2",
 				},
 			},
 			wantErr: false,
 		},
 		{
-			name: "valid_full_config",
+			name: "valid_full",
 			raws: []any{
 				map[string]any{
+					// AccessConfig
 					"project":                             "test-project",
 					"zone":                                "ru-central1-b",
 					"base_endpoint":                       "https://custom.api.mwsapis.ru",
 					"service_account_authorized_key_path": "/path/to/key",
-					"image_name":                          "test-image",
-					"image_display_name":                  "Custom display name",
-					"image_description":                   "Custom image description",
-					"cleanup_timeout":                     "2h",
-					"object_storage_path":                 "test-bucket/path/to/image.qcow2",
-					"object_storage_endpoint":             "https://custom.storage.mwsapis.ru",
-					"object_storage_region":               "ru-central1-a",
-					"service_account":                     "test-service-account",
+					// ImageConfig
+					"image_name":         "test-image-name",
+					"image_display_name": "Test image display name",
+					"image_description":  "Test image description.",
+					// ObjectStorageConfig
+					"service_account":         "test-service-account",
+					"object_storage_endpoint": "https://custom.api.mwsapis.ru",
+					"object_storage_region":   "ru-central2",
+
+					"object_storage_path": "test-bucket/path/to/image.qcow2",
+
+					"cleanup_timeout": "2h",
 				},
 			},
 			wantErr: false,
 		},
 		{
-			name: "missing_project_error",
+			name: "error_missing_object_storage_path",
 			raws: []any{
 				map[string]any{
-					"object_storage_path": "test-bucket/path/to/image.qcow2",
-					"service_account":     "test-service-account",
-					"image_name":          "test-image",
+					"project":         "test-project",
+					"service_account": "test-service-account",
 				},
 			},
 			wantErr: true,
@@ -67,81 +70,9 @@ func TestConfig_Prepare(t *testing.T) {
 			raws: []any{
 				map[string]any{
 					"project":             "test-project",
+					"service_account":     "test-service-account",
+					"object_storage_path": "test-bucket/path/to/image.qcow2",
 					"cleanup_timeout":     "invalid-duration",
-					"object_storage_path": "test-bucket/path/to/image.qcow2",
-					"service_account":     "test-service-account",
-					"image_name":          "test-image",
-				},
-			},
-			wantErr: true,
-		},
-		{
-			name: "missing_object_storage_authentication_error",
-			raws: []any{
-				map[string]any{
-					"project":             "test-project",
-					"object_storage_path": "test-bucket/path/to/image.qcow2",
-					"image_name":          "test-image",
-				},
-			},
-			wantErr: true,
-		},
-		{
-			name: "valid_service_account_authentication",
-			raws: []any{
-				map[string]any{
-					"project":             "test-project",
-					"object_storage_path": "test-bucket/path/to/image.qcow2",
-					"service_account":     "test-service-account",
-					"image_name":          "test-image",
-				},
-			},
-			wantErr: false,
-		},
-		{
-			name: "valid_access_key_secret_key_authentication",
-			raws: []any{
-				map[string]any{
-					"project":             "test-project",
-					"object_storage_path": "test-bucket/path/to/image.qcow2",
-					"access_key":          "test-access-key",
-					"secret_key":          "test-secret-key",
-					"image_name":          "test-image",
-				},
-			},
-			wantErr: false,
-		},
-		{
-			name: "invalid_access_key_without_secret_key_error",
-			raws: []any{
-				map[string]any{
-					"project":             "test-project",
-					"object_storage_path": "test-bucket/path/to/image.qcow2",
-					"access_key":          "test-access-key",
-					"image_name":          "test-image",
-				},
-			},
-			wantErr: true,
-		},
-		{
-			name: "invalid_secret_key_without_access_key_error",
-			raws: []any{
-				map[string]any{
-					"project":             "test-project",
-					"object_storage_path": "test-bucket/path/to/image.qcow2",
-					"secret_key":          "test-secret-key",
-					"image_name":          "test-image",
-				},
-			},
-			wantErr: true,
-		},
-		{
-			name: "missing_object_storage_path_error",
-			raws: []any{
-				map[string]any{
-					"project":         "test-project",
-					"service_account": "test-service-account",
-					"image_name":      "test-image",
 				},
 			},
 			wantErr: true,

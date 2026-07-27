@@ -1,0 +1,7 @@
+{
+ "Project": "test-project",
+ "Zone": "ru-central1-b",
+ "BaseEndpoint": "https://custom.api.mwsapis.ru",
+ "ServiceAccountAuthorizedKeyPath": "",
+ "Token": "secret-token"
+}

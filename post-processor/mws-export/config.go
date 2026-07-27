@@ -23,9 +23,10 @@ type Config struct {
 	Communicator                      communicator.Config `mapstructure:",squash" json:"-"`
 	commonconfig.AccessConfig         `mapstructure:",squash"`
 	commonconfig.VirtualMachineConfig `mapstructure:",squash"`
-
-	DiskForExportConfig `mapstructure:",squash"`
-	ObjectStorageConfig `mapstructure:",squash"`
+	commonconfig.DiskForExportConfig  `mapstructure:",squash"`
+	commonconfig.ObjectStorageConfig  `mapstructure:",squash"`
+	// MWS Cloud Platform Object Storage path where the image will be stored.
+	ObjectStoragePath string `mapstructure:"object_storage_path" required:"true"`
 
 	ctx interpolate.Context
 }
@@ -70,46 +71,9 @@ func (c *Config) Validate() error {
 		c.ObjectStorageConfig.Validate(),
 		interpolate.Validate(c.ObjectStoragePath, &c.ctx),
 	)
-
-	err := errors.Join(errs...)
-	return err
-}
-
-type ObjectStorageConfig struct {
-	commonconfig.ObjectStorageConfig `mapstructure:",squash"`
-	// MWS Cloud Platform Object Storage path where the image will be stored.
-	ObjectStoragePath string `mapstructure:"object_storage_path" required:"true"`
-}
-
-func (c *ObjectStorageConfig) SetDefaults() {
-	c.ObjectStorageConfig.SetDefaults()
-}
-
-func (c *ObjectStorageConfig) Validate() error {
-	err := c.ObjectStorageConfig.Validate()
 	if c.ObjectStoragePath == "" {
-		err = errors.Join(err, consterr.Error("object_storage_path is not provided"))
+		errs = append(errs, consterr.Error("object_storage_path is not provided"))
 	}
-	return err
-}
 
-type DiskForExportConfig struct {
-	// Type of the disk used for image export (defaults to "nbs-pl2").
-	DiskForExportType string `mapstructure:"disk_for_export_type" required:"false"`
-	// IOPS for the disk used for image export (defaults to 1000).
-	DiskForExportIOPS int64 `mapstructure:"disk_for_export_iops" required:"false"`
-	// The project identifier where the image for export exists (defaults to the `project`).
-	ImageForExportProject string `mapstructure:"image_for_export_project" required:"false"`
-	// Identifier of the image to export. Required only when post processor used
-	// without mws builder.
-	ImageForExport string `mapstructure:"image_for_export" required:"false"`
-}
-
-func (c *DiskForExportConfig) SetDefaults() {
-	c.DiskForExportType = cmp.Or(c.DiskForExportType, commonconfig.DefaultDiskType)
-	c.DiskForExportIOPS = cmp.Or(c.DiskForExportIOPS, commonconfig.DefaultDiskIOPS)
-}
-
-func (c *DiskForExportConfig) Validate() error {
-	return nil
+	return errors.Join(errs...)
 }

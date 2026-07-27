@@ -1,1 +1,0 @@
-when use_external_address is false, subnet_name must be provided
