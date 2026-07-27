@@ -93,6 +93,6 @@ func TestDiskConfig(t *testing.T) {
 	expectedDir := golden.NewDir(t, golden.WithPath(path.Join("testdata", t.Name())), golden.WithRecreateOnUpdate())
 
 	for _, tt := range tests {
-		t.Run(tt.name, ConfigTest(&config.DiskConfig{}, tt, expectedDir))
+		t.Run(tt.name, tt.ConfigTest(&config.DiskConfig{}, expectedDir))
 	}
 }

@@ -60,6 +60,6 @@ func TestAccessConfig(t *testing.T) {
 	expectedDir := golden.NewDir(t, golden.WithPath(path.Join("testdata", t.Name())), golden.WithRecreateOnUpdate())
 
 	for _, tt := range tests {
-		t.Run(tt.name, ConfigTest(&config.AccessConfig{}, tt, expectedDir))
+		t.Run(tt.name, tt.ConfigTest(&config.AccessConfig{}, expectedDir))
 	}
 }

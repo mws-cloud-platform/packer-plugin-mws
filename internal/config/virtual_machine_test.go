@@ -4,6 +4,7 @@
 package config_test
 
 import (
+	_ "embed"
 	"path"
 	"testing"
 
@@ -12,21 +13,8 @@ import (
 	"go.mws.cloud/util-toolset/pkg/testing/golden"
 )
 
-const testCloudConfig = `#cloud-config
-packages:
-  - nginx
-  - curl
-runcmd:
-  - systemctl enable nginx
-  - systemctl start nginx
-  - echo "Packer build completed successfully!" > /var/log/build-complete.log
-users:
-  - name: demo
-    groups: sudo
-    shell: /bin/bash
-    sudo: ['ALL=(ALL) NOPASSWD:ALL']
-    ssh-authorized-keys:
-      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDemoKeyForDemoUser`
+//go:embed testdata/cloud-config.yaml
+var testCloudConfig string
 
 func TestVirtualMachineConfig(t *testing.T) {
 	t.Parallel()
@@ -84,6 +72,6 @@ func TestVirtualMachineConfig(t *testing.T) {
 	expectedDir := golden.NewDir(t, golden.WithPath(path.Join("testdata", t.Name())), golden.WithRecreateOnUpdate())
 
 	for _, tt := range tests {
-		t.Run(tt.name, ConfigTest(&config.VirtualMachineConfig{}, tt, expectedDir))
+		t.Run(tt.name, tt.ConfigTest(&config.VirtualMachineConfig{}, expectedDir))
 	}
 }

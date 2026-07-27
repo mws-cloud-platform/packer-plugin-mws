@@ -1,0 +1,15 @@
+#cloud-config
+packages:
+  - nginx
+  - curl
+runcmd:
+  - systemctl enable nginx
+  - systemctl start nginx
+  - echo "Packer build completed successfully!" > /var/log/build-complete.log
+users:
+  - name: demo
+    groups: sudo
+    shell: /bin/bash
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    ssh-authorized-keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDemoKeyForDemoUser

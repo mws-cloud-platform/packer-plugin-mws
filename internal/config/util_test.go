@@ -23,18 +23,19 @@ type ConfigTestCase struct {
 	wantErr bool
 }
 
-func ConfigTest(c Config, tt ConfigTestCase, expectedDir *golden.Dir) func(*testing.T) {
+func (tc *ConfigTestCase) ConfigTest(c Config, expectedDir *golden.Dir) func(*testing.T) {
 	return func(t *testing.T) {
-		err := packerconfig.Decode(c, nil, tt.raws...)
+		t.Parallel()
+		err := packerconfig.Decode(c, nil, tc.raws...)
 		c.SetDefaults()
 		err = errors.Join(err, c.Validate())
 
-		if tt.wantErr {
+		if tc.wantErr {
 			require.Error(t, err)
-			expectedDir.String(t, tt.name+".txt", err.Error())
+			expectedDir.String(t, tc.name+".txt", err.Error())
 		} else {
 			require.NoError(t, err)
-			expectedDir.JSON(t, tt.name+".json", c)
+			expectedDir.JSON(t, tc.name+".json", c)
 		}
 	}
 }
