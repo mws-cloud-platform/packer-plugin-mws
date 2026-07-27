@@ -1,13 +1,13 @@
 // Copyright 2026 MTS Web Services, LLC.
 // SPDX-License-Identifier: MPL-2.0
 
-package mws_test
+package steps_test
 
 import (
 	"net"
 	"testing"
 
-	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/steps"
 	"github.com/stretchr/testify/require"
 	"go.mws.cloud/go-sdk/pkg/apimodels/ipaddress"
 )
@@ -152,7 +152,7 @@ func TestConvertToIPv6(t *testing.T) {
 			}
 
 			address, _ := ipaddress.NewIPAddress(ipv4)
-			result, err := mws.ConvertToIPv6(new(address), tt.prefix)
+			result, err := steps.ConvertToIPv6(new(address), tt.prefix)
 
 			if tt.expectErr {
 				require.Error(t, err)

@@ -10,7 +10,7 @@ import (
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
-	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/common"
 	mwsexport "github.com/mws-cloud-platform/packer-plugin-mws/post-processor/mws-export"
 	mock "github.com/mws-cloud-platform/packer-plugin-mws/post-processor/mws-export/mock"
 	"github.com/stretchr/testify/require"
@@ -110,9 +110,9 @@ func TestStepPrepareTools_Run(t *testing.T) {
 			state := new(multistep.BasicStateBag)
 			writer := new(bytes.Buffer)
 			ui := &packer.BasicUi{Writer: writer}
-			state.Put(mws.UIKey, ui)
+			state.Put(common.UIKey, ui)
 			comm := mock.NewMockCommunicator(ctrl)
-			state.Put(mws.CommunicatorKey, tc.configureCommMock(t, comm))
+			state.Put(common.CommunicatorKey, tc.configureCommMock(t, comm))
 
 			step := &mwsexport.StepPrepareTools{}
 

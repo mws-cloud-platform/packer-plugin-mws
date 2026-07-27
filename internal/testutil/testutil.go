@@ -8,16 +8,12 @@ import (
 	"testing"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/common"
 	"github.com/stretchr/testify/require"
 )
 
-const (
-	ErrorKey         = "error"
-	GeneratedDataKey = "generated_data"
-)
-
 func RequireGeneratedDataGet(t *testing.T, state multistep.StateBag, key string, expected any) {
-	genDataResult := state.Get(GeneratedDataKey)
+	genDataResult := state.Get(common.GeneratedDataKey)
 	require.NotNil(t, genDataResult, "Expected generated_data to be stored in state")
 
 	genDataMap, ok := genDataResult.(map[string]any)
@@ -48,10 +44,10 @@ func RequireStateNotSet(t *testing.T, state multistep.StateBag, key string) {
 }
 
 func RequireActionContinue(t *testing.T, state multistep.StateBag, action multistep.StepAction) {
-	require.Equal(t, multistep.ActionContinue, action, "Expected action to be ActionContinue, error: %v", state.Get(ErrorKey))
+	require.Equal(t, multistep.ActionContinue, action, "Expected action to be ActionContinue, error: %v", state.Get(common.ErrorKey))
 }
 
 func RequireActionHalt(t *testing.T, state multistep.StateBag, action multistep.StepAction) {
 	require.Equal(t, multistep.ActionHalt, action, "Expected action to be ActionHalt")
-	require.NotNil(t, state.Get(ErrorKey), "Expected error to be stored in state")
+	require.NotNil(t, state.Get(common.ErrorKey), "Expected error to be stored in state")
 }

@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep/commonsteps"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/packerbuilderdata"
-	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/common"
 	"github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
-	mwsexport "github.com/mws-cloud-platform/packer-plugin-mws/post-processor/mws-export"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/steps"
 	computemodel "go.mws.cloud/go-sdk/service/compute/model"
 )
 
@@ -50,13 +50,13 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, _ packer.
 	}
 
 	state := new(multistep.BasicStateBag)
-	state.Put(mws.DriverKey, driver)
-	state.Put(mws.UIKey, ui)
-	state.Put(mws.PrefixKey, fmt.Sprintf("packer-%s-", uuid.NewString()))
+	state.Put(common.DriverKey, driver)
+	state.Put(common.UIKey, ui)
+	state.Put(common.PrefixKey, fmt.Sprintf("packer-%s-", uuid.NewString()))
 	generatedData := &packerbuilderdata.GeneratedData{State: state}
 
 	steps := []multistep.Step{
-		&mwsexport.StepCreateHMACKey{
+		&steps.StepCreateHMACKey{
 			AccessKey:      p.config.AccessKey,
 			SecretKey:      p.config.SecretKey,
 			ServiceAccount: p.config.ServiceAccount,
@@ -80,20 +80,20 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, _ packer.
 
 	p.runner = commonsteps.NewRunner(steps, p.config.PackerConfig, ui)
 	p.runner.Run(ctx, state)
-	if rawErr, ok := state.GetOk(mws.ErrorKey); ok {
+	if rawErr, ok := state.GetOk(common.ErrorKey); ok {
 		return nil, false, false, rawErr.(error)
 	}
 
-	v, ok := state.GetOk(mws.ImageKey)
+	v, ok := state.GetOk(common.ImageKey)
 	if !ok {
-		return nil, false, false, fmt.Errorf("image not found in state: %w", mws.ErrUnexpected)
+		return nil, false, false, fmt.Errorf("image not found in state: %w", common.ErrUnexpected)
 	}
 	image, ok := v.(*computemodel.ImageOptionalResponse)
 	if !ok {
-		return nil, false, false, fmt.Errorf("image found in state has wrong type %T: %w", v, mws.ErrUnexpected)
+		return nil, false, false, fmt.Errorf("image found in state has wrong type %T: %w", v, common.ErrUnexpected)
 	}
 
-	result := NewArtifact(driver, image, state.Get(mws.GeneratedDataKey))
+	result := NewArtifact(driver, image, state.Get(common.GeneratedDataKey))
 
 	ui.Say(result.String())
 

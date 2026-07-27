@@ -10,7 +10,7 @@ import (
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
-	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/common"
 	commonconfig "github.com/mws-cloud-platform/packer-plugin-mws/internal/config"
 	drivermws "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 	mwsexport "github.com/mws-cloud-platform/packer-plugin-mws/post-processor/mws-export"
@@ -140,11 +140,11 @@ func TestStepAttachDisk_Run(t *testing.T) {
 			state := new(multistep.BasicStateBag)
 			writer := new(bytes.Buffer)
 			ui := &packer.BasicUi{Writer: writer}
-			state.Put(mws.UIKey, ui)
-			state.Put(mws.PrefixKey, prefix)
+			state.Put(common.UIKey, ui)
+			state.Put(common.PrefixKey, prefix)
 			driver := mock.NewMockDriver(ctrl)
-			state.Put(mws.DriverKey, tc.driver(t, driver))
-			state.Put(mws.InstanceIDKey, vmName)
+			state.Put(common.DriverKey, tc.driver(t, driver))
+			state.Put(common.InstanceIDKey, vmName)
 
 			step := &mwsexport.StepAttachDisk{
 				Project:        project,
@@ -230,13 +230,13 @@ func TestStepAttachDisk_Cleanup(t *testing.T) {
 			state := new(multistep.BasicStateBag)
 			writer := new(bytes.Buffer)
 			ui := &packer.BasicUi{Writer: writer}
-			state.Put(mws.UIKey, ui)
-			state.Put(mws.PrefixKey, prefix)
+			state.Put(common.UIKey, ui)
+			state.Put(common.PrefixKey, prefix)
 			driver := mock.NewMockDriver(ctrl)
-			state.Put(mws.DriverKey, tc.configureDriverMock(t, driver))
-			state.Put(mws.InstanceIDKey, vmName)
+			state.Put(common.DriverKey, tc.configureDriverMock(t, driver))
+			state.Put(common.InstanceIDKey, vmName)
 			if tc.diskExists {
-				state.Put(mwsexport.DiskForExportNameKey, diskForExportName)
+				state.Put(common.DiskForExportNameKey, diskForExportName)
 			}
 
 			step := &mwsexport.StepAttachDisk{

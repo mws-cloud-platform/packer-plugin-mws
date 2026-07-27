@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/packerbuilderdata"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/common"
 	drivermws "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 	computeref "go.mws.cloud/go-sdk/service/resources/references/compute"
 )
@@ -24,17 +25,17 @@ type StepCreateImage struct {
 }
 
 func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	driver := state.Get(DriverKey).(Driver)
-	prefix := state.Get(PrefixKey).(string)
-	ui := state.Get(UIKey).(packer.Ui)
+	driver := state.Get(common.DriverKey).(Driver)
+	prefix := state.Get(common.PrefixKey).(string)
+	ui := state.Get(common.UIKey).(packer.Ui)
 
 	imageName := cmp.Or(s.ImageName, prefix+"image")
 
-	ui.Sayf("Creating image %q from virtual machine %q...", imageName, state.Get(VirtualMachineNameKey))
+	ui.Sayf("Creating image %q from virtual machine %q...", imageName, state.Get(common.VirtualMachineNameKey))
 
-	diskRef, ok := state.Get(DiskRefKey).(*computeref.DiskRef)
+	diskRef, ok := state.Get(common.DiskRefKey).(*computeref.DiskRef)
 	if !ok || diskRef == nil {
-		return ActionHaltWithErrorf(state, "disk ref not found in state: %w", ErrUnexpected)
+		return common.ActionHaltWithErrorf(state, "disk ref not found in state: %w", common.ErrUnexpected)
 	}
 
 	image, err := driver.CreateImage(ctx, drivermws.CreateImageParams{
@@ -44,12 +45,12 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 		DiskRef:          diskRef,
 	})
 	if err != nil {
-		return ActionHaltWithErrorf(state, "create image: %w", err)
+		return common.ActionHaltWithErrorf(state, "create image: %w", err)
 	}
 
 	ui.Sayf("Image %q created", imageName)
 
-	state.Put(ImageKey, image)
+	state.Put(common.ImageKey, image)
 
 	s.GeneratedData.Put("ImageProject", s.Project)
 	s.GeneratedData.Put("ImageName", imageName)

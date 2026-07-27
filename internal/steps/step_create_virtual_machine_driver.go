@@ -1,7 +1,7 @@
 // Copyright 2026 MTS Web Services, LLC.
 // SPDX-License-Identifier: MPL-2.0
 
-package mws
+package steps
 
 import (
 	"context"
@@ -9,6 +9,8 @@ import (
 	drivermws "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 	"go.mws.cloud/go-sdk/pkg/apimodels/ipaddress"
 )
+
+//go:generate go run go.uber.org/mock/mockgen@v0.6.0 -typed -destination=mock/step_create_virtual_machine_driver_mock.go . StepCreateVirtualMachineDriver
 
 type StepCreateVirtualMachineDriver interface {
 	CreateDisk(context.Context, drivermws.CreateDiskParams) error

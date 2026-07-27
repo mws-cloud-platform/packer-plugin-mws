@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/common"
 	computemodel "go.mws.cloud/go-sdk/service/compute/model"
 )
 
@@ -16,7 +16,7 @@ const BuilderId = "packer.post-processor.mws-import"
 
 func NewArtifact(driver Driver, image *computemodel.ImageOptionalResponse, generatedData any) *Artifact {
 	return &Artifact{
-		StateData: map[string]any{"generated_data": generatedData},
+		StateData: map[string]any{common.GeneratedDataKey: generatedData},
 		driver:    driver,
 		image:     image,
 	}
@@ -51,7 +51,7 @@ func (a *Artifact) State(name string) any {
 	if _, ok := a.StateData[name]; ok {
 		return a.StateData[name]
 	}
-	data, ok := a.StateData[mws.GeneratedDataKey]
+	data, ok := a.StateData[common.GeneratedDataKey]
 	if !ok {
 		return nil
 	}
@@ -63,7 +63,7 @@ func (a *Artifact) State(name string) any {
 
 func (a *Artifact) Destroy() error {
 	if a.driver == nil {
-		return fmt.Errorf("driver is not provided in artifact: %w", mws.ErrUnexpected)
+		return fmt.Errorf("driver is not provided in artifact: %w", common.ErrUnexpected)
 	}
 	return a.driver.DeleteImage(context.Background(), string(a.image.GetMetadata().GetId().ResourceName()))
 }

@@ -10,7 +10,7 @@ import (
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
-	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/common"
 	mwsexport "github.com/mws-cloud-platform/packer-plugin-mws/post-processor/mws-export"
 	"github.com/stretchr/testify/require"
 	"go.mws.cloud/util-toolset/pkg/testing/golden"
@@ -23,11 +23,11 @@ func TestStepUploadAWSSharedCredsFile_Run(t *testing.T) {
 	state := new(multistep.BasicStateBag)
 	writer := new(bytes.Buffer)
 	ui := &packer.BasicUi{Writer: writer}
-	state.Put(mws.UIKey, ui)
+	state.Put(common.UIKey, ui)
 	comm := &packer.MockCommunicator{}
-	state.Put(mws.CommunicatorKey, comm)
-	state.Put(mwsexport.HMACAccessKeyStateKey, "access_key")
-	state.Put(mwsexport.HMACSecretKeyStateKey, "secret_key")
+	state.Put(common.CommunicatorKey, comm)
+	state.Put(common.HMACAccessKeyStateKey, "access_key")
+	state.Put(common.HMACSecretKeyStateKey, "secret_key")
 
 	step := &mwsexport.StepUploadAWSSharedCredsFile{}
 

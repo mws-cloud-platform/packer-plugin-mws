@@ -15,8 +15,9 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/packerbuilderdata"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
-	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/common"
 	"github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/steps"
 	computeref "go.mws.cloud/go-sdk/service/resources/references/compute"
 	"go.mws.cloud/util-toolset/pkg/utils/consterr"
 )
@@ -43,7 +44,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, artifact 
 	projectForExport := ""
 	imageForExport := ""
 	switch artifact.BuilderId() {
-	case mws.BuilderId, "packer.post-processor.artifice":
+	case "packer.mws", "packer.post-processor.artifice":
 		projectForExport, _ = artifact.State("ImageProject").(string)
 		imageForExport, _ = artifact.State("ImageName").(string)
 	default:
@@ -57,7 +58,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, artifact 
 
 	// prepare and render values
 	var generatedData map[any]any
-	stateData := artifact.State("generated_data")
+	stateData := artifact.State(common.GeneratedDataKey)
 	if stateData != nil {
 		generatedData = stateData.(map[any]any)
 	}
@@ -85,9 +86,9 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, artifact 
 	ui.Sayf("Exporting image %s to %s", imageForExport, objectStoragePath)
 
 	state := new(multistep.BasicStateBag)
-	state.Put(mws.DriverKey, driver)
-	state.Put(mws.UIKey, ui)
-	state.Put(mws.PrefixKey, fmt.Sprintf("packer-%s-", uuid.NewString()))
+	state.Put(common.DriverKey, driver)
+	state.Put(common.UIKey, ui)
+	state.Put(common.PrefixKey, fmt.Sprintf("packer-%s-", uuid.NewString()))
 
 	steps := []multistep.Step{
 		&communicator.StepSSHKeyGen{
@@ -100,15 +101,17 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, artifact 
 				SSH:  &p.config.Communicator.SSH,
 			},
 		),
-		&StepCreateHMACKey{
+		&steps.StepCreateHMACKey{
 			AccessKey:      p.config.AccessKey,
 			SecretKey:      p.config.SecretKey,
 			ServiceAccount: p.config.ServiceAccount,
 			CleanupTimeout: p.config.CleanupTimeout,
 		},
-		&mws.StepCreateVirtualMachine{
-			Communicator:         &p.config.Communicator,
-			AccessConfig:         p.config.AccessConfig,
+		&steps.StepCreateVirtualMachine{
+			Project:              p.config.Project,
+			Zone:                 p.config.Zone,
+			SSHUsername:          p.config.Communicator.SSHUsername,
+			SSHPublicKey:         string(p.config.Communicator.SSHPublicKey),
 			VirtualMachineConfig: p.config.VirtualMachineConfig,
 			GeneratedData:        &packerbuilderdata.GeneratedData{State: state},
 		},
@@ -122,7 +125,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, artifact 
 		},
 		&communicator.StepConnect{
 			Config:    &p.config.Communicator,
-			Host:      mws.CommHost(p.config.Communicator.SSHHost),
+			Host:      common.CommHost(p.config.Communicator.SSHHost),
 			SSHConfig: p.config.Communicator.SSHConfigFunc(),
 		},
 		&StepPrepareTools{},
@@ -140,7 +143,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, artifact 
 
 	p.runner = commonsteps.NewRunner(steps, p.config.PackerConfig, ui)
 	p.runner.Run(ctx, state)
-	if rawErr, ok := state.GetOk(mws.ErrorKey); ok {
+	if rawErr, ok := state.GetOk(common.ErrorKey); ok {
 		return nil, false, false, rawErr.(error)
 	}
 

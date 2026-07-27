@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/packerbuilderdata"
-	mws "github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/common"
 	drivermws "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 	"github.com/mws-cloud-platform/packer-plugin-mws/internal/testutil"
 	mwsimport "github.com/mws-cloud-platform/packer-plugin-mws/post-processor/mws-import"
@@ -65,7 +65,7 @@ func TestStepImportImage(t *testing.T) {
 			imageDisplayName: testImageDisplayName,
 			imageDescription: testImageDescription,
 			prepare: func(state multistep.StateBag, driver *mockmws.MockDriver) {
-				state.Put(mwsimport.ExternalURLKey, testExternalURL)
+				state.Put(common.ExternalURLKey, testExternalURL)
 
 				driver.EXPECT().
 					ImportImage(gomock.Any(), drivermws.ImportImageParams{
@@ -86,7 +86,7 @@ func TestStepImportImage(t *testing.T) {
 			imageDisplayName: testImageDisplayName,
 			imageDescription: testImageDescription,
 			prepare: func(state multistep.StateBag, driver *mockmws.MockDriver) {
-				state.Put(mwsimport.ExternalURLKey, testExternalURL)
+				state.Put(common.ExternalURLKey, testExternalURL)
 
 				driver.EXPECT().
 					ImportImage(gomock.Any(), drivermws.ImportImageParams{
@@ -115,11 +115,11 @@ func TestStepImportImage(t *testing.T) {
 			driver := mockmws.NewMockDriver(ctrl)
 
 			state := new(multistep.BasicStateBag)
-			state.Put(mws.DriverKey, driver)
-			state.Put(mws.PrefixKey, packerPrefix)
+			state.Put(common.DriverKey, driver)
+			state.Put(common.PrefixKey, packerPrefix)
 			writer := new(bytes.Buffer)
 			ui := &packer.BasicUi{Writer: writer}
-			state.Put(mws.UIKey, ui)
+			state.Put(common.UIKey, ui)
 
 			if tt.prepare != nil {
 				tt.prepare(state, driver)
@@ -138,7 +138,7 @@ func TestStepImportImage(t *testing.T) {
 				testutil.RequireActionHalt(t, state, action)
 			} else {
 				testutil.RequireActionContinue(t, state, action)
-				testutil.RequireStateGet(t, state, mws.ImageKey, tt.expectedImage)
+				testutil.RequireStateGet(t, state, common.ImageKey, tt.expectedImage)
 				testutil.RequireGeneratedDataGet(t, state, "ImageProject", tt.project)
 				testutil.RequireGeneratedDataGet(t, state, "ImageName", tt.imageName)
 			}

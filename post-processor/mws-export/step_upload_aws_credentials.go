@@ -10,7 +10,7 @@ import (
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
-	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/common"
 )
 
 const awsSharedCredsFile = "/tmp/aws_credentials" //nolint:gosec // no hardcoded credentials, only path
@@ -19,10 +19,10 @@ type StepUploadAWSSharedCredsFile struct {
 }
 
 func (s *StepUploadAWSSharedCredsFile) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	ui := state.Get(mws.UIKey).(packer.Ui)
-	comm := state.Get(mws.CommunicatorKey).(packer.Communicator)
-	hmacAccessKey := state.Get(HMACAccessKeyStateKey).(string)
-	hmacSecretKey := state.Get(HMACSecretKeyStateKey).(string)
+	ui := state.Get(common.UIKey).(packer.Ui)
+	comm := state.Get(common.CommunicatorKey).(packer.Communicator)
+	hmacAccessKey := state.Get(common.HMACAccessKeyStateKey).(string)
+	hmacSecretKey := state.Get(common.HMACSecretKeyStateKey).(string)
 
 	ui.Say("Uploading AWS shared credentials file...")
 	creds := fmt.Sprintf(
@@ -30,7 +30,7 @@ func (s *StepUploadAWSSharedCredsFile) Run(ctx context.Context, state multistep.
 		hmacAccessKey, hmacSecretKey,
 	)
 	if err := comm.Upload(awsSharedCredsFile, strings.NewReader(creds), nil); err != nil {
-		return mws.ActionHaltWithError(state, err)
+		return common.ActionHaltWithError(state, err)
 	}
 
 	ui.Say("AWS shared credentials file uploaded")

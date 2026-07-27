@@ -11,8 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
-	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
-	mwsexport "github.com/mws-cloud-platform/packer-plugin-mws/post-processor/mws-export"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/common"
 )
 
 type StepCreateAWSClient struct {
@@ -22,12 +21,12 @@ type StepCreateAWSClient struct {
 }
 
 func (s *StepCreateAWSClient) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	ui := state.Get(mws.UIKey).(packer.Ui)
+	ui := state.Get(common.UIKey).(packer.Ui)
 
 	ui.Say("Creating Object Storage client...")
 
-	hmacAccessKey := state.Get(mwsexport.HMACAccessKeyStateKey).(string)
-	hmacSecretKey := state.Get(mwsexport.HMACSecretKeyStateKey).(string)
+	hmacAccessKey := state.Get(common.HMACAccessKeyStateKey).(string)
+	hmacSecretKey := state.Get(common.HMACSecretKeyStateKey).(string)
 	creds := credentials.NewStaticCredentialsProvider(hmacAccessKey, hmacSecretKey, "")
 
 	awsConfig, err := config.LoadDefaultConfig(ctx,
@@ -36,11 +35,11 @@ func (s *StepCreateAWSClient) Run(ctx context.Context, state multistep.StateBag)
 		config.WithBaseEndpoint(s.Endpoint),
 	)
 	if err != nil {
-		return mws.ActionHaltWithErrorf(state, "load AWS config: %w", err)
+		return common.ActionHaltWithErrorf(state, "load AWS config: %w", err)
 	}
 
 	awsClient := s3.NewPresignClient(s3.NewFromConfig(awsConfig))
-	state.Put(AWSClientKey, awsClient)
+	state.Put(common.AWSClientKey, awsClient)
 
 	return multistep.ActionContinue
 }

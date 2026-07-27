@@ -9,7 +9,7 @@ import (
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
-	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/common"
 	drivermws "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 	computeref "go.mws.cloud/go-sdk/service/resources/references/compute"
 )
@@ -24,16 +24,16 @@ type StepAttachDisk struct {
 }
 
 func (s *StepAttachDisk) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	ui := state.Get(mws.UIKey).(packer.Ui)
-	driver := state.Get(mws.DriverKey).(Driver)
-	prefix := state.Get(mws.PrefixKey).(string)
-	vmName := state.Get(mws.InstanceIDKey).(string)
+	ui := state.Get(common.UIKey).(packer.Ui)
+	driver := state.Get(common.DriverKey).(Driver)
+	prefix := state.Get(common.PrefixKey).(string)
+	vmName := state.Get(common.InstanceIDKey).(string)
 	diskName := prefix + "disk-for-export"
 
 	ui.Sayf("Getting image %q info...", s.ImageRef.String())
 	image, err := driver.GetImage(ctx, s.ImageRef)
 	if err != nil {
-		return mws.ActionHaltWithErrorf(state, "get image: %w", err)
+		return common.ActionHaltWithErrorf(state, "get image: %w", err)
 	}
 	if image.GetStatus().GetMinDiskSize() == nil {
 		ui.Error("Image for export has unknown minimum disk size")
@@ -49,15 +49,15 @@ func (s *StepAttachDisk) Run(ctx context.Context, state multistep.StateBag) mult
 		ImageRef: &s.ImageRef,
 		Zone:     s.Zone,
 	}); err != nil {
-		return mws.ActionHaltWithErrorf(state, "create disk: %w", err)
+		return common.ActionHaltWithErrorf(state, "create disk: %w", err)
 	}
 
-	state.Put(DiskForExportNameKey, diskName)
+	state.Put(common.DiskForExportNameKey, diskName)
 	diskRef := computeref.NewDiskRef(s.Project, diskName)
 
 	ui.Sayf("Attaching disk for export %q to the virtual machine %q...", diskName, vmName)
 	if err = driver.AttachDiskToVirtualMachine(ctx, vmName, diskRef); err != nil {
-		return mws.ActionHaltWithErrorf(state, "attach disk to virtual machine: %w", err)
+		return common.ActionHaltWithErrorf(state, "attach disk to virtual machine: %w", err)
 	}
 
 	ui.Sayf("Disk for export %q attached", diskName)
@@ -66,14 +66,14 @@ func (s *StepAttachDisk) Run(ctx context.Context, state multistep.StateBag) mult
 }
 
 func (s *StepAttachDisk) Cleanup(state multistep.StateBag) {
-	diskName, ok := state.Get(DiskForExportNameKey).(string)
+	diskName, ok := state.Get(common.DiskForExportNameKey).(string)
 	if !ok {
 		return
 	}
 
-	ui := state.Get(mws.UIKey).(packer.Ui)
-	driver := state.Get(mws.DriverKey).(Driver)
-	vmName := state.Get(mws.InstanceIDKey).(string)
+	ui := state.Get(common.UIKey).(packer.Ui)
+	driver := state.Get(common.DriverKey).(Driver)
+	vmName := state.Get(common.InstanceIDKey).(string)
 
 	ctx, cancel := context.WithTimeout(context.Background(), s.CleanupTimeout)
 	defer cancel()

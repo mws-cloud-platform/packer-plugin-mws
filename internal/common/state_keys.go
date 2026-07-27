@@ -1,7 +1,7 @@
 // Copyright 2026 MTS Web Services, LLC.
 // SPDX-License-Identifier: MPL-2.0
 
-package mws
+package common
 
 const (
 	DriverKey       = "driver"
@@ -24,4 +24,11 @@ const (
 
 	InstanceIPKey = "instance_ip"
 	InstanceIDKey = "instance_id"
+
+	DiskForExportNameKey  = "disk_for_export_name"
+	HMACAccessKeyStateKey = "hmac_access_key"
+	HMACSecretKeyStateKey = "hmac_secret_key"
+
+	ExternalURLKey = "external_url"
+	AWSClientKey   = "aws_client"
 )

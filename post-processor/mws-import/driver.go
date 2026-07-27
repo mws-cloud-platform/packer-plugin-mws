@@ -7,6 +7,7 @@ import (
 	"context"
 
 	drivermws "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/steps"
 	computemodel "go.mws.cloud/go-sdk/service/compute/model"
 )
 
@@ -15,6 +16,7 @@ import (
 var _ Driver = &drivermws.Driver{}
 
 type Driver interface {
+	steps.StepCreateHMACKeyDriver
 	ImportImage(context.Context, drivermws.ImportImageParams) (*computemodel.ImageOptionalResponse, error)
 	DeleteImage(context.Context, string) error
 }
