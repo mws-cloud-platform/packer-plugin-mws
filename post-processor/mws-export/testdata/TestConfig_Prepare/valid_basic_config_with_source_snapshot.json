@@ -37,7 +37,7 @@
  "ServiceAccount": "test-service-account",
  "AccessKey": "",
  "SecretKey": "",
- "ObjectStoragePath": "test-bucker/path/to/image.qcow2",
  "ObjectStorageEndpoint": "https://storage.mwsapis.ru",
- "ObjectStorageRegion": "ru-central1"
+ "ObjectStorageRegion": "ru-central1",
+ "ObjectStoragePath": "test-bucker/path/to/image.qcow2"
 }

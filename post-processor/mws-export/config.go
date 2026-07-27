@@ -18,11 +18,6 @@ import (
 	"go.mws.cloud/util-toolset/pkg/utils/consterr"
 )
 
-const (
-	DefaultObjectStorageRegion   = "ru-central1"
-	DefaultObjectStorageEndpoint = "https://storage.mwsapis.ru"
-)
-
 type Config struct {
 	common.PackerConfig               `mapstructure:",squash"`
 	Communicator                      communicator.Config `mapstructure:",squash" json:"-"`
@@ -81,41 +76,21 @@ func (c *Config) Validate() error {
 }
 
 type ObjectStorageConfig struct {
-	// MWS Cloud Platform Service Account used for generating temporal HMAC key
-	// to access Object Storage. Required, unless `access_key` and `secret_key`
-	// are provided.
-	ServiceAccount string `mapstructure:"service_account" required:"false"`
-
-	// HMAC key identifier for authenticating with Object Storage. Used if
-	// `service_account` is not provided. Also requires `secret_key` to be
-	// provided.
-	AccessKey string `mapstructure:"access_key" required:"false"`
-	// HMAC key secret for accessing Object Storage. Required if `access_key` is
-	// provided.
-	SecretKey string `mapstructure:"secret_key" required:"false"`
-
+	commonconfig.ObjectStorageConfig `mapstructure:",squash"`
 	// MWS Cloud Platform Object Storage path where the image will be stored.
 	ObjectStoragePath string `mapstructure:"object_storage_path" required:"true"`
-	// MWS Cloud Platform Object Storage endpoint to upload image (defaults to "https://storage.mwsapis.ru").
-	ObjectStorageEndpoint string `mapstructure:"object_storage_endpoint" required:"false"`
-	// MWS Cloud Platform Object Storage region where the bucket is located (defaults to "ru-central1").
-	ObjectStorageRegion string `mapstructure:"object_storage_region" required:"false"`
 }
 
 func (c *ObjectStorageConfig) SetDefaults() {
-	c.ObjectStorageEndpoint = cmp.Or(c.ObjectStorageEndpoint, DefaultObjectStorageEndpoint)
-	c.ObjectStorageRegion = cmp.Or(c.ObjectStorageRegion, DefaultObjectStorageRegion)
+	c.ObjectStorageConfig.SetDefaults()
 }
 
 func (c *ObjectStorageConfig) Validate() error {
+	err := c.ObjectStorageConfig.Validate()
 	if c.ObjectStoragePath == "" {
-		return consterr.Error("object_storage_path is not provided")
+		err = errors.Join(err, consterr.Error("object_storage_path is not provided"))
 	}
-	if (c.SecretKey == "" || c.AccessKey == "") && c.ServiceAccount == "" {
-		return consterr.Error("Object Storage authentication is not provided, " +
-			"provide service_account for hmac-key generation (recommended) or pair access_key, secret_key")
-	}
-	return nil
+	return err
 }
 
 type DiskForExportConfig struct {

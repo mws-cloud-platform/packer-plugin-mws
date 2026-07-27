@@ -68,11 +68,11 @@ optional.
 
 **Required**
 
-<!-- Code generated from the comments of the AccessConfig struct in internal/config/config.go; DO NOT EDIT MANUALLY -->
+<!-- Code generated from the comments of the AccessConfig struct in internal/config/access.go; DO NOT EDIT MANUALLY -->
 
 - `project` (string) - The project identifier where resources will be created.
 
-<!-- End of code generated from the comments of the AccessConfig struct in internal/config/config.go; -->
+<!-- End of code generated from the comments of the AccessConfig struct in internal/config/access.go; -->
 
 <!-- Code generated from the comments of the ObjectStorageConfig struct in post-processor/mws-import/config.go; DO NOT EDIT MANUALLY -->
 
@@ -83,7 +83,7 @@ optional.
 
 **Optional**
 
-<!-- Code generated from the comments of the AccessConfig struct in internal/config/config.go; DO NOT EDIT MANUALLY -->
+<!-- Code generated from the comments of the AccessConfig struct in internal/config/access.go; DO NOT EDIT MANUALLY -->
 
 - `zone` (string) - The zone in which the VM will be created (defaults to "ru-central1-a")
 
@@ -97,9 +97,9 @@ optional.
 - `token` (string) - IAM token used for authentication.
   Can be specified using the `MWS_TOKEN` environment variable.
 
-<!-- End of code generated from the comments of the AccessConfig struct in internal/config/config.go; -->
+<!-- End of code generated from the comments of the AccessConfig struct in internal/config/access.go; -->
 
-<!-- Code generated from the comments of the ImageConfig struct in internal/config/config.go; DO NOT EDIT MANUALLY -->
+<!-- Code generated from the comments of the ImageConfig struct in internal/config/image.go; DO NOT EDIT MANUALLY -->
 
 - `image_name` (string) - Name for the resulting image (defaults to "packer-{{uuid}}-image").
 
@@ -107,9 +107,9 @@ optional.
 
 - `image_description` (string) - Description for the resulting image. (defaults to "Image created by Packer").
 
-<!-- End of code generated from the comments of the ImageConfig struct in internal/config/config.go; -->
+<!-- End of code generated from the comments of the ImageConfig struct in internal/config/image.go; -->
 
-<!-- Code generated from the comments of the ObjectStorageConfig struct in post-processor/mws-import/config.go; DO NOT EDIT MANUALLY -->
+<!-- Code generated from the comments of the ObjectStorageConfig struct in internal/config/object_storage.go; DO NOT EDIT MANUALLY -->
 
 - `service_account` (string) - MWS Cloud Platform Service Account used for generating temporal HMAC key
   to access Object Storage. Required, unless `access_key` and `secret_key`
@@ -122,11 +122,11 @@ optional.
 - `secret_key` (string) - HMAC key secret for accessing Object Storage. Required if `access_key` is
   provided.
 
-- `object_storage_endpoint` (string) - MWS Cloud Platform Object Storage endpoint to import image from (defaults to "https://storage.mwsapis.ru").
+- `object_storage_endpoint` (string) - MWS Cloud Platform Object Storage endpoint (defaults to "https://storage.mwsapis.ru").
 
 - `object_storage_region` (string) - MWS Cloud Platform Object Storage region where the bucket is located (defaults to "ru-central1").
 
-<!-- End of code generated from the comments of the ObjectStorageConfig struct in post-processor/mws-import/config.go; -->
+<!-- End of code generated from the comments of the ObjectStorageConfig struct in internal/config/object_storage.go; -->
 
 <!-- Code generated from the comments of the Config struct in post-processor/mws-import/config.go; DO NOT EDIT MANUALLY -->
 
