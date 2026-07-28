@@ -1,7 +1,7 @@
 // Copyright 2026 MTS Web Services, LLC.
 // SPDX-License-Identifier: MPL-2.0
 
-package mws_test
+package steps_test
 
 import (
 	"bytes"
@@ -16,33 +16,58 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/packerbuilderdata"
 	"github.com/stretchr/testify/require"
 
-	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
-	mockmws "github.com/mws-cloud-platform/packer-plugin-mws/builder/mws/mock"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/common"
+	mocksteps "github.com/mws-cloud-platform/packer-plugin-mws/internal/steps/mock"
+
 	commonconfig "github.com/mws-cloud-platform/packer-plugin-mws/internal/config"
 	drivermws "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/steps"
 	"github.com/mws-cloud-platform/packer-plugin-mws/internal/testutil"
 	"go.mws.cloud/go-sdk/pkg/apimodels/cidraddress"
+	"go.mws.cloud/go-sdk/pkg/apimodels/ipaddress"
 	"go.mws.cloud/go-sdk/pkg/apimodels/units/bytesize"
 	computeref "go.mws.cloud/go-sdk/service/resources/references/compute"
 	vpcref "go.mws.cloud/go-sdk/service/resources/references/vpc"
 	"go.mws.cloud/util-toolset/pkg/testing/golden"
+	"go.mws.cloud/util-toolset/pkg/utils/consterr"
 	"go.uber.org/mock/gomock"
+)
+
+const (
+	packerPrefix            = "packer-"
+	testProjectName         = "test-project"
+	testDiskName            = "test-disk"
+	testExternalAddressName = "test-external-address"
+	testNetworkName         = "test-network"
+	testSubnetName          = "test-subnet"
+	testVirtualMachineName  = "test-vm"
+	testSSHPublicKey        = "test-public-key"
+	testSourceImage         = "test-source-image"
+
+	defaultDiskName            = packerPrefix + "disk"
+	defaultExternalAddressName = packerPrefix + "external-address"
+	defaultNetworkName         = packerPrefix + "network"
+	defaultSubnetName          = packerPrefix + "subnet"
+	defaultVirtualMachineName  = packerPrefix + "vm"
+
+	errInternal = consterr.Error("internal error")
+)
+
+var (
+	testInternalAddress = new(ipaddress.MustParseIPAddressString("192.168.0.10"))
+	testExternalAddress = new(ipaddress.MustParseIPAddressString("10.20.30.40"))
 )
 
 func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 	t.Parallel()
 	expectedDir := golden.NewDir(t, golden.WithPath(path.Join("testdata", t.Name())), golden.WithRecreateOnUpdate())
-
 	for _, tt := range []struct {
-		name   string
-		config *mws.Config
+		name string
+		step *steps.StepCreateVirtualMachine
 	}{
 		{
 			name: "all_set",
-			config: &mws.Config{
-				AccessConfig: commonconfig.AccessConfig{
-					Project: testProjectName,
-				},
+			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
 					DiskConfig: commonconfig.DiskConfig{
 						DiskName:    testDiskName,
@@ -60,10 +85,7 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 		},
 		{
 			name: "network_set",
-			config: &mws.Config{
-				AccessConfig: commonconfig.AccessConfig{
-					Project: testProjectName,
-				},
+			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
 					DiskConfig: commonconfig.DiskConfig{
 						SourceImage: testSourceImage,
@@ -77,10 +99,7 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 		},
 		{
 			name: "all_default",
-			config: &mws.Config{
-				AccessConfig: commonconfig.AccessConfig{
-					Project: testProjectName,
-				},
+			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
 					DiskConfig: commonconfig.DiskConfig{
 						SourceImage: testSourceImage,
@@ -93,10 +112,7 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 		},
 		{
 			name: "no_external_address_all_set",
-			config: &mws.Config{
-				AccessConfig: commonconfig.AccessConfig{
-					Project: testProjectName,
-				},
+			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
 					DiskConfig: commonconfig.DiskConfig{
 						DiskName:    testDiskName,
@@ -113,10 +129,7 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 		},
 		{
 			name: "no_external_address_default",
-			config: &mws.Config{
-				AccessConfig: commonconfig.AccessConfig{
-					Project: testProjectName,
-				},
+			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
 					DiskConfig: commonconfig.DiskConfig{
 						SourceImage: testSourceImage,
@@ -132,20 +145,20 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
-			driver := mockmws.NewMockDriver(ctrl)
+			driver := mocksteps.NewMockStepCreateVirtualMachineDriver(ctrl)
 			writer, state := prepareState(driver)
-			prepareConfig(t, tt.config)
+			prepareStep(t, tt.step, state)
 
-			expectedDiskName := cmp.Or(tt.config.DiskName, defaultDiskName)
-			expectedExternalAddressName := cmp.Or(tt.config.ExternalAddressName, defaultExternalAddressName)
-			expectedNetworkName := cmp.Or(tt.config.NetworkName, defaultNetworkName)
-			expectedSubnetName := cmp.Or(tt.config.SubnetName, defaultSubnetName)
-			expectedVirtualMachineName := cmp.Or(tt.config.VirtualMachineName, defaultVirtualMachineName)
-			expectedFirewallRuleName := mws.FirewallRuleName
-			expectedDiskRef := new(computeref.NewDiskRef(tt.config.Project, expectedDiskName))
+			expectedDiskName := cmp.Or(tt.step.DiskName, defaultDiskName)
+			expectedExternalAddressName := cmp.Or(tt.step.ExternalAddressName, defaultExternalAddressName)
+			expectedNetworkName := cmp.Or(tt.step.NetworkName, defaultNetworkName)
+			expectedSubnetName := cmp.Or(tt.step.SubnetName, defaultSubnetName)
+			expectedVirtualMachineName := cmp.Or(tt.step.VirtualMachineName, defaultVirtualMachineName)
+			expectedFirewallRuleName := steps.FirewallRuleName
+			expectedDiskRef := new(computeref.NewDiskRef(tt.step.Project, expectedDiskName))
 			var expectedExternalAddressRef *vpcref.ExternalAddressRef
-			if tt.config.UseExternalAddress {
-				expectedExternalAddressRef = new(vpcref.NewExternalAddressRef(tt.config.Project, expectedExternalAddressName))
+			if tt.step.UseExternalAddress {
+				expectedExternalAddressRef = new(vpcref.NewExternalAddressRef(tt.step.Project, expectedExternalAddressName))
 			}
 
 			driver.EXPECT().
@@ -154,12 +167,12 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 					DiskType: commonconfig.DefaultDiskType,
 					Size:     bytesize.MustParseString(commonconfig.DefaultDiskSize),
 					Iops:     commonconfig.DefaultDiskIOPS,
-					ImageRef: new(computeref.NewImageRef(tt.config.Project, testSourceImage)),
+					ImageRef: new(computeref.NewImageRef(tt.step.Project, testSourceImage)),
 					Zone:     commonconfig.DefaultZone,
 				}).
 				Times(1)
 
-			if tt.config.UseExternalAddress {
+			if tt.step.UseExternalAddress {
 				driver.EXPECT().
 					CreateExternalAddress(gomock.Any(), drivermws.CreateExternalAddressParams{
 						ExternalAddressName: expectedExternalAddressName,
@@ -167,7 +180,7 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 					Return(testExternalAddress, nil).
 					Times(1)
 
-				if tt.config.NetworkName == "" {
+				if tt.step.NetworkName == "" {
 					driver.EXPECT().
 						CreateNetwork(gomock.Any(), drivermws.CreateNetworkParams{
 							NetworkName: expectedNetworkName,
@@ -175,7 +188,7 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 						Times(1)
 				}
 
-				if tt.config.SubnetName == "" {
+				if tt.step.SubnetName == "" {
 					driver.EXPECT().
 						CreateSubnet(gomock.Any(), drivermws.CreateSubnetParams{
 							NetworkName: expectedNetworkName,
@@ -195,49 +208,42 @@ func TestStepCreateVirtualMachine_Run_Success(t *testing.T) {
 					SSHPublicKey:       testSSHPublicKey,
 					DiskRef:            expectedDiskRef,
 					ExternalAddressRef: expectedExternalAddressRef,
-					SubnetRef:          new(vpcref.NewSubnetRef(tt.config.Project, expectedNetworkName, expectedSubnetName)),
+					SubnetRef:          new(vpcref.NewSubnetRef(tt.step.Project, expectedNetworkName, expectedSubnetName)),
 				}).
 				Return(testInternalAddress, nil).
 				Times(1)
 
-			if tt.config.UseExternalAddress {
+			if tt.step.UseExternalAddress {
 				driver.EXPECT().
 					CreateFirewallRule(gomock.Any(), drivermws.CreateFirewallRuleParams{
 						NetworkName:                   expectedNetworkName,
-						FirewallRuleName:              mws.FirewallRuleName,
+						FirewallRuleName:              steps.FirewallRuleName,
 						VirtualMachineInternalAddress: testInternalAddress.String(),
 					}).
 					Times(1)
 			}
 
-			step := &mws.StepCreateVirtualMachine{
-				Communicator:         &tt.config.Communicator,
-				AccessConfig:         tt.config.AccessConfig,
-				VirtualMachineConfig: tt.config.VirtualMachineConfig,
-				GeneratedData:        &packerbuilderdata.GeneratedData{State: state},
-			}
-
-			testutil.RequireActionContinue(t, state, step.Run(t.Context(), state))
+			testutil.RequireActionContinue(t, state, tt.step.Run(t.Context(), state))
 			testutil.RequireStateGets(t, state,
 				map[string]any{
-					mws.DiskNameKey:           expectedDiskName,
-					mws.NetworkNameKey:        expectedNetworkName,
-					mws.SubnetNameKey:         expectedSubnetName,
-					mws.VirtualMachineNameKey: expectedVirtualMachineName,
-					mws.InstanceIDKey:         expectedVirtualMachineName,
-					mws.DiskRefKey:            expectedDiskRef,
+					common.DiskNameKey:           expectedDiskName,
+					common.NetworkNameKey:        expectedNetworkName,
+					common.SubnetNameKey:         expectedSubnetName,
+					common.VirtualMachineNameKey: expectedVirtualMachineName,
+					common.InstanceIDKey:         expectedVirtualMachineName,
+					common.DiskRefKey:            expectedDiskRef,
 				})
-			testutil.RequireGeneratedDataGet(t, state, "SourceProject", tt.config.Project)
+			testutil.RequireGeneratedDataGet(t, state, "SourceProject", testProjectName)
 			testutil.RequireGeneratedDataGet(t, state, "SourceImageName", testSourceImage)
 
-			if tt.config.UseExternalAddress {
-				testutil.RequireStateGet(t, state, mws.ExternalAddressNameKey, expectedExternalAddressName)
-				testutil.RequireStateGet(t, state, mws.FirewallRuleNameKey, expectedFirewallRuleName)
-				testutil.RequireStateGet(t, state, mws.InstanceIPKey, testExternalAddress.String())
+			if tt.step.UseExternalAddress {
+				testutil.RequireStateGet(t, state, common.ExternalAddressNameKey, expectedExternalAddressName)
+				testutil.RequireStateGet(t, state, common.FirewallRuleNameKey, expectedFirewallRuleName)
+				testutil.RequireStateGet(t, state, common.InstanceIPKey, testExternalAddress.String())
 			} else {
-				testutil.RequireStateGet(t, state, mws.InstanceIPKey, testInternalAddress.String())
-				testutil.RequireStateNotSet(t, state, mws.ExternalAddressNameKey)
-				testutil.RequireStateNotSet(t, state, mws.FirewallRuleNameKey)
+				testutil.RequireStateGet(t, state, common.InstanceIPKey, testInternalAddress.String())
+				testutil.RequireStateNotSet(t, state, common.ExternalAddressNameKey)
+				testutil.RequireStateNotSet(t, state, common.FirewallRuleNameKey)
 			}
 
 			expectedDir.String(t, tt.name+".out", writer.String())
@@ -250,15 +256,12 @@ func TestStepCreateVirtualMachine_Cleanup_Success(t *testing.T) {
 	expectedDir := golden.NewDir(t, golden.WithPath(path.Join("testdata", t.Name())), golden.WithRecreateOnUpdate())
 
 	for _, tt := range []struct {
-		name   string
-		config *mws.Config
+		name string
+		step *steps.StepCreateVirtualMachine
 	}{
 		{
 			name: "all_set",
-			config: &mws.Config{
-				AccessConfig: commonconfig.AccessConfig{
-					Project: testProjectName,
-				},
+			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
 					DiskConfig: commonconfig.DiskConfig{
 						DiskName: testDiskName,
@@ -277,10 +280,7 @@ func TestStepCreateVirtualMachine_Cleanup_Success(t *testing.T) {
 		},
 		{
 			name: "network_set",
-			config: &mws.Config{
-				AccessConfig: commonconfig.AccessConfig{
-					Project: testProjectName,
-				},
+			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
 
 					DiskConfig: commonconfig.DiskConfig{
@@ -295,10 +295,7 @@ func TestStepCreateVirtualMachine_Cleanup_Success(t *testing.T) {
 		},
 		{
 			name: "all_default",
-			config: &mws.Config{
-				AccessConfig: commonconfig.AccessConfig{
-					Project: testProjectName,
-				},
+			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
 					DiskConfig: commonconfig.DiskConfig{
 						SourceImage: testSourceImage,
@@ -311,10 +308,7 @@ func TestStepCreateVirtualMachine_Cleanup_Success(t *testing.T) {
 		},
 		{
 			name: "no_external_address_all_set",
-			config: &mws.Config{
-				AccessConfig: commonconfig.AccessConfig{
-					Project: testProjectName,
-				},
+			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
 					DiskConfig: commonconfig.DiskConfig{
 						DiskName:    testDiskName,
@@ -331,10 +325,7 @@ func TestStepCreateVirtualMachine_Cleanup_Success(t *testing.T) {
 		},
 		{
 			name: "no_external_address_default",
-			config: &mws.Config{
-				AccessConfig: commonconfig.AccessConfig{
-					Project: testProjectName,
-				},
+			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
 					DiskConfig: commonconfig.DiskConfig{
 						SourceImage: testSourceImage,
@@ -353,7 +344,7 @@ func TestStepCreateVirtualMachine_Cleanup_Success(t *testing.T) {
 			"CreateVirtualMachine",
 			"None",
 		}
-		if tt.config.UseExternalAddress {
+		if tt.step.UseExternalAddress {
 			possibleErrors = []string{
 				"CreateDisk",
 				"CreateExternalAddress",
@@ -367,42 +358,42 @@ func TestStepCreateVirtualMachine_Cleanup_Success(t *testing.T) {
 		for _, errorInRun := range possibleErrors {
 			t.Run(tt.name, func(t *testing.T) {
 				ctrl := gomock.NewController(t)
-				driver := mockmws.NewMockDriver(ctrl)
+				driver := mocksteps.NewMockStepCreateVirtualMachineDriver(ctrl)
 				writer, state := prepareState(driver)
-				prepareConfig(t, tt.config)
+				prepareStep(t, tt.step, state)
 
-				expectedDiskName := cmp.Or(tt.config.DiskName, defaultDiskName)
-				expectedExternalAddressName := cmp.Or(tt.config.ExternalAddressName, defaultExternalAddressName)
-				expectedNetworkName := cmp.Or(tt.config.NetworkName, defaultNetworkName)
-				expectedSubnetName := cmp.Or(tt.config.SubnetName, defaultSubnetName)
-				expectedVirtualMachineName := cmp.Or(tt.config.VirtualMachineName, defaultVirtualMachineName)
-				expectedFirewallRuleName := mws.FirewallRuleName
+				expectedDiskName := cmp.Or(tt.step.DiskName, defaultDiskName)
+				expectedExternalAddressName := cmp.Or(tt.step.ExternalAddressName, defaultExternalAddressName)
+				expectedNetworkName := cmp.Or(tt.step.NetworkName, defaultNetworkName)
+				expectedSubnetName := cmp.Or(tt.step.SubnetName, defaultSubnetName)
+				expectedVirtualMachineName := cmp.Or(tt.step.VirtualMachineName, defaultVirtualMachineName)
+				expectedFirewallRuleName := steps.FirewallRuleName
 
 				func() {
 					if errorInRun == "CreateDisk" {
 						return
 					}
-					state.Put(mws.DiskNameKey, expectedDiskName)
+					state.Put(common.DiskNameKey, expectedDiskName)
 					driver.EXPECT().DeleteDisk(gomock.Any(), expectedDiskName).Times(1)
 
-					if tt.config.UseExternalAddress {
+					if tt.step.UseExternalAddress {
 						if errorInRun == "CreateExternalAddress" {
 							return
 						}
-						state.Put(mws.ExternalAddressNameKey, expectedExternalAddressName)
+						state.Put(common.ExternalAddressNameKey, expectedExternalAddressName)
 						driver.EXPECT().DeleteExternalAddress(gomock.Any(), expectedExternalAddressName).Times(1)
 						if errorInRun == "CreateNetwork" {
 							return
 						}
-						state.Put(mws.NetworkNameKey, expectedNetworkName)
-						if tt.config.NetworkName == "" {
+						state.Put(common.NetworkNameKey, expectedNetworkName)
+						if tt.step.NetworkName == "" {
 							driver.EXPECT().DeleteNetwork(gomock.Any(), expectedNetworkName).Times(1)
 						}
 						if errorInRun == "CreateSubnet" {
 							return
 						}
-						state.Put(mws.SubnetNameKey, expectedSubnetName)
-						if tt.config.SubnetName == "" {
+						state.Put(common.SubnetNameKey, expectedSubnetName)
+						if tt.step.SubnetName == "" {
 							driver.EXPECT().DeleteSubnet(gomock.Any(), expectedNetworkName, expectedSubnetName).Times(1)
 						}
 					}
@@ -410,26 +401,19 @@ func TestStepCreateVirtualMachine_Cleanup_Success(t *testing.T) {
 					if errorInRun == "CreateVirtualMachine" {
 						return
 					}
-					state.Put(mws.VirtualMachineNameKey, expectedVirtualMachineName)
+					state.Put(common.VirtualMachineNameKey, expectedVirtualMachineName)
 					driver.EXPECT().DeleteVirtualMachine(gomock.Any(), expectedVirtualMachineName).Times(1)
 
-					if tt.config.UseExternalAddress {
+					if tt.step.UseExternalAddress {
 						if errorInRun == "CreateFirewallRule" {
 							return
 						}
-						state.Put(mws.FirewallRuleNameKey, expectedFirewallRuleName)
+						state.Put(common.FirewallRuleNameKey, expectedFirewallRuleName)
 						driver.EXPECT().DeleteFirewallRule(gomock.Any(), expectedNetworkName, expectedFirewallRuleName).Times(1)
 					}
 				}()
 
-				step := &mws.StepCreateVirtualMachine{
-					Communicator:         &tt.config.Communicator,
-					AccessConfig:         tt.config.AccessConfig,
-					VirtualMachineConfig: tt.config.VirtualMachineConfig,
-					GeneratedData:        &packerbuilderdata.GeneratedData{State: state},
-				}
-
-				step.Cleanup(state)
+				tt.step.Cleanup(state)
 				expectedDir.String(t, fmt.Sprintf("%s_with_%s_error_in_run.out", tt.name, errorInRun), writer.String())
 			})
 		}
@@ -442,15 +426,12 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 
 	for _, tt := range []struct {
 		name      string
-		config    *mws.Config
+		step      *steps.StepCreateVirtualMachine
 		errorStep string
 	}{
 		{
 			name: "CreateDisk_use_external_address",
-			config: &mws.Config{
-				AccessConfig: commonconfig.AccessConfig{
-					Project: testProjectName,
-				},
+			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
 					DiskConfig: commonconfig.DiskConfig{
 						SourceImage: testSourceImage,
@@ -464,10 +445,7 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 		},
 		{
 			name: "CreateExternalAddress_use_external_address",
-			config: &mws.Config{
-				AccessConfig: commonconfig.AccessConfig{
-					Project: testProjectName,
-				},
+			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
 					DiskConfig: commonconfig.DiskConfig{
 						SourceImage: testSourceImage,
@@ -481,10 +459,7 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 		},
 		{
 			name: "CreateNetwork_use_external_address",
-			config: &mws.Config{
-				AccessConfig: commonconfig.AccessConfig{
-					Project: testProjectName,
-				},
+			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
 					DiskConfig: commonconfig.DiskConfig{
 						SourceImage: testSourceImage,
@@ -498,10 +473,7 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 		},
 		{
 			name: "CreateSubnet_use_external_address",
-			config: &mws.Config{
-				AccessConfig: commonconfig.AccessConfig{
-					Project: testProjectName,
-				},
+			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
 					DiskConfig: commonconfig.DiskConfig{
 						SourceImage: testSourceImage,
@@ -515,10 +487,7 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 		},
 		{
 			name: "CreateVirtualMachine_use_external_address",
-			config: &mws.Config{
-				AccessConfig: commonconfig.AccessConfig{
-					Project: testProjectName,
-				},
+			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
 					DiskConfig: commonconfig.DiskConfig{
 						SourceImage: testSourceImage,
@@ -532,10 +501,7 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 		},
 		{
 			name: "CreateFirewallRule_use_external_address",
-			config: &mws.Config{
-				AccessConfig: commonconfig.AccessConfig{
-					Project: testProjectName,
-				},
+			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
 					DiskConfig: commonconfig.DiskConfig{
 						SourceImage: testSourceImage,
@@ -549,10 +515,7 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 		},
 		{
 			name: "CreateDisk_no_external_address",
-			config: &mws.Config{
-				AccessConfig: commonconfig.AccessConfig{
-					Project: testProjectName,
-				},
+			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
 					DiskConfig: commonconfig.DiskConfig{
 						SourceImage: testSourceImage,
@@ -568,10 +531,7 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 		},
 		{
 			name: "CreateVirtualMachine_no_external_address",
-			config: &mws.Config{
-				AccessConfig: commonconfig.AccessConfig{
-					Project: testProjectName,
-				},
+			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
 					DiskConfig: commonconfig.DiskConfig{
 						SourceImage: testSourceImage,
@@ -588,17 +548,17 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
-			driver := mockmws.NewMockDriver(ctrl)
+			driver := mocksteps.NewMockStepCreateVirtualMachineDriver(ctrl)
 			writer, state := prepareState(driver)
-			prepareConfig(t, tt.config)
+			prepareStep(t, tt.step, state)
 
 			expectedDiskName := defaultDiskName
 			expectedExternalAddressName := defaultExternalAddressName
-			expectedNetworkName := cmp.Or(tt.config.NetworkName, defaultNetworkName)
-			expectedSubnetName := cmp.Or(tt.config.SubnetName, defaultSubnetName)
+			expectedNetworkName := cmp.Or(tt.step.NetworkName, defaultNetworkName)
+			expectedSubnetName := cmp.Or(tt.step.SubnetName, defaultSubnetName)
 			expectedVirtualMachineName := defaultVirtualMachineName
-			expectedFirewallRuleName := mws.FirewallRuleName
-			expectedDiskRef := new(computeref.NewDiskRef(tt.config.Project, expectedDiskName))
+			expectedFirewallRuleName := steps.FirewallRuleName
+			expectedDiskRef := new(computeref.NewDiskRef(tt.step.Project, expectedDiskName))
 
 			expectedErrors := map[string]error{tt.errorStep: errors.New("test error")}
 			requireStateKV := make(map[string]any)
@@ -608,29 +568,29 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 				if tt.errorStep == "CreateDisk" {
 					return
 				}
-				requireStateKV[mws.DiskNameKey] = expectedDiskName
+				requireStateKV[common.DiskNameKey] = expectedDiskName
 
-				if tt.config.UseExternalAddress {
+				if tt.step.UseExternalAddress {
 					driver.EXPECT().CreateExternalAddress(gomock.Any(), gomock.Any()).
 						Return(testExternalAddress, expectedErrors["CreateExternalAddress"]).Times(1)
 					if tt.errorStep == "CreateExternalAddress" {
 						return
 					}
-					requireStateKV[mws.ExternalAddressNameKey] = expectedExternalAddressName
+					requireStateKV[common.ExternalAddressNameKey] = expectedExternalAddressName
 
 					driver.EXPECT().CreateNetwork(gomock.Any(), gomock.Any()).
 						Return(expectedErrors["CreateNetwork"]).Times(1)
 					if tt.errorStep == "CreateNetwork" {
 						return
 					}
-					requireStateKV[mws.NetworkNameKey] = expectedNetworkName
+					requireStateKV[common.NetworkNameKey] = expectedNetworkName
 
 					driver.EXPECT().CreateSubnet(gomock.Any(), gomock.Any()).
 						Return(expectedErrors["CreateSubnet"]).Times(1)
 					if tt.errorStep == "CreateSubnet" {
 						return
 					}
-					requireStateKV[mws.SubnetNameKey] = expectedSubnetName
+					requireStateKV[common.SubnetNameKey] = expectedSubnetName
 				}
 
 				driver.EXPECT().CreateVirtualMachine(gomock.Any(), gomock.Any()).
@@ -638,33 +598,26 @@ func TestStepCreateVirtualMachine_Run_Error(t *testing.T) {
 				if tt.errorStep == "CreateVirtualMachine" {
 					return
 				}
-				requireStateKV[mws.VirtualMachineNameKey] = expectedVirtualMachineName
+				requireStateKV[common.VirtualMachineNameKey] = expectedVirtualMachineName
 
-				if tt.config.UseExternalAddress {
+				if tt.step.UseExternalAddress {
 					driver.EXPECT().CreateFirewallRule(gomock.Any(), gomock.Any()).
 						Return(expectedErrors["CreateFirewallRule"]).Times(1)
 				}
 				if tt.errorStep == "CreateFirewallRule" {
 					return
 				}
-				if tt.config.UseExternalAddress {
-					requireStateKV[mws.FirewallRuleNameKey] = expectedFirewallRuleName
-					requireStateKV[mws.InstanceIPKey] = testExternalAddress
+				if tt.step.UseExternalAddress {
+					requireStateKV[common.FirewallRuleNameKey] = expectedFirewallRuleName
+					requireStateKV[common.InstanceIPKey] = testExternalAddress
 				} else {
-					requireStateKV[mws.InstanceIPKey] = testInternalAddress
+					requireStateKV[common.InstanceIPKey] = testInternalAddress
 				}
-				requireStateKV[mws.InstanceIDKey] = expectedVirtualMachineName
-				requireStateKV[mws.DiskRefKey] = expectedDiskRef
+				requireStateKV[common.InstanceIDKey] = expectedVirtualMachineName
+				requireStateKV[common.DiskRefKey] = expectedDiskRef
 			}()
 
-			step := &mws.StepCreateVirtualMachine{
-				Communicator:         &tt.config.Communicator,
-				AccessConfig:         tt.config.AccessConfig,
-				VirtualMachineConfig: tt.config.VirtualMachineConfig,
-				GeneratedData:        &packerbuilderdata.GeneratedData{State: state},
-			}
-
-			testutil.RequireActionHalt(t, state, step.Run(t.Context(), state))
+			testutil.RequireActionHalt(t, state, tt.step.Run(t.Context(), state))
 			testutil.RequireStateGets(t, state, requireStateKV)
 
 			expectedDir.String(t, tt.name+".out", writer.String())
@@ -678,15 +631,12 @@ func TestStepCreateVirtualMachine_Cleanup_Error(t *testing.T) {
 
 	for _, tt := range []struct {
 		name      string
-		config    *mws.Config
+		step      *steps.StepCreateVirtualMachine
 		errorStep string
 	}{
 		{
 			name: "DeleteFirewallRule_use_external_address",
-			config: &mws.Config{
-				AccessConfig: commonconfig.AccessConfig{
-					Project: testProjectName,
-				},
+			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
 					DiskConfig: commonconfig.DiskConfig{
 						SourceImage: testSourceImage,
@@ -700,10 +650,7 @@ func TestStepCreateVirtualMachine_Cleanup_Error(t *testing.T) {
 		},
 		{
 			name: "DeleteVirtualMachine_use_external_address",
-			config: &mws.Config{
-				AccessConfig: commonconfig.AccessConfig{
-					Project: testProjectName,
-				},
+			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
 					DiskConfig: commonconfig.DiskConfig{
 						SourceImage: testSourceImage,
@@ -717,10 +664,7 @@ func TestStepCreateVirtualMachine_Cleanup_Error(t *testing.T) {
 		},
 		{
 			name: "DeleteSubnet_use_external_address",
-			config: &mws.Config{
-				AccessConfig: commonconfig.AccessConfig{
-					Project: testProjectName,
-				},
+			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
 					DiskConfig: commonconfig.DiskConfig{
 						SourceImage: testSourceImage,
@@ -734,10 +678,7 @@ func TestStepCreateVirtualMachine_Cleanup_Error(t *testing.T) {
 		},
 		{
 			name: "DeleteNetwork_use_external_address",
-			config: &mws.Config{
-				AccessConfig: commonconfig.AccessConfig{
-					Project: testProjectName,
-				},
+			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
 					DiskConfig: commonconfig.DiskConfig{
 						SourceImage: testSourceImage,
@@ -751,10 +692,7 @@ func TestStepCreateVirtualMachine_Cleanup_Error(t *testing.T) {
 		},
 		{
 			name: "DeleteExternalAddress_use_external_address",
-			config: &mws.Config{
-				AccessConfig: commonconfig.AccessConfig{
-					Project: testProjectName,
-				},
+			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
 					DiskConfig: commonconfig.DiskConfig{
 						SourceImage: testSourceImage,
@@ -768,10 +706,7 @@ func TestStepCreateVirtualMachine_Cleanup_Error(t *testing.T) {
 		},
 		{
 			name: "DeleteDisk_use_external_address",
-			config: &mws.Config{
-				AccessConfig: commonconfig.AccessConfig{
-					Project: testProjectName,
-				},
+			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
 					DiskConfig: commonconfig.DiskConfig{
 						SourceImage: testSourceImage,
@@ -785,10 +720,7 @@ func TestStepCreateVirtualMachine_Cleanup_Error(t *testing.T) {
 		},
 		{
 			name: "DeleteVirtualMachine_no_external_address",
-			config: &mws.Config{
-				AccessConfig: commonconfig.AccessConfig{
-					Project: testProjectName,
-				},
+			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
 					DiskConfig: commonconfig.DiskConfig{
 						SourceImage: testSourceImage,
@@ -804,10 +736,7 @@ func TestStepCreateVirtualMachine_Cleanup_Error(t *testing.T) {
 		},
 		{
 			name: "DeleteDisk_no_external_address",
-			config: &mws.Config{
-				AccessConfig: commonconfig.AccessConfig{
-					Project: testProjectName,
-				},
+			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
 					DiskConfig: commonconfig.DiskConfig{
 						SourceImage: testSourceImage,
@@ -824,24 +753,24 @@ func TestStepCreateVirtualMachine_Cleanup_Error(t *testing.T) {
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
-			driver := mockmws.NewMockDriver(ctrl)
+			driver := mocksteps.NewMockStepCreateVirtualMachineDriver(ctrl)
 			writer, state := prepareState(driver)
-			prepareConfig(t, tt.config)
+			prepareStep(t, tt.step, state)
 
 			expectedDiskName := defaultDiskName
 			expectedExternalAddressName := defaultExternalAddressName
-			expectedNetworkName := cmp.Or(tt.config.NetworkName, defaultNetworkName)
-			expectedSubnetName := cmp.Or(tt.config.SubnetName, defaultSubnetName)
+			expectedNetworkName := cmp.Or(tt.step.NetworkName, defaultNetworkName)
+			expectedSubnetName := cmp.Or(tt.step.SubnetName, defaultSubnetName)
 			expectedVirtualMachineName := defaultVirtualMachineName
-			expectedFirewallRuleName := mws.FirewallRuleName
+			expectedFirewallRuleName := steps.FirewallRuleName
 
-			state.Put(mws.DiskNameKey, expectedDiskName)
-			state.Put(mws.NetworkNameKey, expectedNetworkName)
-			state.Put(mws.SubnetNameKey, expectedSubnetName)
-			state.Put(mws.VirtualMachineNameKey, expectedVirtualMachineName)
-			if tt.config.UseExternalAddress {
-				state.Put(mws.ExternalAddressNameKey, expectedExternalAddressName)
-				state.Put(mws.FirewallRuleNameKey, expectedFirewallRuleName)
+			state.Put(common.DiskNameKey, expectedDiskName)
+			state.Put(common.NetworkNameKey, expectedNetworkName)
+			state.Put(common.SubnetNameKey, expectedSubnetName)
+			state.Put(common.VirtualMachineNameKey, expectedVirtualMachineName)
+			if tt.step.UseExternalAddress {
+				state.Put(common.ExternalAddressNameKey, expectedExternalAddressName)
+				state.Put(common.FirewallRuleNameKey, expectedFirewallRuleName)
 			}
 
 			expectedErrors := map[string]error{tt.errorStep: errors.New("test error")}
@@ -850,7 +779,7 @@ func TestStepCreateVirtualMachine_Cleanup_Error(t *testing.T) {
 				Return(expectedErrors["DeleteDisk"]).Times(1)
 			driver.EXPECT().DeleteVirtualMachine(gomock.Any(), expectedVirtualMachineName).
 				Return(expectedErrors["DeleteVirtualMachine"]).Times(1)
-			if tt.config.UseExternalAddress {
+			if tt.step.UseExternalAddress {
 				driver.EXPECT().DeleteExternalAddress(gomock.Any(), expectedExternalAddressName).
 					Return(expectedErrors["DeleteExternalAddress"]).Times(1)
 				driver.EXPECT().DeleteNetwork(gomock.Any(), expectedNetworkName).
@@ -861,34 +790,32 @@ func TestStepCreateVirtualMachine_Cleanup_Error(t *testing.T) {
 					Return(expectedErrors["DeleteFirewallRule"]).Times(1)
 			}
 
-			step := &mws.StepCreateVirtualMachine{
-				Communicator:         &tt.config.Communicator,
-				AccessConfig:         tt.config.AccessConfig,
-				VirtualMachineConfig: tt.config.VirtualMachineConfig,
-				GeneratedData:        &packerbuilderdata.GeneratedData{State: state},
-			}
-
-			step.Cleanup(state)
+			tt.step.Cleanup(state)
 			expectedDir.String(t, tt.name+".out", writer.String())
 		})
 	}
 }
 
-func prepareConfig(t *testing.T, config *mws.Config) {
-	config.SetDefaults()
-	require.NoError(t, config.Validate())
-	config.Communicator.SSHPublicKey = []byte(testSSHPublicKey)
+func prepareStep(t *testing.T, step *steps.StepCreateVirtualMachine, state multistep.StateBag) {
+	step.SetDefaults()
+	require.NoError(t, step.Validate())
+	step.Project = testProjectName
+	step.SourceProject = testProjectName
+	step.Zone = commonconfig.DefaultZone
+	step.SSHUsername = commonconfig.DefaultSSHUsername
+	step.SSHPublicKey = testSSHPublicKey
+	step.GeneratedData = &packerbuilderdata.GeneratedData{State: state}
 }
 
-func prepareState(driver mws.Driver) (*bytes.Buffer, multistep.StateBag) {
+func prepareState(driver steps.StepCreateVirtualMachineDriver) (*bytes.Buffer, multistep.StateBag) {
 	state := new(multistep.BasicStateBag)
-	state.Put(mws.DriverKey, driver)
-	state.Put(mws.PrefixKey, packerPrefix)
+	state.Put(common.DriverKey, driver)
+	state.Put(common.PrefixKey, packerPrefix)
 	writer := new(bytes.Buffer)
 	ui := &packer.BasicUi{
 		Writer: writer,
 	}
-	state.Put(mws.UIKey, ui)
+	state.Put(common.UIKey, ui)
 
 	return writer, state
 }

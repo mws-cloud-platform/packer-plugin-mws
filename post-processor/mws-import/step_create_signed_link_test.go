@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
-	mws "github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/common"
 	"github.com/mws-cloud-platform/packer-plugin-mws/internal/testutil"
 	mwsimport "github.com/mws-cloud-platform/packer-plugin-mws/post-processor/mws-import"
 	mockmws "github.com/mws-cloud-platform/packer-plugin-mws/post-processor/mws-import/mock"
@@ -81,10 +81,10 @@ func TestStepCreateSignedLink(t *testing.T) {
 			client := mockmws.NewMockAWSClient(ctrl)
 
 			state := new(multistep.BasicStateBag)
-			state.Put(mwsimport.AWSClientKey, client)
+			state.Put(common.AWSClientKey, client)
 			writer := new(bytes.Buffer)
 			ui := &packer.BasicUi{Writer: writer}
-			state.Put(mws.UIKey, ui)
+			state.Put(common.UIKey, ui)
 
 			if tt.prepare != nil {
 				tt.prepare(state, client)
@@ -99,7 +99,7 @@ func TestStepCreateSignedLink(t *testing.T) {
 				testutil.RequireActionHalt(t, state, action)
 			} else {
 				testutil.RequireActionContinue(t, state, action)
-				testutil.RequireStateGet(t, state, mwsimport.ExternalURLKey, testPresignedURL)
+				testutil.RequireStateGet(t, state, common.ExternalURLKey, testPresignedURL)
 			}
 			dir.String(t, tt.name+".out", writer.String())
 		})

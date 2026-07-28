@@ -1,16 +1,16 @@
 // Copyright 2026 MTS Web Services, LLC.
 // SPDX-License-Identifier: MPL-2.0
 
-package mws
+package steps
 
 import (
 	"cmp"
 	"context"
 
-	"github.com/hashicorp/packer-plugin-sdk/communicator"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/packerbuilderdata"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/common"
 	commonconfig "github.com/mws-cloud-platform/packer-plugin-mws/internal/config"
 	drivermws "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 	"go.mws.cloud/go-sdk/pkg/apimodels/cidraddress"
@@ -25,17 +25,19 @@ const (
 )
 
 type StepCreateVirtualMachine struct {
-	Communicator *communicator.Config
-	commonconfig.AccessConfig
+	Project      string
+	Zone         string
+	SSHUsername  string
+	SSHPublicKey string
 	commonconfig.VirtualMachineConfig
 
 	GeneratedData *packerbuilderdata.GeneratedData
 }
 
 func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	driver := state.Get(DriverKey).(StepCreateVirtualMachineDriver)
-	prefix := state.Get(PrefixKey).(string)
-	ui := state.Get(UIKey).(packer.Ui)
+	driver := state.Get(common.DriverKey).(StepCreateVirtualMachineDriver)
+	prefix := state.Get(common.PrefixKey).(string)
+	ui := state.Get(common.UIKey).(packer.Ui)
 
 	var (
 		imageRef              *computeref.ImageRef
@@ -62,14 +64,14 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 		SnapshotRef: snapshotRef,
 		Zone:        s.Zone,
 	}); err != nil {
-		return ActionHaltWithErrorf(state, "create disk %q: %w", diskName, err)
+		return common.ActionHaltWithErrorf(state, "create disk %q: %w", diskName, err)
 	}
 
 	ui.Sayf("Disk %q created", diskName)
-	state.Put(DiskNameKey, diskName)
+	state.Put(common.DiskNameKey, diskName)
 
 	diskRef := new(computeref.NewDiskRef(s.Project, diskName))
-	state.Put(DiskRefKey, diskRef)
+	state.Put(common.DiskRefKey, diskRef)
 
 	if s.UseExternalAddress {
 		externalAddressName := cmp.Or(s.ExternalAddressName, prefix+"external-address")
@@ -78,11 +80,11 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 			ExternalAddressName: externalAddressName,
 		})
 		if err != nil {
-			return ActionHaltWithErrorf(state, "create external-address %q: %w", externalAddressName, err)
+			return common.ActionHaltWithErrorf(state, "create external-address %q: %w", externalAddressName, err)
 		}
 
 		ui.Sayf("External Address %q created", externalAddressName)
-		state.Put(ExternalAddressNameKey, externalAddressName)
+		state.Put(common.ExternalAddressNameKey, externalAddressName)
 		virtualMachineAddress = externalAddress
 		externalAddressRef = new(vpcref.NewExternalAddressRef(s.Project, externalAddressName))
 	}
@@ -93,12 +95,12 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 		if err := driver.CreateNetwork(ctx, drivermws.CreateNetworkParams{
 			NetworkName: networkName,
 		}); err != nil {
-			return ActionHaltWithErrorf(state, "create network %q: %w", networkName, err)
+			return common.ActionHaltWithErrorf(state, "create network %q: %w", networkName, err)
 		}
 
 		ui.Sayf("Network %q created", networkName)
 	}
-	state.Put(NetworkNameKey, networkName)
+	state.Put(common.NetworkNameKey, networkName)
 
 	subnetName := cmp.Or(s.SubnetName, prefix+"subnet")
 	if s.SubnetName == "" {
@@ -108,12 +110,12 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 			SubnetName:  subnetName,
 			SubnetCidr:  cidraddress.MustParseCIDR4AddressString(s.SubnetCidr),
 		}); err != nil {
-			return ActionHaltWithErrorf(state, "create subnet %q: %w", subnetName, err)
+			return common.ActionHaltWithErrorf(state, "create subnet %q: %w", subnetName, err)
 		}
 
 		ui.Sayf("Subnet %q created", subnetName)
 	}
-	state.Put(SubnetNameKey, subnetName)
+	state.Put(common.SubnetNameKey, subnetName)
 	subnetRef := new(vpcref.NewSubnetRef(s.Project, networkName, subnetName))
 
 	virtualMachineName := cmp.Or(s.VirtualMachineName, prefix+"vm")
@@ -122,19 +124,19 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 		VirtualMachineName: virtualMachineName,
 		VMType:             s.VMType,
 		Zone:               s.Zone,
-		SSHUsername:        s.Communicator.SSHUsername,
-		SSHPublicKey:       string(s.Communicator.SSHPublicKey),
+		SSHUsername:        s.SSHUsername,
+		SSHPublicKey:       s.SSHPublicKey,
 		CloudConfig:        s.CloudConfig,
 		DiskRef:            diskRef,
 		ExternalAddressRef: externalAddressRef,
 		SubnetRef:          subnetRef,
 	})
 	if err != nil {
-		return ActionHaltWithErrorf(state, "create vm %q: %w", virtualMachineName, err)
+		return common.ActionHaltWithErrorf(state, "create vm %q: %w", virtualMachineName, err)
 	}
 
 	ui.Sayf("Virtual Machine %q created", virtualMachineName)
-	state.Put(VirtualMachineNameKey, virtualMachineName)
+	state.Put(common.VirtualMachineNameKey, virtualMachineName)
 
 	if s.UseExternalAddress {
 		ui.Sayf("Creating firewall rule...")
@@ -144,11 +146,11 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 			VirtualMachineInternalAddress: internalAddress.String(),
 		})
 		if err != nil {
-			return ActionHaltWithErrorf(state, "create firewall rule %q: %w", FirewallRuleName, err)
+			return common.ActionHaltWithErrorf(state, "create firewall rule %q: %w", FirewallRuleName, err)
 		}
 
 		ui.Sayf("Firewall Rule %q created", FirewallRuleName)
-		state.Put(FirewallRuleNameKey, FirewallRuleName)
+		state.Put(common.FirewallRuleNameKey, FirewallRuleName)
 	} else {
 		virtualMachineAddress = internalAddress
 	}
@@ -156,14 +158,14 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	if s.Nat64Enable {
 		virtualMachineAddress, err = ConvertToIPv6(virtualMachineAddress, s.Nat64IPV6Prefix)
 		if err != nil {
-			return ActionHaltWithErrorf(state, "convert virtual machine ip to IPv6: %w", err)
+			return common.ActionHaltWithErrorf(state, "convert virtual machine ip to IPv6: %w", err)
 		}
 	}
-	state.Put(InstanceIPKey, virtualMachineAddress.String())
+	state.Put(common.InstanceIPKey, virtualMachineAddress.String())
 
 	// instance_id is the generic term used so that users can have access to the
 	// instance id inside of the provisioners, used in step_provision.
-	state.Put(InstanceIDKey, virtualMachineName)
+	state.Put(common.InstanceIDKey, virtualMachineName)
 
 	s.GeneratedData.Put("SourceProject", s.SourceProject)
 	s.GeneratedData.Put("SourceImageName", s.SourceImage)
@@ -173,18 +175,18 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 }
 
 func (s *StepCreateVirtualMachine) Cleanup(state multistep.StateBag) {
-	driver := state.Get(DriverKey).(StepCreateVirtualMachineDriver)
-	ui := state.Get(UIKey).(packer.Ui)
+	driver := state.Get(common.DriverKey).(StepCreateVirtualMachineDriver)
+	ui := state.Get(common.UIKey).(packer.Ui)
 
 	ctx, cancel := context.WithTimeout(context.Background(), s.CleanupTimeout)
 	defer cancel()
 
-	diskName := stateGetOkString(state, DiskNameKey)
-	externalAddressName := stateGetOkString(state, ExternalAddressNameKey)
-	networkName := stateGetOkString(state, NetworkNameKey)
-	subnetName := stateGetOkString(state, SubnetNameKey)
-	virtualMachineName := stateGetOkString(state, VirtualMachineNameKey)
-	firewallRuleName := stateGetOkString(state, FirewallRuleNameKey)
+	diskName := common.StateGetOkString(state, common.DiskNameKey)
+	externalAddressName := common.StateGetOkString(state, common.ExternalAddressNameKey)
+	networkName := common.StateGetOkString(state, common.NetworkNameKey)
+	subnetName := common.StateGetOkString(state, common.SubnetNameKey)
+	virtualMachineName := common.StateGetOkString(state, common.VirtualMachineNameKey)
+	firewallRuleName := common.StateGetOkString(state, common.FirewallRuleNameKey)
 
 	if firewallRuleName != "" {
 		if err := driver.DeleteFirewallRule(ctx, networkName, firewallRuleName); err != nil {

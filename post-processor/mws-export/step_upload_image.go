@@ -9,7 +9,7 @@ import (
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
-	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/common"
 )
 
 type StepUploadImage struct {
@@ -19,8 +19,8 @@ type StepUploadImage struct {
 }
 
 func (s *StepUploadImage) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	ui := state.Get(mws.UIKey).(packer.Ui)
-	comm := state.Get(mws.CommunicatorKey).(packer.Communicator)
+	ui := state.Get(common.UIKey).(packer.Ui)
+	comm := state.Get(common.CommunicatorKey).(packer.Communicator)
 
 	uploadCmd := &packer.RemoteCmd{
 		Command: fmt.Sprintf(
@@ -36,10 +36,10 @@ func (s *StepUploadImage) Run(ctx context.Context, state multistep.StateBag) mul
 
 	ui.Sayf("Uploading image to %q...", s.Path)
 	if err := uploadCmd.RunWithUi(ctx, comm, ui); err != nil {
-		return mws.ActionHaltWithError(state, err)
+		return common.ActionHaltWithError(state, err)
 	}
 	if code := uploadCmd.ExitStatus(); code != 0 {
-		return mws.ActionHaltWithErrorf(state, "bad exit code: %d", code)
+		return common.ActionHaltWithErrorf(state, "bad exit code: %d", code)
 	}
 
 	ui.Say("Image uploaded")

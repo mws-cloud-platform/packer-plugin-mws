@@ -14,16 +14,15 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep/commonsteps"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/packerbuilderdata"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/common"
 	drivermws "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/steps"
 	computemodel "go.mws.cloud/go-sdk/service/compute/model"
-	"go.mws.cloud/util-toolset/pkg/utils/consterr"
 )
 
 const (
 	//nolint:revive // Very special constant for packer
 	BuilderId = "packer.mws"
-
-	ErrUnexpected = consterr.Error("plugin unexpected error")
 )
 
 type Builder struct {
@@ -60,10 +59,10 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 	}
 
 	state := new(multistep.BasicStateBag)
-	state.Put(DriverKey, driver)
-	state.Put(HookKey, hook)
-	state.Put(UIKey, ui)
-	state.Put(PrefixKey, fmt.Sprintf("packer-%s-", uuid.NewString()))
+	state.Put(common.DriverKey, driver)
+	state.Put(common.HookKey, hook)
+	state.Put(common.UIKey, ui)
+	state.Put(common.PrefixKey, fmt.Sprintf("packer-%s-", uuid.NewString()))
 	generatedData := &packerbuilderdata.GeneratedData{State: state}
 
 	steps := []multistep.Step{
@@ -77,15 +76,17 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 				SSH:  &b.config.Communicator.SSH,
 			},
 		),
-		&StepCreateVirtualMachine{
-			Communicator:         &b.config.Communicator,
-			AccessConfig:         b.config.AccessConfig,
+		&steps.StepCreateVirtualMachine{
+			Project:              b.config.Project,
+			Zone:                 b.config.Zone,
+			SSHUsername:          b.config.Communicator.SSHUsername,
+			SSHPublicKey:         string(b.config.Communicator.SSHPublicKey),
 			VirtualMachineConfig: b.config.VirtualMachineConfig,
 			GeneratedData:        generatedData,
 		},
 		&communicator.StepConnect{
 			Config:    &b.config.Communicator,
-			Host:      CommHost(b.config.Communicator.SSHHost),
+			Host:      common.CommHost(b.config.Communicator.SSHHost),
 			SSHConfig: b.config.Communicator.SSHConfigFunc(),
 		},
 		&commonsteps.StepProvision{},
@@ -105,20 +106,20 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 	b.runner = commonsteps.NewRunner(steps, b.config.PackerConfig, ui)
 	b.runner.Run(ctx, state)
 
-	if err, ok := state.GetOk(ErrorKey); ok {
+	if err, ok := state.GetOk(common.ErrorKey); ok {
 		return nil, err.(error)
 	}
 
-	v, ok := state.GetOk(ImageKey)
+	v, ok := state.GetOk(common.ImageKey)
 	if !ok {
-		return nil, fmt.Errorf("image not found in state: %w", ErrUnexpected)
+		return nil, fmt.Errorf("image not found in state: %w", common.ErrUnexpected)
 	}
 	image, ok := v.(*computemodel.ImageOptionalResponse)
 	if !ok {
-		return nil, fmt.Errorf("image found in state has wrong type %T: %w", v, ErrUnexpected)
+		return nil, fmt.Errorf("image found in state has wrong type %T: %w", v, common.ErrUnexpected)
 	}
 
-	result := NewArtifact(driver, image, state.Get(GeneratedDataKey))
+	result := NewArtifact(driver, image, state.Get(common.GeneratedDataKey))
 
 	ui.Say(result.String())
 

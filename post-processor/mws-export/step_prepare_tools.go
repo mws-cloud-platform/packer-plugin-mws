@@ -12,21 +12,21 @@ import (
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
-	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/common"
 )
 
 type StepPrepareTools struct {
 }
 
 func (s *StepPrepareTools) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	ui := state.Get(mws.UIKey).(packer.Ui)
-	comm := state.Get(mws.CommunicatorKey).(packer.Communicator)
+	ui := state.Get(common.UIKey).(packer.Ui)
+	comm := state.Get(common.CommunicatorKey).(packer.Communicator)
 
 	ui.Say("Checking for required tools...")
 
 	missing, err := s.checkTools(ctx, comm, ui, "qemu-img", "aws")
 	if err != nil {
-		return mws.ActionHaltWithError(state, err)
+		return common.ActionHaltWithError(state, err)
 	}
 
 	if len(missing) == 0 {
@@ -37,19 +37,19 @@ func (s *StepPrepareTools) Run(ctx context.Context, state multistep.StateBag) mu
 	ui.Sayf("Installing missing tools: %s", missing)
 
 	if ok, err := s.which(ctx, comm, "apt"); err != nil {
-		return mws.ActionHaltWithErrorf(state, "which apt: %w", err)
+		return common.ActionHaltWithErrorf(state, "which apt: %w", err)
 	} else if !ok {
 		ui.Error("Supported package manager (apt) not found")
 		return multistep.ActionHalt
 	}
 
 	if err := execTrySudo(ctx, comm, ui, "apt update"); err != nil {
-		return mws.ActionHaltWithError(state, err)
+		return common.ActionHaltWithError(state, err)
 	}
 
 	for _, tool := range missing {
 		if err := s.installTool(ctx, comm, ui, tool); err != nil {
-			return mws.ActionHaltWithError(state, err)
+			return common.ActionHaltWithError(state, err)
 		}
 	}
 

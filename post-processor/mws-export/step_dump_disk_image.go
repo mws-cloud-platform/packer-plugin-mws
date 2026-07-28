@@ -9,7 +9,7 @@ import (
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
-	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/common"
 	"github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 )
 
@@ -22,8 +22,8 @@ type StepDumpDiskImage struct {
 }
 
 func (s *StepDumpDiskImage) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	ui := state.Get(mws.UIKey).(packer.Ui)
-	comm := state.Get(mws.CommunicatorKey).(packer.Communicator)
+	ui := state.Get(common.UIKey).(packer.Ui)
+	comm := state.Get(common.CommunicatorKey).(packer.Communicator)
 
 	sudo := ""
 	checkAccessCmd := &packer.RemoteCmd{
@@ -32,7 +32,7 @@ func (s *StepDumpDiskImage) Run(ctx context.Context, state multistep.StateBag) m
 
 	ui.Say("Checking access...")
 	if err := comm.Start(ctx, checkAccessCmd); err != nil {
-		return mws.ActionHaltWithError(state, err)
+		return common.ActionHaltWithError(state, err)
 	}
 	if code := checkAccessCmd.ExitStatus(); code != 0 {
 		ui.Sayf("Check access failed with exit code %d, trying to dump disk image with sudo", code)
@@ -45,10 +45,10 @@ func (s *StepDumpDiskImage) Run(ctx context.Context, state multistep.StateBag) m
 
 	ui.Say("Dumping disk image...")
 	if err := dumpCmd.RunWithUi(ctx, comm, ui); err != nil {
-		return mws.ActionHaltWithError(state, err)
+		return common.ActionHaltWithError(state, err)
 	}
 	if code := dumpCmd.ExitStatus(); code != 0 {
-		return mws.ActionHaltWithErrorf(state, "bad exit code: %d", code)
+		return common.ActionHaltWithErrorf(state, "bad exit code: %d", code)
 	}
 
 	ui.Say("Disk image dumped")

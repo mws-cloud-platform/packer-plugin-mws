@@ -14,6 +14,7 @@ import (
 
 	"github.com/mws-cloud-platform/packer-plugin-mws/builder/mws"
 	mockmws "github.com/mws-cloud-platform/packer-plugin-mws/builder/mws/mock"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/common"
 	drivermws "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 	"github.com/mws-cloud-platform/packer-plugin-mws/internal/testutil"
 	"go.mws.cloud/go-sdk/pkg/optional"
@@ -22,7 +23,21 @@ import (
 	computemodel "go.mws.cloud/go-sdk/service/compute/model"
 	computeref "go.mws.cloud/go-sdk/service/resources/references/compute"
 	"go.mws.cloud/util-toolset/pkg/testing/golden"
+	"go.mws.cloud/util-toolset/pkg/utils/consterr"
 	"go.uber.org/mock/gomock"
+)
+
+const (
+	packerPrefix    = "packer-"
+	testProjectName = "test-project"
+	testDiskName    = "test-disk"
+
+	testImageName        = "test-image"
+	testImageDescription = "Test image description"
+
+	defaultVirtualMachineName = packerPrefix + "vm"
+
+	errInternal = consterr.Error("internal error")
 )
 
 func TestStepCreateImage(t *testing.T) {
@@ -53,7 +68,7 @@ func TestStepCreateImage(t *testing.T) {
 			imageName:        testImageName,
 			imageDescription: testImageDescription,
 			prepare: func(state multistep.StateBag, driver *mockmws.MockDriver) {
-				state.Put(mws.DiskRefKey, diskRef)
+				state.Put(common.DiskRefKey, diskRef)
 
 				driver.EXPECT().
 					CreateImage(gomock.Any(), drivermws.CreateImageParams{
@@ -72,7 +87,7 @@ func TestStepCreateImage(t *testing.T) {
 			imageName:        testImageName,
 			imageDescription: testImageDescription,
 			prepare: func(state multistep.StateBag, driver *mockmws.MockDriver) {
-				state.Put(mws.DiskRefKey, diskRef)
+				state.Put(common.DiskRefKey, diskRef)
 
 				driver.EXPECT().
 					CreateImage(gomock.Any(), drivermws.CreateImageParams{
@@ -99,12 +114,12 @@ func TestStepCreateImage(t *testing.T) {
 			driver := mockmws.NewMockDriver(ctrl)
 
 			state := new(multistep.BasicStateBag)
-			state.Put(mws.DriverKey, driver)
-			state.Put(mws.PrefixKey, packerPrefix)
+			state.Put(common.DriverKey, driver)
+			state.Put(common.PrefixKey, packerPrefix)
 			writer := new(bytes.Buffer)
 			ui := &packer.BasicUi{Writer: writer}
-			state.Put(mws.UIKey, ui)
-			state.Put(mws.VirtualMachineNameKey, defaultVirtualMachineName)
+			state.Put(common.UIKey, ui)
+			state.Put(common.VirtualMachineNameKey, defaultVirtualMachineName)
 
 			if tt.prepare != nil {
 				tt.prepare(state, driver)
@@ -122,7 +137,7 @@ func TestStepCreateImage(t *testing.T) {
 				testutil.RequireActionHalt(t, state, action)
 			} else {
 				testutil.RequireActionContinue(t, state, action)
-				testutil.RequireStateGet(t, state, mws.ImageKey, tt.expectedImage)
+				testutil.RequireStateGet(t, state, common.ImageKey, tt.expectedImage)
 				testutil.RequireGeneratedDataGet(t, state, "ImageProject", tt.project)
 				testutil.RequireGeneratedDataGet(t, state, "ImageName", tt.imageName)
 			}
