@@ -58,6 +58,5 @@ func (c *Config) Validate() error {
 		c.VirtualMachineConfig.Validate(),
 	)
 
-	err := errors.Join(errs...)
-	return err
+	return errors.Join(errs...)
 }

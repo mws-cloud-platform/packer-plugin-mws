@@ -1,0 +1,20 @@
+{
+ "DiskName": "",
+ "DiskType": "nbs-pl2",
+ "DiskSize": "10 GB",
+ "DiskIOPS": 1000,
+ "SourceProject": "",
+ "SourceImage": "source-image",
+ "SourceSnapshot": "",
+ "NetworkName": "",
+ "SubnetName": "",
+ "SubnetCidr": "192.168.0.0/16",
+ "UseExternalAddress": true,
+ "ExternalAddressName": "",
+ "Nat64Enable": false,
+ "Nat64IPV6Prefix": "64:ff9b::/96",
+ "VirtualMachineName": "",
+ "VMType": "gen-2-8",
+ "CloudConfig": "",
+ "CleanupTimeout": 3600000000000
+}

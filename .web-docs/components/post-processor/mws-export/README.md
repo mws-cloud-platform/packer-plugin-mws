@@ -80,22 +80,22 @@ configured for this post-processor.
 
 **Required**
 
-<!-- Code generated from the comments of the AccessConfig struct in internal/config/config.go; DO NOT EDIT MANUALLY -->
+<!-- Code generated from the comments of the AccessConfig struct in internal/config/access.go; DO NOT EDIT MANUALLY -->
 
 - `project` (string) - The project identifier where resources will be created.
 
-<!-- End of code generated from the comments of the AccessConfig struct in internal/config/config.go; -->
+<!-- End of code generated from the comments of the AccessConfig struct in internal/config/access.go; -->
 
-<!-- Code generated from the comments of the ObjectStorageConfig struct in post-processor/mws-export/config.go; DO NOT EDIT MANUALLY -->
+<!-- Code generated from the comments of the Config struct in post-processor/mws-export/config.go; DO NOT EDIT MANUALLY -->
 
 - `object_storage_path` (string) - MWS Cloud Platform Object Storage path where the image will be stored.
 
-<!-- End of code generated from the comments of the ObjectStorageConfig struct in post-processor/mws-export/config.go; -->
+<!-- End of code generated from the comments of the Config struct in post-processor/mws-export/config.go; -->
 
 
 **Optional**
 
-<!-- Code generated from the comments of the AccessConfig struct in internal/config/config.go; DO NOT EDIT MANUALLY -->
+<!-- Code generated from the comments of the AccessConfig struct in internal/config/access.go; DO NOT EDIT MANUALLY -->
 
 - `zone` (string) - The zone in which the VM will be created (defaults to "ru-central1-a")
 
@@ -109,9 +109,9 @@ configured for this post-processor.
 - `token` (string) - IAM token used for authentication.
   Can be specified using the `MWS_TOKEN` environment variable.
 
-<!-- End of code generated from the comments of the AccessConfig struct in internal/config/config.go; -->
+<!-- End of code generated from the comments of the AccessConfig struct in internal/config/access.go; -->
 
-<!-- Code generated from the comments of the VirtualMachineConfig struct in internal/config/config.go; DO NOT EDIT MANUALLY -->
+<!-- Code generated from the comments of the VirtualMachineConfig struct in internal/config/virtual_machine.go; DO NOT EDIT MANUALLY -->
 
 - `virtual_machine_name` (string) - Name for the temporary build VM (defaults to "packer-{{uuid}}-vm").
 
@@ -124,9 +124,9 @@ configured for this post-processor.
 
 - `cleanup_timeout` (duration string | ex: "1h5m2s") - Timeout for resources cleanup (defaults to "1h").
 
-<!-- End of code generated from the comments of the VirtualMachineConfig struct in internal/config/config.go; -->
+<!-- End of code generated from the comments of the VirtualMachineConfig struct in internal/config/virtual_machine.go; -->
 
-<!-- Code generated from the comments of the DiskForExportConfig struct in post-processor/mws-export/config.go; DO NOT EDIT MANUALLY -->
+<!-- Code generated from the comments of the DiskForExportConfig struct in internal/config/disk_for_export.go; DO NOT EDIT MANUALLY -->
 
 - `disk_for_export_type` (string) - Type of the disk used for image export (defaults to "nbs-pl2").
 
@@ -137,9 +137,9 @@ configured for this post-processor.
 - `image_for_export` (string) - Identifier of the image to export. Required only when post processor used
   without mws builder.
 
-<!-- End of code generated from the comments of the DiskForExportConfig struct in post-processor/mws-export/config.go; -->
+<!-- End of code generated from the comments of the DiskForExportConfig struct in internal/config/disk_for_export.go; -->
 
-<!-- Code generated from the comments of the ObjectStorageConfig struct in post-processor/mws-export/config.go; DO NOT EDIT MANUALLY -->
+<!-- Code generated from the comments of the ObjectStorageConfig struct in internal/config/object_storage.go; DO NOT EDIT MANUALLY -->
 
 - `service_account` (string) - MWS Cloud Platform Service Account used for generating temporal HMAC key
   to access Object Storage. Required, unless `access_key` and `secret_key`
@@ -152,11 +152,11 @@ configured for this post-processor.
 - `secret_key` (string) - HMAC key secret for accessing Object Storage. Required if `access_key` is
   provided.
 
-- `object_storage_endpoint` (string) - MWS Cloud Platform Object Storage endpoint to upload image (defaults to "https://storage.mwsapis.ru").
+- `object_storage_endpoint` (string) - MWS Cloud Platform Object Storage endpoint (defaults to "https://storage.mwsapis.ru").
 
 - `object_storage_region` (string) - MWS Cloud Platform Object Storage region where the bucket is located (defaults to "ru-central1").
 
-<!-- End of code generated from the comments of the ObjectStorageConfig struct in post-processor/mws-export/config.go; -->
+<!-- End of code generated from the comments of the ObjectStorageConfig struct in internal/config/object_storage.go; -->
 
 
 ### Example Usage

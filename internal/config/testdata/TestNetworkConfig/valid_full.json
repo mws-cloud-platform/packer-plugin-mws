@@ -1,0 +1,9 @@
+{
+ "NetworkName": "test-network",
+ "SubnetName": "test-subnet",
+ "SubnetCidr": "10.0.0.0/8",
+ "UseExternalAddress": true,
+ "ExternalAddressName": "test-external-address",
+ "Nat64Enable": true,
+ "Nat64IPV6Prefix": "2a02:5501:0:6000::/64"
+}

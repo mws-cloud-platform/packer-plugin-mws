@@ -1,1 +1,0 @@
-exactly one of source_image or source_snapshot must be provided

@@ -1,0 +1,20 @@
+{
+ "DiskName": "test-disk",
+ "DiskType": "nbs-pl3",
+ "DiskSize": "50 GB",
+ "DiskIOPS": 2000,
+ "SourceProject": "source-project",
+ "SourceImage": "source-image",
+ "SourceSnapshot": "",
+ "NetworkName": "test-network",
+ "SubnetName": "test-subnet",
+ "SubnetCidr": "10.0.0.0/8",
+ "UseExternalAddress": true,
+ "ExternalAddressName": "test-external-address",
+ "Nat64Enable": true,
+ "Nat64IPV6Prefix": "2a02:5501:0:6000::/64",
+ "VirtualMachineName": "test-vm",
+ "VMType": "gen-2-16",
+ "CloudConfig": "#cloud-config\npackages:\n  - nginx\n  - curl\nruncmd:\n  - systemctl enable nginx\n  - systemctl start nginx\n  - echo \"Packer build completed successfully!\" \u003e /var/log/build-complete.log\nusers:\n  - name: demo\n    groups: sudo\n    shell: /bin/bash\n    sudo: ['ALL=(ALL) NOPASSWD:ALL']\n    ssh-authorized-keys:\n      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDemoKeyForDemoUser",
+ "CleanupTimeout": 7200000000000
+}

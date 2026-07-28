@@ -54,16 +54,16 @@ configured for this builder.
   noted in the description of the field
 -->
 
-<!-- Code generated from the comments of the AccessConfig struct in internal/config/config.go; DO NOT EDIT MANUALLY -->
+<!-- Code generated from the comments of the AccessConfig struct in internal/config/access.go; DO NOT EDIT MANUALLY -->
 
 - `project` (string) - The project identifier where resources will be created.
 
-<!-- End of code generated from the comments of the AccessConfig struct in internal/config/config.go; -->
+<!-- End of code generated from the comments of the AccessConfig struct in internal/config/access.go; -->
 
 
 **Optional**
 
-<!-- Code generated from the comments of the AccessConfig struct in internal/config/config.go; DO NOT EDIT MANUALLY -->
+<!-- Code generated from the comments of the AccessConfig struct in internal/config/access.go; DO NOT EDIT MANUALLY -->
 
 - `zone` (string) - The zone in which the VM will be created (defaults to "ru-central1-a")
 
@@ -77,9 +77,9 @@ configured for this builder.
 - `token` (string) - IAM token used for authentication.
   Can be specified using the `MWS_TOKEN` environment variable.
 
-<!-- End of code generated from the comments of the AccessConfig struct in internal/config/config.go; -->
+<!-- End of code generated from the comments of the AccessConfig struct in internal/config/access.go; -->
 
-<!-- Code generated from the comments of the DiskConfig struct in internal/config/config.go; DO NOT EDIT MANUALLY -->
+<!-- Code generated from the comments of the DiskConfig struct in internal/config/disk.go; DO NOT EDIT MANUALLY -->
 
 - `disk_name` (string) - Name for the disk (defaults to "packer-{{uuid}}-disk").
 
@@ -95,9 +95,9 @@ configured for this builder.
 
 - `source_snapshot` (string) - ID of an existing snapshot to use as a base (required unless using `source_image`).
 
-<!-- End of code generated from the comments of the DiskConfig struct in internal/config/config.go; -->
+<!-- End of code generated from the comments of the DiskConfig struct in internal/config/disk.go; -->
 
-<!-- Code generated from the comments of the NetworkConfig struct in internal/config/config.go; DO NOT EDIT MANUALLY -->
+<!-- Code generated from the comments of the NetworkConfig struct in internal/config/network.go; DO NOT EDIT MANUALLY -->
 
 - `network_name` (string) - Name for the network (defaults to "packer-{{uuid}}-network").
   If specified, Packer will use existing network.
@@ -118,9 +118,9 @@ configured for this builder.
 - `nat64_ipv6_prefix` (string) - Prefix used in nat64 conversion (defaults to "64:ff9b::/96" (RFC 6052 Well-Known Prefix)).
   CIDR notation only.
 
-<!-- End of code generated from the comments of the NetworkConfig struct in internal/config/config.go; -->
+<!-- End of code generated from the comments of the NetworkConfig struct in internal/config/network.go; -->
 
-<!-- Code generated from the comments of the VirtualMachineConfig struct in internal/config/config.go; DO NOT EDIT MANUALLY -->
+<!-- Code generated from the comments of the VirtualMachineConfig struct in internal/config/virtual_machine.go; DO NOT EDIT MANUALLY -->
 
 - `virtual_machine_name` (string) - Name for the temporary build VM (defaults to "packer-{{uuid}}-vm").
 
@@ -133,9 +133,9 @@ configured for this builder.
 
 - `cleanup_timeout` (duration string | ex: "1h5m2s") - Timeout for resources cleanup (defaults to "1h").
 
-<!-- End of code generated from the comments of the VirtualMachineConfig struct in internal/config/config.go; -->
+<!-- End of code generated from the comments of the VirtualMachineConfig struct in internal/config/virtual_machine.go; -->
 
-<!-- Code generated from the comments of the ImageConfig struct in internal/config/config.go; DO NOT EDIT MANUALLY -->
+<!-- Code generated from the comments of the ImageConfig struct in internal/config/image.go; DO NOT EDIT MANUALLY -->
 
 - `image_name` (string) - Name for the resulting image (defaults to "packer-{{uuid}}-image").
 
@@ -143,7 +143,7 @@ configured for this builder.
 
 - `image_description` (string) - Description for the resulting image. (defaults to "Image created by Packer").
 
-<!-- End of code generated from the comments of the ImageConfig struct in internal/config/config.go; -->
+<!-- End of code generated from the comments of the ImageConfig struct in internal/config/image.go; -->
 
 
 ### Example Usage

@@ -1,0 +1,9 @@
+{
+ "DiskName": "",
+ "DiskType": "nbs-pl2",
+ "DiskSize": "10 GB",
+ "DiskIOPS": 1000,
+ "SourceProject": "",
+ "SourceImage": "",
+ "SourceSnapshot": "source-snapshot"
+}

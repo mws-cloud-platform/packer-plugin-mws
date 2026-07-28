@@ -18,19 +18,15 @@ import (
 	"go.mws.cloud/util-toolset/pkg/utils/consterr"
 )
 
-const (
-	DefaultObjectStorageRegion   = "ru-central1"
-	DefaultObjectStorageEndpoint = "https://storage.mwsapis.ru"
-)
-
 type Config struct {
 	common.PackerConfig               `mapstructure:",squash"`
 	Communicator                      communicator.Config `mapstructure:",squash" json:"-"`
 	commonconfig.AccessConfig         `mapstructure:",squash"`
 	commonconfig.VirtualMachineConfig `mapstructure:",squash"`
-
-	DiskForExportConfig `mapstructure:",squash"`
-	ObjectStorageConfig `mapstructure:",squash"`
+	commonconfig.DiskForExportConfig  `mapstructure:",squash"`
+	commonconfig.ObjectStorageConfig  `mapstructure:",squash"`
+	// MWS Cloud Platform Object Storage path where the image will be stored.
+	ObjectStoragePath string `mapstructure:"object_storage_path" required:"true"`
 
 	ctx interpolate.Context
 }
@@ -75,66 +71,9 @@ func (c *Config) Validate() error {
 		c.ObjectStorageConfig.Validate(),
 		interpolate.Validate(c.ObjectStoragePath, &c.ctx),
 	)
-
-	err := errors.Join(errs...)
-	return err
-}
-
-type ObjectStorageConfig struct {
-	// MWS Cloud Platform Service Account used for generating temporal HMAC key
-	// to access Object Storage. Required, unless `access_key` and `secret_key`
-	// are provided.
-	ServiceAccount string `mapstructure:"service_account" required:"false"`
-
-	// HMAC key identifier for authenticating with Object Storage. Used if
-	// `service_account` is not provided. Also requires `secret_key` to be
-	// provided.
-	AccessKey string `mapstructure:"access_key" required:"false"`
-	// HMAC key secret for accessing Object Storage. Required if `access_key` is
-	// provided.
-	SecretKey string `mapstructure:"secret_key" required:"false"`
-
-	// MWS Cloud Platform Object Storage path where the image will be stored.
-	ObjectStoragePath string `mapstructure:"object_storage_path" required:"true"`
-	// MWS Cloud Platform Object Storage endpoint to upload image (defaults to "https://storage.mwsapis.ru").
-	ObjectStorageEndpoint string `mapstructure:"object_storage_endpoint" required:"false"`
-	// MWS Cloud Platform Object Storage region where the bucket is located (defaults to "ru-central1").
-	ObjectStorageRegion string `mapstructure:"object_storage_region" required:"false"`
-}
-
-func (c *ObjectStorageConfig) SetDefaults() {
-	c.ObjectStorageEndpoint = cmp.Or(c.ObjectStorageEndpoint, DefaultObjectStorageEndpoint)
-	c.ObjectStorageRegion = cmp.Or(c.ObjectStorageRegion, DefaultObjectStorageRegion)
-}
-
-func (c *ObjectStorageConfig) Validate() error {
 	if c.ObjectStoragePath == "" {
-		return consterr.Error("object_storage_path is not provided")
+		errs = append(errs, consterr.Error("object_storage_path is not provided"))
 	}
-	if (c.SecretKey == "" || c.AccessKey == "") && c.ServiceAccount == "" {
-		return consterr.Error("Object Storage authentication is not provided, " +
-			"provide service_account for hmac-key generation (recommended) or pair access_key, secret_key")
-	}
-	return nil
-}
 
-type DiskForExportConfig struct {
-	// Type of the disk used for image export (defaults to "nbs-pl2").
-	DiskForExportType string `mapstructure:"disk_for_export_type" required:"false"`
-	// IOPS for the disk used for image export (defaults to 1000).
-	DiskForExportIOPS int64 `mapstructure:"disk_for_export_iops" required:"false"`
-	// The project identifier where the image for export exists (defaults to the `project`).
-	ImageForExportProject string `mapstructure:"image_for_export_project" required:"false"`
-	// Identifier of the image to export. Required only when post processor used
-	// without mws builder.
-	ImageForExport string `mapstructure:"image_for_export" required:"false"`
-}
-
-func (c *DiskForExportConfig) SetDefaults() {
-	c.DiskForExportType = cmp.Or(c.DiskForExportType, commonconfig.DefaultDiskType)
-	c.DiskForExportIOPS = cmp.Or(c.DiskForExportIOPS, commonconfig.DefaultDiskIOPS)
-}
-
-func (c *DiskForExportConfig) Validate() error {
-	return nil
+	return errors.Join(errs...)
 }

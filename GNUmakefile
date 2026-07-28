@@ -29,6 +29,7 @@ testacc: dev
 	@PACKER_ACC=1 go test -count $(COUNT) -v $(TEST) -timeout=120m
 
 generate: install-packer-sdc
+	@rm -rf docs-partials
 	@go generate ./...
 	@rm -rf .docs
 	@packer-sdc renderdocs -src docs -partials docs-partials/ -dst .docs/

@@ -29,9 +29,9 @@ type FlatConfig struct {
 	ServiceAccount                  *string           `mapstructure:"service_account" required:"false" cty:"service_account" hcl:"service_account"`
 	AccessKey                       *string           `mapstructure:"access_key" required:"false" cty:"access_key" hcl:"access_key"`
 	SecretKey                       *string           `mapstructure:"secret_key" required:"false" cty:"secret_key" hcl:"secret_key"`
-	ObjectStoragePath               *string           `mapstructure:"object_storage_path" required:"true" cty:"object_storage_path" hcl:"object_storage_path"`
 	ObjectStorageEndpoint           *string           `mapstructure:"object_storage_endpoint" required:"false" cty:"object_storage_endpoint" hcl:"object_storage_endpoint"`
 	ObjectStorageRegion             *string           `mapstructure:"object_storage_region" required:"false" cty:"object_storage_region" hcl:"object_storage_region"`
+	ObjectStoragePath               *string           `mapstructure:"object_storage_path" required:"true" cty:"object_storage_path" hcl:"object_storage_path"`
 	CleanupTimeout                  *string           `mapstructure:"cleanup_timeout" required:"false" cty:"cleanup_timeout" hcl:"cleanup_timeout"`
 }
 
@@ -66,9 +66,9 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"service_account":                     &hcldec.AttrSpec{Name: "service_account", Type: cty.String, Required: false},
 		"access_key":                          &hcldec.AttrSpec{Name: "access_key", Type: cty.String, Required: false},
 		"secret_key":                          &hcldec.AttrSpec{Name: "secret_key", Type: cty.String, Required: false},
-		"object_storage_path":                 &hcldec.AttrSpec{Name: "object_storage_path", Type: cty.String, Required: false},
 		"object_storage_endpoint":             &hcldec.AttrSpec{Name: "object_storage_endpoint", Type: cty.String, Required: false},
 		"object_storage_region":               &hcldec.AttrSpec{Name: "object_storage_region", Type: cty.String, Required: false},
+		"object_storage_path":                 &hcldec.AttrSpec{Name: "object_storage_path", Type: cty.String, Required: false},
 		"cleanup_timeout":                     &hcldec.AttrSpec{Name: "cleanup_timeout", Type: cty.String, Required: false},
 	}
 	return s

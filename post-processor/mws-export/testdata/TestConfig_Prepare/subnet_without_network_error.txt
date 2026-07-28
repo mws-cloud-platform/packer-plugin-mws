@@ -1,1 +1,0 @@
-when subnet_name is provided, network_name must be provided

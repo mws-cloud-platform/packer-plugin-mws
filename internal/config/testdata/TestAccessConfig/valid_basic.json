@@ -1,0 +1,7 @@
+{
+ "Project": "test-project",
+ "Zone": "ru-central1-a",
+ "BaseEndpoint": "",
+ "ServiceAccountAuthorizedKeyPath": "",
+ "Token": ""
+}
