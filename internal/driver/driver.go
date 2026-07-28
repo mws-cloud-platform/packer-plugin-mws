@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/mws-cloud-platform/packer-plugin-mws/internal/cloudinit"
+	"github.com/mws-cloud-platform/packer-plugin-mws/version"
 	"go.mws.cloud/go-sdk/mws"
 	"go.mws.cloud/go-sdk/mws/wait"
 	"go.mws.cloud/go-sdk/pkg/apimodels/cidraddress"
@@ -58,7 +59,9 @@ func NewDriver(ctx context.Context, c Config) (*Driver, error) {
 		config.Token = c.Token
 	}
 
-	sdk, err := mws.Load(ctx, mws.WithConfig(*config))
+	userAgent := "packer-plugin-mws/" + version.PluginVersion.FormattedVersion()
+
+	sdk, err := mws.Load(ctx, mws.WithConfig(*config), mws.WithUserAgent(userAgent))
 	if err != nil {
 		return nil, fmt.Errorf("load sdk: %w", err)
 	}
