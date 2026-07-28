@@ -31,7 +31,7 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 
 	imageName := cmp.Or(s.ImageName, prefix+"image")
 
-	ui.Sayf("Creating image %q from virtual machine %q...", imageName, state.Get(common.VirtualMachineNameKey))
+	ui.Sayf("Creating image %q from virtual machine %q...", imageName, state.Get(common.InstanceIDKey))
 
 	diskRef, ok := state.Get(common.DiskRefKey).(*computeref.DiskRef)
 	if !ok || diskRef == nil {
@@ -58,6 +58,4 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 	return multistep.ActionContinue
 }
 
-func (*StepCreateImage) Cleanup(multistep.StateBag) {
-	// No cleanup needed for image creation step
-}
+func (*StepCreateImage) Cleanup(multistep.StateBag) {}

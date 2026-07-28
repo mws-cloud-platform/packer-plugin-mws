@@ -110,8 +110,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, artifact 
 		&steps.StepCreateVirtualMachine{
 			Project:              p.config.Project,
 			Zone:                 p.config.Zone,
-			SSHUsername:          p.config.Communicator.SSHUsername,
-			SSHPublicKey:         string(p.config.Communicator.SSHPublicKey),
+			Communicator:         &p.config.Communicator,
 			VirtualMachineConfig: p.config.VirtualMachineConfig,
 			GeneratedData:        &packerbuilderdata.GeneratedData{State: state},
 		},

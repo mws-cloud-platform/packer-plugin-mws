@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/mws-cloud-platform/packer-plugin-mws/internal/common"
+	drivermws "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 )
 
 type StepCreateHMACKey struct {
@@ -55,20 +56,10 @@ func (s *StepCreateHMACKey) Cleanup(state multistep.StateBag) {
 		return
 	}
 
-	if _, ok := state.GetOk(common.HMACAccessKeyStateKey); ok {
-		ctx, cancel := context.WithTimeout(context.Background(), s.CleanupTimeout)
-		defer cancel()
+	ctx, cancel := context.WithTimeout(context.Background(), s.CleanupTimeout)
+	defer cancel()
 
-		name := s.hmacKeyName(state)
-
-		ui.Say("Deleting HMAC key...")
-		if err := driver.DeleteHMACKey(ctx, s.ServiceAccount, name); err != nil {
-			ui.Errorf("Error deleting HMAC key %q. Please delete it manually.\n"+
-				"Error: %v.", name, err)
-		} else {
-			ui.Sayf("HMAC key %q deleted", name)
-		}
-	}
+	drivermws.DeleteSubWithUI(ctx, ui, "HMAC key", s.hmacKeyName(state), s.ServiceAccount, driver.DeleteHMACKey)
 }
 
 func (s *StepCreateHMACKey) hmacKeyName(state multistep.StateBag) string {

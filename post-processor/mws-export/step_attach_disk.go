@@ -86,11 +86,5 @@ func (s *StepAttachDisk) Cleanup(state multistep.StateBag) {
 		ui.Say("Secondary disk detached")
 	}
 
-	if err := driver.DeleteDisk(ctx, diskName); err != nil {
-		ui.Errorf("Error deleting disk for export %q. "+
-			"Please detach (if necessary) and delete it manually.\n"+
-			"Error: %v.", diskName, err)
-	} else {
-		ui.Sayf("Disk for export %q deleted", diskName)
-	}
+	drivermws.DeleteWithUI(ctx, ui, "Disk for export", diskName, driver.DeleteDisk)
 }
