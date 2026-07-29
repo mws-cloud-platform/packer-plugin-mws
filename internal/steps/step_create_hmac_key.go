@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/mws-cloud-platform/packer-plugin-mws/internal/common"
-	drivermws "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 )
 
 type StepCreateHMACKey struct {
@@ -59,7 +58,7 @@ func (s *StepCreateHMACKey) Cleanup(state multistep.StateBag) {
 	ctx, cancel := context.WithTimeout(context.Background(), s.CleanupTimeout)
 	defer cancel()
 
-	drivermws.DeleteSubWithUI(ctx, ui, "HMAC key", s.hmacKeyName(state), s.ServiceAccount, driver.DeleteHMACKey)
+	common.DeleteSubWithUI(ctx, ui, "HMAC key", s.hmacKeyName(state), s.ServiceAccount, driver.DeleteHMACKey)
 }
 
 func (s *StepCreateHMACKey) hmacKeyName(state multistep.StateBag) string {

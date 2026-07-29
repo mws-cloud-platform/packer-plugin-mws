@@ -1,7 +1,7 @@
 // Copyright 2026 MTS Web Services, LLC.
 // SPDX-License-Identifier: MPL-2.0
 
-package driver
+package common
 
 import (
 	"context"
@@ -17,7 +17,7 @@ func DeleteWithUI(
 	resourceName string,
 	deleteMethod func(context.Context, string) error,
 ) {
-	ui.Sayf("Deleting %s...", resourceType)
+	ui.Sayf("Deleting %s %q...", resourceType, resourceName)
 	err := deleteMethod(ctx, resourceName)
 	switch {
 	case err == nil:
@@ -38,7 +38,7 @@ func DeleteSubWithUI(
 	parentName string,
 	deleteMethod func(context.Context, string, string) error,
 ) {
-	ui.Sayf("Deleting %s...", resourceType)
+	ui.Sayf("Deleting %s %q from %q...", resourceType, resourceName, parentName)
 	err := deleteMethod(ctx, parentName, resourceName)
 	switch {
 	case err == nil:
