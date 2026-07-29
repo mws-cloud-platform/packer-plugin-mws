@@ -58,7 +58,7 @@ func (s *StepCreateHMACKey) Cleanup(state multistep.StateBag) {
 	ctx, cancel := context.WithTimeout(context.Background(), s.CleanupTimeout)
 	defer cancel()
 
-	common.DeleteSubWithUI(ctx, ui, "HMAC key", s.hmacKeyName(state), s.ServiceAccount, driver.DeleteHMACKey)
+	common.DeleteSubWithUI(ctx, ui, "HMAC key", s.hmacKeyName(state), "service account", s.ServiceAccount, driver.DeleteHMACKey)
 }
 
 func (s *StepCreateHMACKey) hmacKeyName(state multistep.StateBag) string {

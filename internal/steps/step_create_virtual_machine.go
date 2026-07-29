@@ -175,26 +175,26 @@ func (s *StepCreateVirtualMachine) Cleanup(state multistep.StateBag) {
 
 	if s.UseExternalAddress {
 		firewallRuleName := prefix + "ssh-access"
-		common.DeleteSubWithUI(ctx, ui, "Firewall Rule", firewallRuleName, networkName, driver.DeleteFirewallRule)
+		common.DeleteSubWithUI(ctx, ui, "Firewall Rule", firewallRuleName, "network", networkName, driver.DeleteFirewallRule)
 	}
 
 	virtualMachineName := cmp.Or(s.VirtualMachineName, prefix+"vm")
-	common.DeleteWithUI(ctx, ui, "Virtual Machine", virtualMachineName, driver.DeleteVirtualMachine)
+	common.DeleteWithUI(ctx, ui, "virtual machine", virtualMachineName, driver.DeleteVirtualMachine)
 
 	if s.SubnetName == "" {
 		subnetName := cmp.Or(s.SubnetName, prefix+"subnet")
-		common.DeleteSubWithUI(ctx, ui, "Subnet", subnetName, networkName, driver.DeleteSubnet)
+		common.DeleteSubWithUI(ctx, ui, "subnet", subnetName, "network", networkName, driver.DeleteSubnet)
 	}
 
 	if s.NetworkName == "" {
-		common.DeleteWithUI(ctx, ui, "Network", networkName, driver.DeleteNetwork)
+		common.DeleteWithUI(ctx, ui, "network", networkName, driver.DeleteNetwork)
 	}
 
 	if s.UseExternalAddress {
 		externalAddressName := cmp.Or(s.ExternalAddressName, prefix+"external-address")
-		common.DeleteWithUI(ctx, ui, "External Address", externalAddressName, driver.DeleteExternalAddress)
+		common.DeleteWithUI(ctx, ui, "external address", externalAddressName, driver.DeleteExternalAddress)
 	}
 
 	diskName := cmp.Or(s.DiskName, prefix+"disk")
-	common.DeleteWithUI(ctx, ui, "Disk", diskName, driver.DeleteDisk)
+	common.DeleteWithUI(ctx, ui, "disk", diskName, driver.DeleteDisk)
 }
