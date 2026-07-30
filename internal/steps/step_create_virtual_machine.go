@@ -18,6 +18,7 @@ import (
 	"go.mws.cloud/go-sdk/pkg/apimodels/ipaddress"
 	"go.mws.cloud/go-sdk/pkg/apimodels/units/bytesize"
 	computeref "go.mws.cloud/go-sdk/service/resources/references/compute"
+	iamref "go.mws.cloud/go-sdk/service/resources/references/iam"
 	vpcref "go.mws.cloud/go-sdk/service/resources/references/vpc"
 )
 
@@ -38,6 +39,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	var (
 		imageRef              *computeref.ImageRef
 		snapshotRef           *computeref.SnapshotRef
+		serviceAccountRef     *iamref.ServiceAccountRef
 		externalAddressRef    *vpcref.ExternalAddressRef
 		virtualMachineAddress *ipaddress.IPAddress
 	)
@@ -47,6 +49,9 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	}
 	if s.SourceSnapshot != "" {
 		snapshotRef = new(computeref.NewSnapshotRef(s.SourceProject, s.SourceSnapshot))
+	}
+	if s.VMServiceAccount != "" {
+		serviceAccountRef = new(iamref.NewServiceAccountRef(s.Project, s.VMServiceAccount))
 	}
 
 	diskName := cmp.Or(s.DiskName, prefix+"disk")
@@ -118,6 +123,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 		SSHUsername:        s.Communicator.SSHUsername,
 		SSHPublicKey:       string(s.Communicator.SSHPublicKey),
 		CloudConfig:        s.CloudConfig,
+		ServiceAccountRef:  serviceAccountRef,
 		DiskRef:            diskRef,
 		ExternalAddressRef: externalAddressRef,
 		SubnetRef:          subnetRef,

@@ -47,6 +47,7 @@ func TestConfig_Prepare(t *testing.T) {
 					"virtual_machine_name": "test-vm",
 					"vm_type":              "gen-2-16",
 					"cloud_config":         "#cloud-config\npackages:\n  - nginx",
+					"vm_service_account":   "test-admin",
 					"cleanup_timeout":      "2h",
 					// DiskConfig
 					"disk_name":      "test-disk",

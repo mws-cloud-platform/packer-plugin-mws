@@ -270,6 +270,7 @@ func (d *Driver) CreateVirtualMachine(ctx context.Context, params CreateVirtualM
 						},
 					},
 				},
+				ServiceAccount: params.ServiceAccountRef,
 			},
 		},
 	}
