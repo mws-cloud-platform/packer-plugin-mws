@@ -25,12 +25,12 @@ set the `token` configuration field or the `MWS_TOKEN` environment variable.
 
 ### Authentication using Instance Metadata Service
 
-If none of the listed authentication methods is used, builder will try to detect
+If none of the listed authentication methods is used, plugin will try to detect
 if the current environment is a Compute VM with an [attached service
 account](https://mws.ru/docs/cloud-platform/compute/general/vm-add-change-delete-sa.html)
 by performing a request to the [instance metadata
 service](https://mws.ru/docs/cloud-platform/compute/general/vm-metadata-overview.html).
-If the request succeeds, builder will use credentials from the metadata service
+If the request succeeds, plugin will use credentials from the metadata service
 for authentication.
 
 ## Configuration Reference

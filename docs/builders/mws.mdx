@@ -8,33 +8,7 @@ The `mws` Packer builder creates [images](https://mws.ru/docs/cloud-platform/com
 ## Authentication
 
 Builder supports authentication using:
-
-- Service Account Authorized Key File
-- IAM Token
-- Instance Metadata Service
-
-### Authentication using Service Account Authorized Key File
-
-To authenticate as a service account, you can set the path to its [authorized
-key](https://mws.ru/docs/cloud-platform/iam/keys.html#authkey) using either the
-`service_account_authorized_key_path` configuration field or the
-`MWS_SERVICE_ACCOUNT_AUTHORIZED_KEY_PATH` environment variable.
-
-### Authentication using IAM Token
-
-To authenticate using an [IAM
-token](https://mws.ru/docs/cloud-platform/iam/sa-get-access-token.html), you can
-set the `token` configuration field or the `MWS_TOKEN` environment variable.
-
-### Authentication using Instance Metadata Service
-
-If none of the listed authentication methods is used, builder will try to detect
-if the current environment is a Compute VM with an [attached service
-account](https://mws.ru/docs/cloud-platform/compute/general/vm-add-change-delete-sa.html)
-by performing a request to the [instance metadata
-service](https://mws.ru/docs/cloud-platform/compute/general/vm-metadata-overview.html).
-If the request succeeds, builder will use credentials from the metadata service
-for authentication.
+@include 'manuscript/auth_sdk.mdx'
 
 ## Configuration Reference
 
