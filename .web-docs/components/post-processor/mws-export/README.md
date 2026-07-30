@@ -172,7 +172,7 @@ source "mws" "example" {
   service_account_authorized_key_path = "/path/to/your/service_account_authorized_key.dms"
 
   source_project = "mws-ubuntu"
-  source_image   = "mws-ubuntu-2404-lts-v20250529"
+  source_image   = "mws-ubuntu-2404-lts-v20260324"
 
   use_external_address = true
 }
@@ -204,7 +204,7 @@ source "mws" "example" {
   service_account_authorized_key_path = "/path/to/your/service_account_authorized_key.dms"
 
   source_project = "mws-ubuntu"
-  source_image   = "mws-ubuntu-2404-lts-v20250529"
+  source_image   = "mws-ubuntu-2404-lts-v20260324"
   
   use_external_address = true
 }
