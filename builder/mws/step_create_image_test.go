@@ -119,7 +119,7 @@ func TestStepCreateImage(t *testing.T) {
 			writer := new(bytes.Buffer)
 			ui := &packer.BasicUi{Writer: writer}
 			state.Put(common.UIKey, ui)
-			state.Put(common.VirtualMachineNameKey, defaultVirtualMachineName)
+			state.Put(common.InstanceIDKey, defaultVirtualMachineName)
 
 			if tt.prepare != nil {
 				tt.prepare(state, driver)

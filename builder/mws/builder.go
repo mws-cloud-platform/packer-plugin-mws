@@ -79,8 +79,7 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 		&steps.StepCreateVirtualMachine{
 			Project:              b.config.Project,
 			Zone:                 b.config.Zone,
-			SSHUsername:          b.config.Communicator.SSHUsername,
-			SSHPublicKey:         string(b.config.Communicator.SSHPublicKey),
+			Communicator:         &b.config.Communicator,
 			VirtualMachineConfig: b.config.VirtualMachineConfig,
 			GeneratedData:        generatedData,
 		},

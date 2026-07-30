@@ -7,6 +7,7 @@ import (
 	"cmp"
 	"context"
 
+	"github.com/hashicorp/packer-plugin-sdk/communicator"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/packerbuilderdata"
@@ -20,15 +21,10 @@ import (
 	vpcref "go.mws.cloud/go-sdk/service/resources/references/vpc"
 )
 
-const (
-	FirewallRuleName = "access-from-internet-ssh"
-)
-
 type StepCreateVirtualMachine struct {
 	Project      string
 	Zone         string
-	SSHUsername  string
-	SSHPublicKey string
+	Communicator *communicator.Config
 	commonconfig.VirtualMachineConfig
 
 	GeneratedData *packerbuilderdata.GeneratedData
@@ -66,9 +62,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	}); err != nil {
 		return common.ActionHaltWithErrorf(state, "create disk %q: %w", diskName, err)
 	}
-
 	ui.Sayf("Disk %q created", diskName)
-	state.Put(common.DiskNameKey, diskName)
 
 	diskRef := new(computeref.NewDiskRef(s.Project, diskName))
 	state.Put(common.DiskRefKey, diskRef)
@@ -84,7 +78,6 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 		}
 
 		ui.Sayf("External Address %q created", externalAddressName)
-		state.Put(common.ExternalAddressNameKey, externalAddressName)
 		virtualMachineAddress = externalAddress
 		externalAddressRef = new(vpcref.NewExternalAddressRef(s.Project, externalAddressName))
 	}
@@ -100,7 +93,6 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 
 		ui.Sayf("Network %q created", networkName)
 	}
-	state.Put(common.NetworkNameKey, networkName)
 
 	subnetName := cmp.Or(s.SubnetName, prefix+"subnet")
 	if s.SubnetName == "" {
@@ -115,7 +107,6 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 
 		ui.Sayf("Subnet %q created", subnetName)
 	}
-	state.Put(common.SubnetNameKey, subnetName)
 	subnetRef := new(vpcref.NewSubnetRef(s.Project, networkName, subnetName))
 
 	virtualMachineName := cmp.Or(s.VirtualMachineName, prefix+"vm")
@@ -124,8 +115,8 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 		VirtualMachineName: virtualMachineName,
 		VMType:             s.VMType,
 		Zone:               s.Zone,
-		SSHUsername:        s.SSHUsername,
-		SSHPublicKey:       s.SSHPublicKey,
+		SSHUsername:        s.Communicator.SSHUsername,
+		SSHPublicKey:       string(s.Communicator.SSHPublicKey),
 		CloudConfig:        s.CloudConfig,
 		DiskRef:            diskRef,
 		ExternalAddressRef: externalAddressRef,
@@ -134,23 +125,21 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	if err != nil {
 		return common.ActionHaltWithErrorf(state, "create vm %q: %w", virtualMachineName, err)
 	}
-
 	ui.Sayf("Virtual Machine %q created", virtualMachineName)
-	state.Put(common.VirtualMachineNameKey, virtualMachineName)
 
 	if s.UseExternalAddress {
+		firewallRuleName := prefix + "ssh-access"
 		ui.Sayf("Creating firewall rule...")
 		err = driver.CreateFirewallRule(ctx, drivermws.CreateFirewallRuleParams{
 			NetworkName:                   networkName,
-			FirewallRuleName:              FirewallRuleName,
+			FirewallRuleName:              firewallRuleName,
 			VirtualMachineInternalAddress: internalAddress.String(),
 		})
 		if err != nil {
-			return common.ActionHaltWithErrorf(state, "create firewall rule %q: %w", FirewallRuleName, err)
+			return common.ActionHaltWithErrorf(state, "create firewall rule %q: %w", firewallRuleName, err)
 		}
 
-		ui.Sayf("Firewall Rule %q created", FirewallRuleName)
-		state.Put(common.FirewallRuleNameKey, FirewallRuleName)
+		ui.Sayf("Firewall Rule %q created", firewallRuleName)
 	} else {
 		virtualMachineAddress = internalAddress
 	}
@@ -176,69 +165,36 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 
 func (s *StepCreateVirtualMachine) Cleanup(state multistep.StateBag) {
 	driver := state.Get(common.DriverKey).(StepCreateVirtualMachineDriver)
+	prefix := state.Get(common.PrefixKey).(string)
 	ui := state.Get(common.UIKey).(packer.Ui)
 
 	ctx, cancel := context.WithTimeout(context.Background(), s.CleanupTimeout)
 	defer cancel()
 
-	diskName := common.StateGetOkString(state, common.DiskNameKey)
-	externalAddressName := common.StateGetOkString(state, common.ExternalAddressNameKey)
-	networkName := common.StateGetOkString(state, common.NetworkNameKey)
-	subnetName := common.StateGetOkString(state, common.SubnetNameKey)
-	virtualMachineName := common.StateGetOkString(state, common.VirtualMachineNameKey)
-	firewallRuleName := common.StateGetOkString(state, common.FirewallRuleNameKey)
+	networkName := cmp.Or(s.NetworkName, prefix+"network")
 
-	if firewallRuleName != "" {
-		if err := driver.DeleteFirewallRule(ctx, networkName, firewallRuleName); err != nil {
-			ui.Errorf("Error deleting firewall rule %q in network %q. Please delete it manually.\n"+
-				"Error: %v.", firewallRuleName, networkName, err)
-		} else {
-			ui.Sayf("Firewall Rule %q deleted", firewallRuleName)
-		}
+	if s.UseExternalAddress {
+		firewallRuleName := prefix + "ssh-access"
+		common.DeleteSubWithUI(ctx, ui, "firewall rule", firewallRuleName, "network", networkName, driver.DeleteFirewallRule)
 	}
 
-	if virtualMachineName != "" {
-		if err := driver.DeleteVirtualMachine(ctx, virtualMachineName); err != nil {
-			ui.Errorf("Error deleting virtual machine %q. Please delete it manually.\n"+
-				"Error: %v.", virtualMachineName, err)
-		} else {
-			ui.Sayf("Virtual Machine %q deleted", virtualMachineName)
-		}
+	virtualMachineName := cmp.Or(s.VirtualMachineName, prefix+"vm")
+	common.DeleteWithUI(ctx, ui, "virtual machine", virtualMachineName, driver.DeleteVirtualMachine)
+
+	if s.SubnetName == "" {
+		subnetName := cmp.Or(s.SubnetName, prefix+"subnet")
+		common.DeleteSubWithUI(ctx, ui, "subnet", subnetName, "network", networkName, driver.DeleteSubnet)
 	}
 
-	if subnetName != "" && s.SubnetName == "" {
-		if err := driver.DeleteSubnet(ctx, networkName, subnetName); err != nil {
-			ui.Errorf("Error deleting subnet %q in network %q. Please delete it manually.\n"+
-				"Error: %v.", subnetName, networkName, err)
-		} else {
-			ui.Sayf("Subnet %q deleted", subnetName)
-		}
+	if s.NetworkName == "" {
+		common.DeleteWithUI(ctx, ui, "network", networkName, driver.DeleteNetwork)
 	}
 
-	if networkName != "" && s.NetworkName == "" {
-		if err := driver.DeleteNetwork(ctx, networkName); err != nil {
-			ui.Errorf("Error deleting network %q. Please delete it manually.\n"+
-				"Error: %v.", networkName, err)
-		} else {
-			ui.Sayf("Network %q deleted", networkName)
-		}
+	if s.UseExternalAddress {
+		externalAddressName := cmp.Or(s.ExternalAddressName, prefix+"external-address")
+		common.DeleteWithUI(ctx, ui, "external address", externalAddressName, driver.DeleteExternalAddress)
 	}
 
-	if externalAddressName != "" {
-		if err := driver.DeleteExternalAddress(ctx, externalAddressName); err != nil {
-			ui.Errorf("Error deleting external address %q. Please delete it manually.\n"+
-				"Error: %v.", externalAddressName, err)
-		} else {
-			ui.Sayf("External address %q deleted", externalAddressName)
-		}
-	}
-
-	if diskName != "" {
-		if err := driver.DeleteDisk(ctx, diskName); err != nil {
-			ui.Errorf("Error deleting disk %q. Please delete it manually.\n"+
-				"Error: %v.", diskName, err)
-		} else {
-			ui.Sayf("Disk %q deleted", diskName)
-		}
-	}
+	diskName := cmp.Or(s.DiskName, prefix+"disk")
+	common.DeleteWithUI(ctx, ui, "disk", diskName, driver.DeleteDisk)
 }

@@ -1,3 +1,4 @@
 Secondary disk detached
-Error deleting disk for export "packer-disk-for-export". Please detach (if necessary) and delete it manually.
+Deleting disk for export "packer-disk-for-export"...
+Error deleting disk for export "packer-disk-for-export". Please delete it manually.
 Error: internal error.

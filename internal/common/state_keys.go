@@ -11,13 +11,6 @@ const (
 	PrefixKey       = "prefix"
 	ErrorKey        = "error"
 
-	DiskNameKey            = "disk_name"
-	ExternalAddressNameKey = "external_address_name"
-	NetworkNameKey         = "network_name"
-	SubnetNameKey          = "subnet_name"
-	VirtualMachineNameKey  = "virtual_machine_name"
-	FirewallRuleNameKey    = "firewall_rule_name"
-
 	DiskRefKey       = "disk_ref"
 	ImageKey         = "image"
 	GeneratedDataKey = "generated_data"
