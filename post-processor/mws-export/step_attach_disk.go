@@ -86,5 +86,5 @@ func (s *StepAttachDisk) Cleanup(state multistep.StateBag) {
 		ui.Say("Secondary disk detached")
 	}
 
-	common.DeleteWithUI(ctx, ui, "Disk for export", diskName, driver.DeleteDisk)
+	common.DeleteWithUI(ctx, ui, "disk for export", diskName, driver.DeleteDisk)
 }

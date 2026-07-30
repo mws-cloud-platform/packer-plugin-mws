@@ -175,7 +175,7 @@ func (s *StepCreateVirtualMachine) Cleanup(state multistep.StateBag) {
 
 	if s.UseExternalAddress {
 		firewallRuleName := prefix + "ssh-access"
-		common.DeleteSubWithUI(ctx, ui, "Firewall Rule", firewallRuleName, "network", networkName, driver.DeleteFirewallRule)
+		common.DeleteSubWithUI(ctx, ui, "firewall rule", firewallRuleName, "network", networkName, driver.DeleteFirewallRule)
 	}
 
 	virtualMachineName := cmp.Or(s.VirtualMachineName, prefix+"vm")
