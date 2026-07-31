@@ -18,6 +18,7 @@ import (
 	"go.mws.cloud/go-sdk/pkg/apimodels/ipaddress"
 	"go.mws.cloud/go-sdk/pkg/apimodels/units/bytesize"
 	computeref "go.mws.cloud/go-sdk/service/resources/references/compute"
+	iamref "go.mws.cloud/go-sdk/service/resources/references/iam"
 	vpcref "go.mws.cloud/go-sdk/service/resources/references/vpc"
 )
 
@@ -36,18 +37,9 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	ui := state.Get(common.UIKey).(packer.Ui)
 
 	var (
-		imageRef              *computeref.ImageRef
-		snapshotRef           *computeref.SnapshotRef
 		externalAddressRef    *vpcref.ExternalAddressRef
 		virtualMachineAddress *ipaddress.IPAddress
 	)
-
-	if s.SourceImage != "" {
-		imageRef = new(computeref.NewImageRef(s.SourceProject, s.SourceImage))
-	}
-	if s.SourceSnapshot != "" {
-		snapshotRef = new(computeref.NewSnapshotRef(s.SourceProject, s.SourceSnapshot))
-	}
 
 	diskName := cmp.Or(s.DiskName, prefix+"disk")
 	ui.Sayf("Creating disk...")
@@ -56,8 +48,8 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 		DiskType:    s.DiskType,
 		Size:        bytesize.MustParseString(s.DiskSize),
 		Iops:        s.DiskIOPS,
-		ImageRef:    imageRef,
-		SnapshotRef: snapshotRef,
+		ImageRef:    s.imageRef(),
+		SnapshotRef: s.snapshotRef(),
 		Zone:        s.Zone,
 	}); err != nil {
 		return common.ActionHaltWithErrorf(state, "create disk %q: %w", diskName, err)
@@ -118,6 +110,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 		SSHUsername:        s.Communicator.SSHUsername,
 		SSHPublicKey:       string(s.Communicator.SSHPublicKey),
 		CloudConfig:        s.CloudConfig,
+		ServiceAccountRef:  s.serviceAccountRef(),
 		DiskRef:            diskRef,
 		ExternalAddressRef: externalAddressRef,
 		SubnetRef:          subnetRef,
@@ -197,4 +190,25 @@ func (s *StepCreateVirtualMachine) Cleanup(state multistep.StateBag) {
 
 	diskName := cmp.Or(s.DiskName, prefix+"disk")
 	common.DeleteWithUI(ctx, ui, "disk", diskName, driver.DeleteDisk)
+}
+
+func (s *StepCreateVirtualMachine) imageRef() *computeref.ImageRef {
+	if s.SourceImage != "" {
+		return new(computeref.NewImageRef(s.SourceProject, s.SourceImage))
+	}
+	return nil
+}
+
+func (s *StepCreateVirtualMachine) snapshotRef() *computeref.SnapshotRef {
+	if s.SourceSnapshot != "" {
+		return new(computeref.NewSnapshotRef(s.SourceProject, s.SourceSnapshot))
+	}
+	return nil
+}
+
+func (s *StepCreateVirtualMachine) serviceAccountRef() *iamref.ServiceAccountRef {
+	if s.VMServiceAccount != "" {
+		return new(iamref.NewServiceAccountRef(s.Project, s.VMServiceAccount))
+	}
+	return nil
 }

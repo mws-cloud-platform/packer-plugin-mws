@@ -29,6 +29,7 @@
  "VirtualMachineName": "test-vm",
  "VMType": "gen-2-16",
  "CloudConfig": "#cloud-config\npackages:\n  - nginx",
+ "VMServiceAccount": "test-admin",
  "CleanupTimeout": 7200000000000,
  "DiskForExportType": "nbs-pl3",
  "DiskForExportIOPS": 2000,
