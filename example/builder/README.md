@@ -30,5 +30,5 @@ The example declares all required variables directly in the configuration file, 
 
 ## Required Variables
 
-- `project` - Your MWS Cloud Platform project ID
-- `service_account_authorized_key_path` - Path to your service account key file
+- `project` - MWS Cloud Platform project ID for creation of virtual machine
+- `service_account_authorized_key_path` - Path to authorized key for service account on whose behalf Packer will perform operations in the MWS Cloud

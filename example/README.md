@@ -6,18 +6,19 @@ This directory contains example Packer configurations that demonstrate how to us
 
 Before using these examples, you'll need:
 
-1. Packer installed on your system
-2. An MWS Cloud Platform account
-3. A service account with appropriate permissions
-4. A service account authorized key file
+<!-- TODO: replace first link with our public doc -->
+1. [Packer installed on your system](https://developer.hashicorp.com/packer/install)
+2. [An MWS Cloud Platform account](https://mws.ru/docs/cloud-platform/about/quickstart.html)
+3. [A service account with appropriate permissions](https://mws.ru/docs/cloud-platform/iam/sa.html)
+4. [A service account authorized key file](https://mws.ru/docs/cloud-platform/iam/keys.html#authkey)
 
 ## Usage
 
 Each example is contained in its own directory with a detailed README:
 
 - [Builder Example](./builder/README.md) - Creating VM images
-- [Import Example](./import/README.md) - Importing images from object storage
-- [Export Example](./export/README.md) - Exporting images to object storage
+- [Import Example](./import/README.md) - Importing images from MWS Cloud Platform Object Storage
+- [Export Example](./export/README.md) - Exporting images to MWS Cloud Platform Object Storage
 
 ## Security Notes
 

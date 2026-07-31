@@ -1,10 +1,10 @@
 # MWS Cloud Platform Export Example
 
-This example demonstrates how to use the MWS Cloud Platform Packer Export Post-Processor to export images to object storage.
+This example demonstrates how to use the MWS Cloud Platform Packer Export Post-Processor to export images to MWS Cloud Platform Object Storage.
 
 ## Overview
 
-The configuration creates a virtual machine image and then exports it to object storage in QCOW2 format.
+The configuration creates a virtual machine image and then exports it to MWS Cloud Platform Object Storage in QCOW2 format.
 
 ## Usage
 
@@ -30,13 +30,13 @@ The example declares all required variables directly in the configuration file, 
 
 ## Required Variables
 
-- `project` - Your MWS Cloud Platform project ID
-- `service_account_authorized_key_path` - Path to your service account key file
-- `service_account` - Your service account name
-- `object_storage_bucket` - Your object storage bucket for exported image
+- `project` - MWS Cloud Platform project ID for creation of virtual machine
+- `service_account_authorized_key_path` - Path to authorized key for service account on whose behalf Packer will perform operations in the MWS Cloud
+- `service_account` - Name of the service account that will be used to access the MWS Cloud Platform Object Storage
+- `object_storage_bucket` - Object storage bucket for exported image
 
 ## Prerequisites
 
-1. A service account with permissions to create resources (provided via service_account_authorized_key_path)
-2. A service account with permission to write to object storage (provided via service_account)
+1. A service account with permissions to create resources (provided via `service_account_authorized_key_path`)
+2. A service account with permission to write to MWS Cloud Platform Object Storage (provided via `service_account`)
 3. Object storage bucket.
