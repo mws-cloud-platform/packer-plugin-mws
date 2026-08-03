@@ -23,12 +23,12 @@ type DiskConfig struct {
 	DiskSize string `mapstructure:"disk_size" required:"false"`
 	// IOPS for the disk (defaults to 1000).
 	DiskIOPS int64 `mapstructure:"disk_iops" required:"false"`
-	// Project ID where the source image/snapshot exists (defaults to the `project`).
+	// Project ID where the source_image/source_disk_backup exists (defaults to the `project`).
 	SourceProject string `mapstructure:"source_project" required:"false"`
-	// ID of an existing image to use as a base (required unless using `source_snapshot`).
+	// ID of an existing image to use as a base (required unless using `source_disk_backup`).
 	SourceImage string `mapstructure:"source_image" required:"false"`
-	// ID of an existing snapshot to use as a base (required unless using `source_image`).
-	SourceSnapshot string `mapstructure:"source_snapshot" required:"false"`
+	// ID of an existing disk backup to use as a base (required unless using `source_image`).
+	SourceDiskBackup string `mapstructure:"source_disk_backup" required:"false"`
 }
 
 func (c *DiskConfig) SetDefaults() {
@@ -42,8 +42,8 @@ func (c *DiskConfig) Validate() error {
 	if _, parseErr := bytesize.ParseString(c.DiskSize); parseErr != nil {
 		err = errors.Join(err, fmt.Errorf("parse disk size: %w", parseErr))
 	}
-	if (c.SourceImage == "") == (c.SourceSnapshot == "") {
-		err = errors.Join(err, consterr.Error("exactly one of source_image or source_snapshot must be provided"))
+	if (c.SourceImage == "") == (c.SourceDiskBackup == "") {
+		err = errors.Join(err, consterr.Error("exactly one of source_image or source_disk_backup must be provided"))
 	}
 	return err
 }

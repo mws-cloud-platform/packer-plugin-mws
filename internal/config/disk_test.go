@@ -25,10 +25,10 @@ func TestDiskConfig(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "valid_basic_with_source_snapshot",
+			name: "valid_basic_with_source_disk_backup",
 			raws: []any{
 				map[string]any{
-					"source_snapshot": "source-snapshot",
+					"source_disk_backup": "source-disk-backup",
 				},
 			},
 			wantErr: false,
@@ -48,15 +48,15 @@ func TestDiskConfig(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "valid_full_with_source_snapshot",
+			name: "valid_full_with_source_disk_backup",
 			raws: []any{
 				map[string]any{
-					"disk_name":       "test-disk",
-					"disk_type":       "nbs-pl3",
-					"disk_size":       "50 GB",
-					"disk_iops":       int64(2000),
-					"source_project":  "source-project",
-					"source_snapshot": "source-snapshot",
+					"disk_name":          "test-disk",
+					"disk_type":          "nbs-pl3",
+					"disk_size":          "50 GB",
+					"disk_iops":          int64(2000),
+					"source_project":     "source-project",
+					"source_disk_backup": "source-disk-backup",
 				},
 			},
 			wantErr: false,
@@ -72,8 +72,8 @@ func TestDiskConfig(t *testing.T) {
 			name: "error_both_source",
 			raws: []any{
 				map[string]any{
-					"source_image":    "test-image",
-					"source_snapshot": "test-snapshot",
+					"source_image":       "test-image",
+					"source_disk_backup": "test-disk-backup",
 				},
 			},
 			wantErr: true,

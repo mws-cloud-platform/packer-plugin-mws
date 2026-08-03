@@ -18,7 +18,7 @@
  "DiskIOPS": 1000,
  "SourceProject": "test-project",
  "SourceImage": "test-image",
- "SourceSnapshot": "",
+ "SourceDiskBackup": "",
  "NetworkName": "",
  "SubnetName": "",
  "SubnetCidr": "192.168.0.0/16",

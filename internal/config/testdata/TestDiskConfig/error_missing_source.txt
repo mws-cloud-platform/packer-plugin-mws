@@ -1,1 +1,1 @@
-exactly one of source_image or source_snapshot must be provided
+exactly one of source_image or source_disk_backup must be provided

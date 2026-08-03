@@ -130,8 +130,8 @@ func (d *Driver) CreateDisk(ctx context.Context, params CreateDiskParams) error 
 				Zone: params.Zone,
 				Size: new(params.Size),
 				Source: &computemodel.DiskSpecSourceRequest{
-					Image:    params.ImageRef,
-					Snapshot: params.SnapshotRef,
+					Image:      params.ImageRef,
+					DiskBackup: params.DiskBackupRef,
 				},
 				DiskType: new(computeref.NewDiskTypeRef(params.DiskType)),
 				Iops:     new(computemodel.Iops(params.Iops)),

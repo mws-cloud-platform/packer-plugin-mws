@@ -81,7 +81,7 @@ type FlatConfig struct {
 	DiskIOPS                        *int64            `mapstructure:"disk_iops" required:"false" cty:"disk_iops" hcl:"disk_iops"`
 	SourceProject                   *string           `mapstructure:"source_project" required:"false" cty:"source_project" hcl:"source_project"`
 	SourceImage                     *string           `mapstructure:"source_image" required:"false" cty:"source_image" hcl:"source_image"`
-	SourceSnapshot                  *string           `mapstructure:"source_snapshot" required:"false" cty:"source_snapshot" hcl:"source_snapshot"`
+	SourceDiskBackup                *string           `mapstructure:"source_disk_backup" required:"false" cty:"source_disk_backup" hcl:"source_disk_backup"`
 	NetworkName                     *string           `mapstructure:"network_name" required:"false" cty:"network_name" hcl:"network_name"`
 	SubnetName                      *string           `mapstructure:"subnet_name" required:"false" cty:"subnet_name" hcl:"subnet_name"`
 	SubnetCidr                      *string           `mapstructure:"subnet_cidr" required:"false" cty:"subnet_cidr" hcl:"subnet_cidr"`
@@ -179,7 +179,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"disk_iops":                           &hcldec.AttrSpec{Name: "disk_iops", Type: cty.Number, Required: false},
 		"source_project":                      &hcldec.AttrSpec{Name: "source_project", Type: cty.String, Required: false},
 		"source_image":                        &hcldec.AttrSpec{Name: "source_image", Type: cty.String, Required: false},
-		"source_snapshot":                     &hcldec.AttrSpec{Name: "source_snapshot", Type: cty.String, Required: false},
+		"source_disk_backup":                  &hcldec.AttrSpec{Name: "source_disk_backup", Type: cty.String, Required: false},
 		"network_name":                        &hcldec.AttrSpec{Name: "network_name", Type: cty.String, Required: false},
 		"subnet_name":                         &hcldec.AttrSpec{Name: "subnet_name", Type: cty.String, Required: false},
 		"subnet_cidr":                         &hcldec.AttrSpec{Name: "subnet_cidr", Type: cty.String, Required: false},
