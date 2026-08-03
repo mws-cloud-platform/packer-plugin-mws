@@ -1,17 +1,27 @@
-# MWS Cloud Platform Builder Example
+# MWS Cloud Platform Packer Plugin Examples
 
-This directory contains an example Packer configuration that demonstrates how to
-use the MWS Cloud Platform Compute Builder. The example includes simple shell
-provisioner that echos "Hello!". You can customize provisioners based on your
-needs.
+This directory contains example Packer configurations that demonstrate how to use the MWS Cloud Platform Packer Plugin for various operations.
+
+## Prerequisites
+
+Before using these examples, you'll need:
+
+<!-- TODO: replace first link with our public doc -->
+1. [Packer installed on your system](https://developer.hashicorp.com/packer/install)
+2. [An MWS Cloud Platform account](https://mws.ru/docs/cloud-platform/about/quickstart.html)
+3. [A service account with appropriate permissions](https://mws.ru/docs/cloud-platform/iam/sa.html)
+4. [A service account authorized key file](https://mws.ru/docs/cloud-platform/iam/keys.html#authkey)
 
 ## Usage
 
-To use this example:
+Each example is contained in its own directory with a detailed README:
 
-1. Update the configuration values in `build.pkr.hcl` with your actual values, most important to replace are:
-   - `project`
-   - `service_account_authorized_key_path`
-   - `source_image`
-2. Run `packer init .` to install the required plugins
-3. Run `packer build .` to build the image
+- [Builder Example](./builder/README.md) - Creating VM images
+- [Import Example](./import/README.md) - Importing images from MWS Cloud Platform Object Storage
+- [Export Example](./export/README.md) - Exporting images to MWS Cloud Platform Object Storage
+
+## Security Notes
+
+- Never commit your service account key files or personal configuration to version control
+- The examples are designed to require explicit variable specification rather than hardcoded values
+- Always use the principle of least privilege when creating service accounts for Packer operations
