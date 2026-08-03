@@ -39,7 +39,7 @@ func (b *Builder) Prepare(raws ...any) ([]string, []string, error) {
 	generatedDataKeys := []string{
 		"SourceProject",
 		"SourceImageName",
-		"SourceSnapshotName",
+		"SourceDiskBackupName",
 		"ImageProject",
 		"ImageName",
 	}

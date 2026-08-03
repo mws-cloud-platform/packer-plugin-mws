@@ -89,11 +89,11 @@ configured for this builder.
 
 - `disk_iops` (int64) - IOPS for the disk (defaults to 1000).
 
-- `source_project` (string) - Project ID where the source image/snapshot exists (defaults to the `project`).
+- `source_project` (string) - Project ID where the source_image/source_disk_backup exists (defaults to the `project`).
 
-- `source_image` (string) - ID of an existing image to use as a base (required unless using `source_snapshot`).
+- `source_image` (string) - ID of an existing image to use as a base (required unless using `source_disk_backup`).
 
-- `source_snapshot` (string) - ID of an existing snapshot to use as a base (required unless using `source_image`).
+- `source_disk_backup` (string) - ID of an existing disk backup to use as a base (required unless using `source_image`).
 
 <!-- End of code generated from the comments of the DiskConfig struct in internal/config/disk.go; -->
 

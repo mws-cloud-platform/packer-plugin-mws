@@ -12,13 +12,13 @@ import (
 )
 
 type CreateDiskParams struct {
-	DiskName    string
-	DiskType    string
-	Size        bytesize.ByteSize
-	Iops        int64
-	ImageRef    *computeref.ImageRef
-	SnapshotRef *computeref.SnapshotRef
-	Zone        string
+	DiskName      string
+	DiskType      string
+	Size          bytesize.ByteSize
+	Iops          int64
+	ImageRef      *computeref.ImageRef
+	DiskBackupRef *computeref.DiskBackupRef
+	Zone          string
 }
 
 type CreateExternalAddressParams struct {

@@ -5,5 +5,5 @@
  "DiskIOPS": 2000,
  "SourceProject": "source-project",
  "SourceImage": "source-image",
- "SourceSnapshot": ""
+ "SourceDiskBackup": ""
 }

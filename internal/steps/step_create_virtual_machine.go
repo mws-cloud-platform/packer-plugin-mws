@@ -44,13 +44,13 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	diskName := cmp.Or(s.DiskName, prefix+"disk")
 	ui.Sayf("Creating disk...")
 	if err := driver.CreateDisk(ctx, drivermws.CreateDiskParams{
-		DiskName:    diskName,
-		DiskType:    s.DiskType,
-		Size:        bytesize.MustParseString(s.DiskSize),
-		Iops:        s.DiskIOPS,
-		ImageRef:    s.imageRef(),
-		SnapshotRef: s.snapshotRef(),
-		Zone:        s.Zone,
+		DiskName:      diskName,
+		DiskType:      s.DiskType,
+		Size:          bytesize.MustParseString(s.DiskSize),
+		Iops:          s.DiskIOPS,
+		ImageRef:      s.imageRef(),
+		DiskBackupRef: s.diskBackupRef(),
+		Zone:          s.Zone,
 	}); err != nil {
 		return common.ActionHaltWithErrorf(state, "create disk %q: %w", diskName, err)
 	}
@@ -151,7 +151,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 
 	s.GeneratedData.Put("SourceProject", s.SourceProject)
 	s.GeneratedData.Put("SourceImageName", s.SourceImage)
-	s.GeneratedData.Put("SourceSnapshotName", s.SourceSnapshot)
+	s.GeneratedData.Put("SourceDiskBackupName", s.SourceDiskBackup)
 
 	return multistep.ActionContinue
 }
@@ -199,9 +199,9 @@ func (s *StepCreateVirtualMachine) imageRef() *computeref.ImageRef {
 	return nil
 }
 
-func (s *StepCreateVirtualMachine) snapshotRef() *computeref.SnapshotRef {
-	if s.SourceSnapshot != "" {
-		return new(computeref.NewSnapshotRef(s.SourceProject, s.SourceSnapshot))
+func (s *StepCreateVirtualMachine) diskBackupRef() *computeref.DiskBackupRef {
+	if s.SourceDiskBackup != "" {
+		return new(computeref.NewDiskBackupRef(s.SourceProject, s.SourceDiskBackup))
 	}
 	return nil
 }
