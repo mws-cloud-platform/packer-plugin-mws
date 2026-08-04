@@ -227,7 +227,6 @@ build {
     
     source_project = "mws-ubuntu"
     source_image   = "mws-ubuntu-2404-lts-v20260526"
-    disk_size      = "20 GB"
     use_external_address = true
 
     service_account = "your-service-account"
@@ -259,7 +258,6 @@ build {
     
     source_project = "mws-ubuntu"
     source_image   = "mws-ubuntu-2404-lts-v20260526"
-    disk_size      = "20 GB"
     use_external_address = true
     
     access_key = "your-access-key"

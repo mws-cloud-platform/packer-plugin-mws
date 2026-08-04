@@ -52,7 +52,6 @@ build {
 
     source_project = "mws-ubuntu"
     source_image   = "mws-ubuntu-2404-lts-v20260324"
-    disk_size      = "20 GB"
 
     use_external_address = true
 
