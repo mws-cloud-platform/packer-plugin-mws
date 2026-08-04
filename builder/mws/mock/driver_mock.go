@@ -15,7 +15,9 @@ import (
 
 	driver "github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 	ipaddress "go.mws.cloud/go-sdk/pkg/apimodels/ipaddress"
+	bytesize "go.mws.cloud/go-sdk/pkg/apimodels/units/bytesize"
 	model "go.mws.cloud/go-sdk/service/compute/model"
+	compute "go.mws.cloud/go-sdk/service/resources/references/compute"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -574,6 +576,84 @@ func (c *MockDriverDeleteVirtualMachineCall) Do(f func(context.Context, string) 
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
 func (c *MockDriverDeleteVirtualMachineCall) DoAndReturn(f func(context.Context, string) error) *MockDriverDeleteVirtualMachineCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
+// GetDiskBackupMinDiskSize mocks base method.
+func (m *MockDriver) GetDiskBackupMinDiskSize(arg0 context.Context, arg1 *compute.DiskBackupRef) (*bytesize.ByteSize, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDiskBackupMinDiskSize", arg0, arg1)
+	ret0, _ := ret[0].(*bytesize.ByteSize)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDiskBackupMinDiskSize indicates an expected call of GetDiskBackupMinDiskSize.
+func (mr *MockDriverMockRecorder) GetDiskBackupMinDiskSize(arg0, arg1 any) *MockDriverGetDiskBackupMinDiskSizeCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDiskBackupMinDiskSize", reflect.TypeOf((*MockDriver)(nil).GetDiskBackupMinDiskSize), arg0, arg1)
+	return &MockDriverGetDiskBackupMinDiskSizeCall{Call: call}
+}
+
+// MockDriverGetDiskBackupMinDiskSizeCall wrap *gomock.Call
+type MockDriverGetDiskBackupMinDiskSizeCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockDriverGetDiskBackupMinDiskSizeCall) Return(arg0 *bytesize.ByteSize, arg1 error) *MockDriverGetDiskBackupMinDiskSizeCall {
+	c.Call = c.Call.Return(arg0, arg1)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockDriverGetDiskBackupMinDiskSizeCall) Do(f func(context.Context, *compute.DiskBackupRef) (*bytesize.ByteSize, error)) *MockDriverGetDiskBackupMinDiskSizeCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockDriverGetDiskBackupMinDiskSizeCall) DoAndReturn(f func(context.Context, *compute.DiskBackupRef) (*bytesize.ByteSize, error)) *MockDriverGetDiskBackupMinDiskSizeCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
+// GetImageMinDiskSize mocks base method.
+func (m *MockDriver) GetImageMinDiskSize(arg0 context.Context, arg1 *compute.ImageRef) (*bytesize.ByteSize, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetImageMinDiskSize", arg0, arg1)
+	ret0, _ := ret[0].(*bytesize.ByteSize)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetImageMinDiskSize indicates an expected call of GetImageMinDiskSize.
+func (mr *MockDriverMockRecorder) GetImageMinDiskSize(arg0, arg1 any) *MockDriverGetImageMinDiskSizeCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetImageMinDiskSize", reflect.TypeOf((*MockDriver)(nil).GetImageMinDiskSize), arg0, arg1)
+	return &MockDriverGetImageMinDiskSizeCall{Call: call}
+}
+
+// MockDriverGetImageMinDiskSizeCall wrap *gomock.Call
+type MockDriverGetImageMinDiskSizeCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockDriverGetImageMinDiskSizeCall) Return(arg0 *bytesize.ByteSize, arg1 error) *MockDriverGetImageMinDiskSizeCall {
+	c.Call = c.Call.Return(arg0, arg1)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockDriverGetImageMinDiskSizeCall) Do(f func(context.Context, *compute.ImageRef) (*bytesize.ByteSize, error)) *MockDriverGetImageMinDiskSizeCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockDriverGetImageMinDiskSizeCall) DoAndReturn(f func(context.Context, *compute.ImageRef) (*bytesize.ByteSize, error)) *MockDriverGetImageMinDiskSizeCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
