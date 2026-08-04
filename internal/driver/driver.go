@@ -302,7 +302,7 @@ func (d *Driver) CreateVirtualMachine(ctx context.Context, params CreateVirtualM
 }
 
 func (d *Driver) CreateFirewallRule(ctx context.Context, params CreateFirewallRuleParams) error {
-	destAddress, err := cidraddress.ParseCIDR4AddressString(params.VirtualMachineInternalAddress + "/32")
+	destAddress, err := cidraddress.ParseCIDR4AddressString(params.VirtualMachineInternalAddress.String() + "/32")
 	if err != nil {
 		return fmt.Errorf("parse destination CIDR for firewall rule: %w", err)
 	}

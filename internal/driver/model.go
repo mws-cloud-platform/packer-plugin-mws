@@ -5,6 +5,7 @@ package driver
 
 import (
 	"go.mws.cloud/go-sdk/pkg/apimodels/cidraddress"
+	"go.mws.cloud/go-sdk/pkg/apimodels/ipaddress"
 	"go.mws.cloud/go-sdk/pkg/apimodels/units/bytesize"
 	computeref "go.mws.cloud/go-sdk/service/resources/references/compute"
 	iamref "go.mws.cloud/go-sdk/service/resources/references/iam"
@@ -59,7 +60,7 @@ type CreateImageParams struct {
 type CreateFirewallRuleParams struct {
 	NetworkName                   string
 	FirewallRuleName              string
-	VirtualMachineInternalAddress string
+	VirtualMachineInternalAddress *ipaddress.IPAddress
 }
 
 type ImportImageParams struct {

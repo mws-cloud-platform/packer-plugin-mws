@@ -331,7 +331,7 @@ func TestStepCreateVirtualMachine_Run(t *testing.T) {
 						CreateFirewallRule(gomock.Any(), drivermws.CreateFirewallRuleParams{
 							NetworkName:                   expectedNetworkName,
 							FirewallRuleName:              expectedFirewallRuleName,
-							VirtualMachineInternalAddress: testInternalAddress.String(),
+							VirtualMachineInternalAddress: testInternalAddress,
 						}).
 						Return(expectedErrors["CreateFirewallRule"]).
 						Times(1)

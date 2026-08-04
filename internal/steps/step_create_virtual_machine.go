@@ -38,128 +38,113 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	prefix := state.Get(common.PrefixKey).(string)
 	ui := state.Get(common.UIKey).(packer.Ui)
 
-	var (
-		externalAddressRef    *vpcref.ExternalAddressRef
-		virtualMachineAddress *ipaddress.IPAddress
-		exportDiskRef         *computeref.DiskRef
-	)
+	exportDiskName := prefix + "disk-for-export"
+	bootDiskName := cmp.Or(s.DiskName, prefix+"boot-disk")
+	externalAddressName := cmp.Or(s.ExternalAddressName, prefix+"external-address")
+	networkName := cmp.Or(s.NetworkName, prefix+"network")
+	subnetName := cmp.Or(s.SubnetName, prefix+"subnet")
+	virtualMachineName := cmp.Or(s.VirtualMachineName, prefix+"vm")
+	firewallRuleName := prefix + "ssh-access"
+
+	externalAddress := &ipaddress.IPAddress{}
+	internalAddress := &ipaddress.IPAddress{}
 
 	bootDiskSize, err := s.bootDiskSize(ctx, driver)
 	if err != nil {
 		return common.ActionHaltWithErrorf(state, "calculate boot disk size: %w", err)
 	}
 
-	if s.DiskForExportConfig != nil {
-		exportDiskName := prefix + "disk-for-export"
-		ui.Sayf("Creating export disk...")
-		if err = driver.CreateDisk(ctx, drivermws.CreateDiskParams{
-			DiskName: exportDiskName,
-			DiskType: s.DiskForExportType,
-			Iops:     s.DiskIOPS,
-			ImageRef: s.imageRef(s.ImageForExportProject, s.ImageForExport),
-			Zone:     s.Zone,
-		}); err != nil {
-			return common.ActionHaltWithErrorf(state, "create export disk %q: %w", exportDiskName, err)
-		}
-		ui.Sayf("Export disk %q created", exportDiskName)
-
-		exportDiskRef = new(computeref.NewDiskRef(s.Project, exportDiskName))
+	if err = (subSteps{
+		&subStepWithoutResult[drivermws.CreateDiskParams]{
+			cond:         s.DiskForExportConfig != nil,
+			resourceType: "export disk",
+			resourceName: exportDiskName,
+			action:       driver.CreateDisk,
+			params:       s.exportDiskParams(exportDiskName),
+		},
+		&subStepWithoutResult[drivermws.CreateDiskParams]{
+			cond:         true,
+			resourceType: "boot disk",
+			resourceName: bootDiskName,
+			action:       driver.CreateDisk,
+			params: drivermws.CreateDiskParams{
+				DiskName:      bootDiskName,
+				DiskType:      s.DiskType,
+				Size:          bootDiskSize,
+				Iops:          s.DiskIOPS,
+				ImageRef:      s.bootImageRef(),
+				DiskBackupRef: s.bootDiskBackupRef(),
+				Zone:          s.Zone,
+			},
+		},
+		&subStepWithResult[ipaddress.IPAddress, drivermws.CreateExternalAddressParams]{
+			cond:         s.UseExternalAddress,
+			resourceType: "external address",
+			resourceName: externalAddressName,
+			action:       driver.CreateExternalAddress,
+			result:       externalAddress,
+			params: drivermws.CreateExternalAddressParams{
+				ExternalAddressName: externalAddressName,
+			},
+		},
+		&subStepWithoutResult[drivermws.CreateNetworkParams]{
+			cond:         s.NetworkName == "",
+			resourceType: "network",
+			resourceName: networkName,
+			action:       driver.CreateNetwork,
+			params: drivermws.CreateNetworkParams{
+				NetworkName: networkName,
+			},
+		},
+		&subStepWithoutResult[drivermws.CreateSubnetParams]{
+			cond:         s.SubnetName == "",
+			resourceType: "subnet",
+			resourceName: subnetName,
+			action:       driver.CreateSubnet,
+			params: drivermws.CreateSubnetParams{
+				NetworkName: networkName,
+				SubnetName:  subnetName,
+				SubnetCidr:  cidraddress.MustParseCIDR4AddressString(s.SubnetCidr),
+			},
+		},
+		&subStepWithResult[ipaddress.IPAddress, drivermws.CreateVirtualMachineParams]{
+			cond:         true,
+			resourceType: "virtual machine",
+			resourceName: virtualMachineName,
+			action:       driver.CreateVirtualMachine,
+			result:       internalAddress,
+			params: drivermws.CreateVirtualMachineParams{
+				VirtualMachineName: virtualMachineName,
+				VMType:             s.VMType,
+				Zone:               s.Zone,
+				SSHUsername:        s.Communicator.SSHUsername,
+				SSHPublicKey:       string(s.Communicator.SSHPublicKey),
+				CloudConfig:        s.CloudConfig,
+				ServiceAccountRef:  s.serviceAccountRef(),
+				BootDiskRef:        new(computeref.NewDiskRef(s.Project, bootDiskName)),
+				ExportDiskRef:      s.exportDiskRef(exportDiskName),
+				ExternalAddressRef: s.externalAddressRef(externalAddressName),
+				SubnetRef:          new(vpcref.NewSubnetRef(s.Project, networkName, subnetName)),
+			},
+		},
+		&subStepWithoutResult[drivermws.CreateFirewallRuleParams]{
+			cond:         s.UseExternalAddress,
+			resourceType: "firewall rule",
+			resourceName: firewallRuleName,
+			action:       driver.CreateFirewallRule,
+			params: drivermws.CreateFirewallRuleParams{
+				NetworkName:                   networkName,
+				FirewallRuleName:              firewallRuleName,
+				VirtualMachineInternalAddress: internalAddress,
+			},
+		},
+	}.run(ctx, ui)); err != nil {
+		return common.ActionHaltWithError(state, err)
 	}
 
-	bootDiskName := cmp.Or(s.DiskName, prefix+"boot-disk")
-	ui.Sayf("Creating boot disk...")
-	if err = driver.CreateDisk(ctx, drivermws.CreateDiskParams{
-		DiskName:      bootDiskName,
-		DiskType:      s.DiskType,
-		Size:          bootDiskSize,
-		Iops:          s.DiskIOPS,
-		ImageRef:      s.imageRef(s.SourceProject, s.SourceImage),
-		DiskBackupRef: s.diskBackupRef(s.SourceProject, s.SourceDiskBackup),
-		Zone:          s.Zone,
-	}); err != nil {
-		return common.ActionHaltWithErrorf(state, "create boot disk %q: %w", bootDiskName, err)
-	}
-	ui.Sayf("Boot disk %q created", bootDiskName)
-
-	bootDiskRef := new(computeref.NewDiskRef(s.Project, bootDiskName))
-	state.Put(common.DiskRefKey, bootDiskRef)
-
+	var virtualMachineAddress *ipaddress.IPAddress
 	if s.UseExternalAddress {
-		externalAddressName := cmp.Or(s.ExternalAddressName, prefix+"external-address")
-		ui.Sayf("Creating external address...")
-		var externalAddress *ipaddress.IPAddress
-		externalAddress, err = driver.CreateExternalAddress(ctx, drivermws.CreateExternalAddressParams{
-			ExternalAddressName: externalAddressName,
-		})
-		if err != nil {
-			return common.ActionHaltWithErrorf(state, "create external-address %q: %w", externalAddressName, err)
-		}
-
-		ui.Sayf("External Address %q created", externalAddressName)
 		virtualMachineAddress = externalAddress
-		externalAddressRef = new(vpcref.NewExternalAddressRef(s.Project, externalAddressName))
-	}
-
-	networkName := cmp.Or(s.NetworkName, prefix+"network")
-	if s.NetworkName == "" {
-		ui.Sayf("Creating network...")
-		if err = driver.CreateNetwork(ctx, drivermws.CreateNetworkParams{
-			NetworkName: networkName,
-		}); err != nil {
-			return common.ActionHaltWithErrorf(state, "create network %q: %w", networkName, err)
-		}
-
-		ui.Sayf("Network %q created", networkName)
-	}
-
-	subnetName := cmp.Or(s.SubnetName, prefix+"subnet")
-	if s.SubnetName == "" {
-		ui.Sayf("Creating subnet...")
-		if err = driver.CreateSubnet(ctx, drivermws.CreateSubnetParams{
-			NetworkName: networkName,
-			SubnetName:  subnetName,
-			SubnetCidr:  cidraddress.MustParseCIDR4AddressString(s.SubnetCidr),
-		}); err != nil {
-			return common.ActionHaltWithErrorf(state, "create subnet %q: %w", subnetName, err)
-		}
-
-		ui.Sayf("Subnet %q created", subnetName)
-	}
-	subnetRef := new(vpcref.NewSubnetRef(s.Project, networkName, subnetName))
-
-	virtualMachineName := cmp.Or(s.VirtualMachineName, prefix+"vm")
-	ui.Sayf("Creating virtual machine...")
-	internalAddress, err := driver.CreateVirtualMachine(ctx, drivermws.CreateVirtualMachineParams{
-		VirtualMachineName: virtualMachineName,
-		VMType:             s.VMType,
-		Zone:               s.Zone,
-		SSHUsername:        s.Communicator.SSHUsername,
-		SSHPublicKey:       string(s.Communicator.SSHPublicKey),
-		CloudConfig:        s.CloudConfig,
-		ServiceAccountRef:  s.serviceAccountRef(),
-		BootDiskRef:        bootDiskRef,
-		ExportDiskRef:      exportDiskRef,
-		ExternalAddressRef: externalAddressRef,
-		SubnetRef:          subnetRef,
-	})
-	if err != nil {
-		return common.ActionHaltWithErrorf(state, "create vm %q: %w", virtualMachineName, err)
-	}
-	ui.Sayf("Virtual Machine %q created", virtualMachineName)
-
-	if s.UseExternalAddress {
-		firewallRuleName := prefix + "ssh-access"
-		ui.Sayf("Creating firewall rule...")
-		err = driver.CreateFirewallRule(ctx, drivermws.CreateFirewallRuleParams{
-			NetworkName:                   networkName,
-			FirewallRuleName:              firewallRuleName,
-			VirtualMachineInternalAddress: internalAddress.String(),
-		})
-		if err != nil {
-			return common.ActionHaltWithErrorf(state, "create firewall rule %q: %w", firewallRuleName, err)
-		}
-
-		ui.Sayf("Firewall Rule %q created", firewallRuleName)
 	} else {
 		virtualMachineAddress = internalAddress
 	}
@@ -175,6 +160,9 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	// instance_id is the generic term used so that users can have access to the
 	// instance id inside of the provisioners, used in step_provision.
 	state.Put(common.InstanceIDKey, virtualMachineName)
+
+	// for create image step
+	state.Put(common.DiskRefKey, new(computeref.NewDiskRef(s.Project, bootDiskName)))
 
 	s.GeneratedData.Put("SourceProject", s.SourceProject)
 	s.GeneratedData.Put("SourceImageName", s.SourceImage)
@@ -230,22 +218,18 @@ func (s *StepCreateVirtualMachine) bootDiskSize(ctx context.Context, driver Step
 		return new(bytesize.MustParseString(s.DiskSize)), nil
 	}
 
-	exportImageRef := s.imageRef(s.ImageForExportProject, s.ImageForExport)
-	bootImageRef := s.imageRef(s.SourceProject, s.SourceImage)
-	bootDiskBackupRef := s.diskBackupRef(s.SourceProject, s.SourceDiskBackup)
-
-	exportSize, err := driver.GetImageMinDiskSize(ctx, exportImageRef)
+	exportSize, err := driver.GetImageMinDiskSize(ctx, s.exportImageRef())
 	if err != nil {
 		return nil, err
 	}
 	var bootSize *bytesize.ByteSize
 	if s.SourceImage != "" {
-		bootSize, err = driver.GetImageMinDiskSize(ctx, bootImageRef)
+		bootSize, err = driver.GetImageMinDiskSize(ctx, s.bootImageRef())
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		bootSize, err = driver.GetDiskBackupMinDiskSize(ctx, bootDiskBackupRef)
+		bootSize, err = driver.GetDiskBackupMinDiskSize(ctx, s.bootDiskBackupRef())
 		if err != nil {
 			return nil, err
 		}
@@ -255,16 +239,30 @@ func (s *StepCreateVirtualMachine) bootDiskSize(ctx context.Context, driver Step
 	return &result, err
 }
 
-func (s *StepCreateVirtualMachine) imageRef(project, image string) *computeref.ImageRef {
-	if image != "" {
-		return new(computeref.NewImageRef(project, image))
+func (s *StepCreateVirtualMachine) exportImageRef() *computeref.ImageRef {
+	if s.DiskForExportConfig != nil && s.ImageForExport != "" {
+		return new(computeref.NewImageRef(s.ImageForExportProject, s.ImageForExport))
 	}
 	return nil
 }
 
-func (s *StepCreateVirtualMachine) diskBackupRef(project, diskBackup string) *computeref.DiskBackupRef {
-	if diskBackup != "" {
-		return new(computeref.NewDiskBackupRef(project, diskBackup))
+func (s *StepCreateVirtualMachine) bootImageRef() *computeref.ImageRef {
+	if s.SourceImage != "" {
+		return new(computeref.NewImageRef(s.SourceProject, s.SourceImage))
+	}
+	return nil
+}
+
+func (s *StepCreateVirtualMachine) bootDiskBackupRef() *computeref.DiskBackupRef {
+	if s.SourceDiskBackup != "" {
+		return new(computeref.NewDiskBackupRef(s.SourceProject, s.SourceDiskBackup))
+	}
+	return nil
+}
+
+func (s *StepCreateVirtualMachine) exportDiskRef(exportDiskName string) *computeref.DiskRef {
+	if s.DiskForExportConfig != nil {
+		return new(computeref.NewDiskRef(s.Project, exportDiskName))
 	}
 	return nil
 }
@@ -274,4 +272,25 @@ func (s *StepCreateVirtualMachine) serviceAccountRef() *iamref.ServiceAccountRef
 		return new(iamref.NewServiceAccountRef(s.Project, s.VMServiceAccount))
 	}
 	return nil
+}
+
+func (s *StepCreateVirtualMachine) externalAddressRef(externalAddressName string) *vpcref.ExternalAddressRef {
+	if s.UseExternalAddress {
+		return new(vpcref.NewExternalAddressRef(s.Project, externalAddressName))
+	}
+	return nil
+}
+
+// separeted from other subStep params because of nil pointer dereference in DiskForExportConfig fields
+func (s *StepCreateVirtualMachine) exportDiskParams(exportDiskName string) drivermws.CreateDiskParams {
+	if s.DiskForExportConfig == nil {
+		return drivermws.CreateDiskParams{}
+	}
+	return drivermws.CreateDiskParams{
+		DiskName: exportDiskName,
+		DiskType: s.DiskForExportType,
+		Iops:     s.DiskForExportIOPS,
+		ImageRef: s.exportImageRef(),
+		Zone:     s.Zone,
+	}
 }
