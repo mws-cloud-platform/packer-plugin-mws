@@ -45,8 +45,9 @@ const (
 	testVirtualMachineName  = "test-vm"
 	testSSHPublicKey        = "test-public-key"
 	testSourceImage         = "test-source-image"
+	testDiskSize            = "10 GB"
 
-	defaultDiskName            = packerPrefix + "disk"
+	defaultDiskName            = packerPrefix + "boot-disk"
 	defaultExternalAddressName = packerPrefix + "external-address"
 	defaultNetworkName         = packerPrefix + "network"
 	defaultSubnetName          = packerPrefix + "subnet"
@@ -259,7 +260,7 @@ func TestStepCreateVirtualMachine_Run(t *testing.T) {
 					CreateDisk(gomock.Any(), drivermws.CreateDiskParams{
 						DiskName: expectedDiskName,
 						DiskType: commonconfig.DefaultDiskType,
-						Size:     bytesize.MustParseString(commonconfig.DefaultDiskSize),
+						Size:     new(bytesize.MustParseString(testDiskSize)),
 						Iops:     commonconfig.DefaultDiskIOPS,
 						ImageRef: new(computeref.NewImageRef(tt.step.Project, testSourceImage)),
 						Zone:     commonconfig.DefaultZone,
@@ -315,7 +316,7 @@ func TestStepCreateVirtualMachine_Run(t *testing.T) {
 						Zone:               commonconfig.DefaultZone,
 						SSHUsername:        commonconfig.DefaultSSHUsername,
 						SSHPublicKey:       testSSHPublicKey,
-						DiskRef:            expectedDiskRef,
+						BootDiskRef:        expectedDiskRef,
 						ExternalAddressRef: expectedExternalAddressRef,
 						SubnetRef:          new(vpcref.NewSubnetRef(tt.step.Project, expectedNetworkName, expectedSubnetName)),
 					}).
@@ -496,6 +497,7 @@ func prepareStep(t *testing.T, step *steps.StepCreateVirtualMachine, state multi
 	step.Project = testProjectName
 	step.SourceProject = testProjectName
 	step.SourceImage = testSourceImage
+	step.DiskSize = testDiskSize
 	step.Zone = commonconfig.DefaultZone
 	step.Communicator = &communicator.Config{
 		SSH: communicator.SSH{
@@ -503,8 +505,8 @@ func prepareStep(t *testing.T, step *steps.StepCreateVirtualMachine, state multi
 			SSHPublicKey: []byte(testSSHPublicKey),
 		},
 	}
-	step.SetDefaults()
-	require.NoError(t, step.Validate())
+	step.VirtualMachineConfig.SetDefaults()
+	require.NoError(t, step.VirtualMachineConfig.Validate())
 	step.GeneratedData = &packerbuilderdata.GeneratedData{State: state}
 }
 

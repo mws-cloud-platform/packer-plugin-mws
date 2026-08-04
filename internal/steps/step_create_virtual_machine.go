@@ -6,6 +6,7 @@ package steps
 import (
 	"cmp"
 	"context"
+	"math/big"
 
 	"github.com/hashicorp/packer-plugin-sdk/communicator"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
@@ -27,6 +28,7 @@ type StepCreateVirtualMachine struct {
 	Zone         string
 	Communicator *communicator.Config
 	commonconfig.VirtualMachineConfig
+	*commonconfig.DiskForExportConfig
 
 	GeneratedData *packerbuilderdata.GeneratedData
 }
@@ -39,30 +41,54 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	var (
 		externalAddressRef    *vpcref.ExternalAddressRef
 		virtualMachineAddress *ipaddress.IPAddress
+		exportDiskRef         *computeref.DiskRef
 	)
 
-	diskName := cmp.Or(s.DiskName, prefix+"disk")
-	ui.Sayf("Creating disk...")
-	if err := driver.CreateDisk(ctx, drivermws.CreateDiskParams{
-		DiskName:      diskName,
+	bootDiskSize, err := s.bootDiskSize(ctx, driver)
+	if err != nil {
+		return common.ActionHaltWithErrorf(state, "calculate boot disk size: %w", err)
+	}
+
+	if s.DiskForExportConfig != nil {
+		exportDiskName := prefix + "disk-for-export"
+		ui.Sayf("Creating export disk...")
+		if err = driver.CreateDisk(ctx, drivermws.CreateDiskParams{
+			DiskName: exportDiskName,
+			DiskType: s.DiskForExportType,
+			Iops:     s.DiskIOPS,
+			ImageRef: s.imageRef(s.ImageForExportProject, s.ImageForExport),
+			Zone:     s.Zone,
+		}); err != nil {
+			return common.ActionHaltWithErrorf(state, "create export disk %q: %w", exportDiskName, err)
+		}
+		ui.Sayf("Export disk %q created", exportDiskName)
+
+		exportDiskRef = new(computeref.NewDiskRef(s.Project, exportDiskName))
+	}
+
+	bootDiskName := cmp.Or(s.DiskName, prefix+"boot-disk")
+	ui.Sayf("Creating boot disk...")
+	if err = driver.CreateDisk(ctx, drivermws.CreateDiskParams{
+		DiskName:      bootDiskName,
 		DiskType:      s.DiskType,
-		Size:          bytesize.MustParseString(s.DiskSize),
+		Size:          bootDiskSize,
 		Iops:          s.DiskIOPS,
-		ImageRef:      s.imageRef(),
-		DiskBackupRef: s.diskBackupRef(),
+		ImageRef:      s.imageRef(s.SourceProject, s.SourceImage),
+		DiskBackupRef: s.diskBackupRef(s.SourceProject, s.SourceDiskBackup),
 		Zone:          s.Zone,
 	}); err != nil {
-		return common.ActionHaltWithErrorf(state, "create disk %q: %w", diskName, err)
+		return common.ActionHaltWithErrorf(state, "create boot disk %q: %w", bootDiskName, err)
 	}
-	ui.Sayf("Disk %q created", diskName)
+	ui.Sayf("Boot disk %q created", bootDiskName)
 
-	diskRef := new(computeref.NewDiskRef(s.Project, diskName))
-	state.Put(common.DiskRefKey, diskRef)
+	bootDiskRef := new(computeref.NewDiskRef(s.Project, bootDiskName))
+	state.Put(common.DiskRefKey, bootDiskRef)
 
 	if s.UseExternalAddress {
 		externalAddressName := cmp.Or(s.ExternalAddressName, prefix+"external-address")
 		ui.Sayf("Creating external address...")
-		externalAddress, err := driver.CreateExternalAddress(ctx, drivermws.CreateExternalAddressParams{
+		var externalAddress *ipaddress.IPAddress
+		externalAddress, err = driver.CreateExternalAddress(ctx, drivermws.CreateExternalAddressParams{
 			ExternalAddressName: externalAddressName,
 		})
 		if err != nil {
@@ -77,7 +103,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	networkName := cmp.Or(s.NetworkName, prefix+"network")
 	if s.NetworkName == "" {
 		ui.Sayf("Creating network...")
-		if err := driver.CreateNetwork(ctx, drivermws.CreateNetworkParams{
+		if err = driver.CreateNetwork(ctx, drivermws.CreateNetworkParams{
 			NetworkName: networkName,
 		}); err != nil {
 			return common.ActionHaltWithErrorf(state, "create network %q: %w", networkName, err)
@@ -89,7 +115,7 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	subnetName := cmp.Or(s.SubnetName, prefix+"subnet")
 	if s.SubnetName == "" {
 		ui.Sayf("Creating subnet...")
-		if err := driver.CreateSubnet(ctx, drivermws.CreateSubnetParams{
+		if err = driver.CreateSubnet(ctx, drivermws.CreateSubnetParams{
 			NetworkName: networkName,
 			SubnetName:  subnetName,
 			SubnetCidr:  cidraddress.MustParseCIDR4AddressString(s.SubnetCidr),
@@ -111,7 +137,8 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 		SSHPublicKey:       string(s.Communicator.SSHPublicKey),
 		CloudConfig:        s.CloudConfig,
 		ServiceAccountRef:  s.serviceAccountRef(),
-		DiskRef:            diskRef,
+		BootDiskRef:        bootDiskRef,
+		ExportDiskRef:      exportDiskRef,
 		ExternalAddressRef: externalAddressRef,
 		SubnetRef:          subnetRef,
 	})
@@ -188,20 +215,56 @@ func (s *StepCreateVirtualMachine) Cleanup(state multistep.StateBag) {
 		common.DeleteWithUI(ctx, ui, "external address", externalAddressName, driver.DeleteExternalAddress)
 	}
 
-	diskName := cmp.Or(s.DiskName, prefix+"disk")
-	common.DeleteWithUI(ctx, ui, "disk", diskName, driver.DeleteDisk)
+	bootDiskName := cmp.Or(s.DiskName, prefix+"boot-disk")
+	common.DeleteWithUI(ctx, ui, "boot disk", bootDiskName, driver.DeleteDisk)
+
+	if s.DiskForExportConfig != nil {
+		exportDiskName := prefix + "disk-for-export"
+		common.DeleteWithUI(ctx, ui, "export disk", exportDiskName, driver.DeleteDisk)
+	}
 }
 
-func (s *StepCreateVirtualMachine) imageRef() *computeref.ImageRef {
+func (s *StepCreateVirtualMachine) bootDiskSize(ctx context.Context, driver StepCreateVirtualMachineDriver) (*bytesize.ByteSize, error) {
+	if s.DiskSize != "" {
+		// Validated in DiskConfig.Validate()
+		return new(bytesize.MustParseString(s.DiskSize)), nil
+	}
+
+	exportImageRef := s.imageRef(s.ImageForExportProject, s.ImageForExport)
+	bootImageRef := s.imageRef(s.SourceProject, s.SourceImage)
+	bootDiskBackupRef := s.diskBackupRef(s.SourceProject, s.SourceDiskBackup)
+
+	exportSize, err := driver.GetImageMinDiskSize(ctx, exportImageRef)
+	if err != nil {
+		return nil, err
+	}
+	var bootSize *bytesize.ByteSize
 	if s.SourceImage != "" {
-		return new(computeref.NewImageRef(s.SourceProject, s.SourceImage))
+		bootSize, err = driver.GetImageMinDiskSize(ctx, bootImageRef)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		bootSize, err = driver.GetDiskBackupMinDiskSize(ctx, bootDiskBackupRef)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	result, err := bytesize.NewFromBigInt(new(big.Int).Add(bootSize.BigInt(), exportSize.BigInt()), bytesize.B)
+	return &result, err
+}
+
+func (s *StepCreateVirtualMachine) imageRef(project, image string) *computeref.ImageRef {
+	if image != "" {
+		return new(computeref.NewImageRef(project, image))
 	}
 	return nil
 }
 
-func (s *StepCreateVirtualMachine) diskBackupRef() *computeref.DiskBackupRef {
-	if s.SourceDiskBackup != "" {
-		return new(computeref.NewDiskBackupRef(s.SourceProject, s.SourceDiskBackup))
+func (s *StepCreateVirtualMachine) diskBackupRef(project, diskBackup string) *computeref.DiskBackupRef {
+	if diskBackup != "" {
+		return new(computeref.NewDiskBackupRef(project, diskBackup))
 	}
 	return nil
 }

@@ -14,7 +14,7 @@ import (
 type CreateDiskParams struct {
 	DiskName      string
 	DiskType      string
-	Size          bytesize.ByteSize
+	Size          *bytesize.ByteSize
 	Iops          int64
 	ImageRef      *computeref.ImageRef
 	DiskBackupRef *computeref.DiskBackupRef
@@ -43,7 +43,8 @@ type CreateVirtualMachineParams struct {
 	SSHPublicKey       string
 	CloudConfig        string
 	ServiceAccountRef  *iamref.ServiceAccountRef
-	DiskRef            *computeref.DiskRef
+	BootDiskRef        *computeref.DiskRef
+	ExportDiskRef      *computeref.DiskRef
 	ExternalAddressRef *vpcref.ExternalAddressRef
 	SubnetRef          *vpcref.SubnetRef
 }
