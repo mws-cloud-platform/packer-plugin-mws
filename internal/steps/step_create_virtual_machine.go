@@ -235,7 +235,16 @@ func (s *StepCreateVirtualMachine) bootDiskSize(ctx context.Context, driver Step
 		}
 	}
 
-	result, err := bytesize.NewFromBigInt(new(big.Int).Add(bootSize.BigInt(), exportSize.BigInt()), bytesize.B)
+	// add bootSize and exportSize
+	sum := new(big.Int).Add(bootSize.BigInt(), exportSize.BigInt())
+	// convert to GB
+	divGB, modGB := new(big.Int).DivMod(sum, bytesize.GB.GetValue(), new(big.Int))
+	// round up if necessary
+	if modGB.Sign() > 0 {
+		divGB.Add(divGB, big.NewInt(1))
+	}
+
+	result, err := bytesize.NewFromBigInt(divGB, bytesize.GB)
 	return &result, err
 }
 
