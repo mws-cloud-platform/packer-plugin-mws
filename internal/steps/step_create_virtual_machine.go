@@ -6,6 +6,7 @@ package steps
 import (
 	"cmp"
 	"context"
+	"fmt"
 	"math/big"
 
 	"github.com/hashicorp/packer-plugin-sdk/communicator"
@@ -46,99 +47,35 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	virtualMachineName := cmp.Or(s.VirtualMachineName, prefix+"vm")
 	firewallRuleName := prefix + "ssh-access"
 
-	externalAddress := &ipaddress.IPAddress{}
-	internalAddress := &ipaddress.IPAddress{}
+	var (
+		externalAddress *ipaddress.IPAddress
+		internalAddress *ipaddress.IPAddress
+	)
 
 	bootDiskSize, err := s.bootDiskSize(ctx, driver)
 	if err != nil {
 		return common.ActionHaltWithErrorf(state, "calculate boot disk size: %w", err)
 	}
-
-	if err = (subSteps{
-		&subStepWithoutResult[drivermws.CreateDiskParams]{
-			cond:         s.DiskForExportConfig != nil,
-			resourceType: "export disk",
-			resourceName: exportDiskName,
-			action:       driver.CreateDisk,
-			params:       s.exportDiskParams(exportDiskName),
-		},
-		&subStepWithoutResult[drivermws.CreateDiskParams]{
-			cond:         true,
-			resourceType: "boot disk",
-			resourceName: bootDiskName,
-			action:       driver.CreateDisk,
-			params: drivermws.CreateDiskParams{
-				DiskName:      bootDiskName,
-				DiskType:      s.DiskType,
-				Size:          bootDiskSize,
-				Iops:          s.DiskIOPS,
-				ImageRef:      s.bootImageRef(),
-				DiskBackupRef: s.bootDiskBackupRef(),
-				Zone:          s.Zone,
-			},
-		},
-		&subStepWithResult[ipaddress.IPAddress, drivermws.CreateExternalAddressParams]{
-			cond:         s.UseExternalAddress,
-			resourceType: "external address",
-			resourceName: externalAddressName,
-			action:       driver.CreateExternalAddress,
-			result:       externalAddress,
-			params: drivermws.CreateExternalAddressParams{
-				ExternalAddressName: externalAddressName,
-			},
-		},
-		&subStepWithoutResult[drivermws.CreateNetworkParams]{
-			cond:         s.NetworkName == "",
-			resourceType: "network",
-			resourceName: networkName,
-			action:       driver.CreateNetwork,
-			params: drivermws.CreateNetworkParams{
-				NetworkName: networkName,
-			},
-		},
-		&subStepWithoutResult[drivermws.CreateSubnetParams]{
-			cond:         s.SubnetName == "",
-			resourceType: "subnet",
-			resourceName: subnetName,
-			action:       driver.CreateSubnet,
-			params: drivermws.CreateSubnetParams{
-				NetworkName: networkName,
-				SubnetName:  subnetName,
-				SubnetCidr:  cidraddress.MustParseCIDR4AddressString(s.SubnetCidr),
-			},
-		},
-		&subStepWithResult[ipaddress.IPAddress, drivermws.CreateVirtualMachineParams]{
-			cond:         true,
-			resourceType: "virtual machine",
-			resourceName: virtualMachineName,
-			action:       driver.CreateVirtualMachine,
-			result:       internalAddress,
-			params: drivermws.CreateVirtualMachineParams{
-				VirtualMachineName: virtualMachineName,
-				VMType:             s.VMType,
-				Zone:               s.Zone,
-				SSHUsername:        s.Communicator.SSHUsername,
-				SSHPublicKey:       string(s.Communicator.SSHPublicKey),
-				CloudConfig:        s.CloudConfig,
-				ServiceAccountRef:  s.serviceAccountRef(),
-				BootDiskRef:        new(computeref.NewDiskRef(s.Project, bootDiskName)),
-				ExportDiskRef:      s.exportDiskRef(exportDiskName),
-				ExternalAddressRef: s.externalAddressRef(externalAddressName),
-				SubnetRef:          new(vpcref.NewSubnetRef(s.Project, networkName, subnetName)),
-			},
-		},
-		&subStepWithoutResult[drivermws.CreateFirewallRuleParams]{
-			cond:         s.UseExternalAddress,
-			resourceType: "firewall rule",
-			resourceName: firewallRuleName,
-			action:       driver.CreateFirewallRule,
-			params: drivermws.CreateFirewallRuleParams{
-				NetworkName:                   networkName,
-				FirewallRuleName:              firewallRuleName,
-				VirtualMachineInternalAddress: internalAddress,
-			},
-		},
-	}.run(ctx, ui)); err != nil {
+	if err = s.createExportDisk(ctx, driver, ui, exportDiskName); err != nil {
+		return common.ActionHaltWithError(state, err)
+	}
+	if err = s.createBootDisk(ctx, driver, ui, bootDiskName, bootDiskSize); err != nil {
+		return common.ActionHaltWithError(state, err)
+	}
+	if externalAddress, err = s.createExternalAddress(ctx, driver, ui, externalAddressName); err != nil {
+		return common.ActionHaltWithError(state, err)
+	}
+	if err = s.createNetwork(ctx, driver, ui, networkName); err != nil {
+		return common.ActionHaltWithError(state, err)
+	}
+	if err = s.createSubnet(ctx, driver, ui, subnetName, networkName); err != nil {
+		return common.ActionHaltWithError(state, err)
+	}
+	if internalAddress, err = s.createVirtualMachine(ctx, driver, ui, virtualMachineName,
+		exportDiskName, bootDiskName, externalAddressName, networkName, subnetName); err != nil {
+		return common.ActionHaltWithError(state, err)
+	}
+	if err = s.createFirewallRule(ctx, driver, ui, firewallRuleName, networkName, internalAddress); err != nil {
 		return common.ActionHaltWithError(state, err)
 	}
 
@@ -183,35 +120,29 @@ func (s *StepCreateVirtualMachine) Cleanup(state multistep.StateBag) {
 	ctx, cancel := context.WithTimeout(context.Background(), s.CleanupTimeout)
 	defer cancel()
 
+	exportDiskName := prefix + "disk-for-export"
+	bootDiskName := cmp.Or(s.DiskName, prefix+"boot-disk")
+	externalAddressName := cmp.Or(s.ExternalAddressName, prefix+"external-address")
 	networkName := cmp.Or(s.NetworkName, prefix+"network")
+	subnetName := cmp.Or(s.SubnetName, prefix+"subnet")
+	virtualMachineName := cmp.Or(s.VirtualMachineName, prefix+"vm")
+	firewallRuleName := prefix + "ssh-access"
 
 	if s.UseExternalAddress {
-		firewallRuleName := prefix + "ssh-access"
 		common.DeleteSubWithUI(ctx, ui, "firewall rule", firewallRuleName, "network", networkName, driver.DeleteFirewallRule)
 	}
-
-	virtualMachineName := cmp.Or(s.VirtualMachineName, prefix+"vm")
 	common.DeleteWithUI(ctx, ui, "virtual machine", virtualMachineName, driver.DeleteVirtualMachine)
-
 	if s.SubnetName == "" {
-		subnetName := cmp.Or(s.SubnetName, prefix+"subnet")
 		common.DeleteSubWithUI(ctx, ui, "subnet", subnetName, "network", networkName, driver.DeleteSubnet)
 	}
-
 	if s.NetworkName == "" {
 		common.DeleteWithUI(ctx, ui, "network", networkName, driver.DeleteNetwork)
 	}
-
 	if s.UseExternalAddress {
-		externalAddressName := cmp.Or(s.ExternalAddressName, prefix+"external-address")
 		common.DeleteWithUI(ctx, ui, "external address", externalAddressName, driver.DeleteExternalAddress)
 	}
-
-	bootDiskName := cmp.Or(s.DiskName, prefix+"boot-disk")
 	common.DeleteWithUI(ctx, ui, "boot disk", bootDiskName, driver.DeleteDisk)
-
 	if s.DiskForExportConfig != nil {
-		exportDiskName := prefix + "disk-for-export"
 		common.DeleteWithUI(ctx, ui, "export disk", exportDiskName, driver.DeleteDisk)
 	}
 }
@@ -250,6 +181,167 @@ func (s *StepCreateVirtualMachine) bootDiskSize(ctx context.Context, driver Step
 
 	result, err := bytesize.NewFromBigInt(divGB, bytesize.GB)
 	return &result, err
+}
+
+func (s *StepCreateVirtualMachine) createExportDisk(
+	ctx context.Context,
+	driver StepCreateVirtualMachineDriver,
+	ui packer.Ui,
+	exportDiskName string,
+) error {
+	if s.DiskForExportConfig == nil {
+		return nil
+	}
+	ui.Sayf("Creating export disk %q...", exportDiskName)
+	err := driver.CreateDisk(ctx, s.exportDiskParams(exportDiskName))
+	if err != nil {
+		return fmt.Errorf("create export disk %q: %w", exportDiskName, err)
+	}
+	ui.Sayf("Export disk %q created", exportDiskName)
+	return nil
+}
+
+func (s *StepCreateVirtualMachine) createBootDisk(
+	ctx context.Context,
+	driver StepCreateVirtualMachineDriver,
+	ui packer.Ui,
+	bootDiskName string,
+	bootDiskSize *bytesize.ByteSize,
+) error {
+	ui.Sayf("Creating boot disk %q...", bootDiskName)
+	err := driver.CreateDisk(ctx, drivermws.CreateDiskParams{
+		DiskName:      bootDiskName,
+		DiskType:      s.DiskType,
+		Size:          bootDiskSize,
+		Iops:          s.DiskIOPS,
+		ImageRef:      s.bootImageRef(),
+		DiskBackupRef: s.bootDiskBackupRef(),
+		Zone:          s.Zone,
+	})
+	if err != nil {
+		return fmt.Errorf("create boot disk %q: %w", bootDiskName, err)
+	}
+	ui.Sayf("Boot disk %q created", bootDiskName)
+	return nil
+}
+
+func (s *StepCreateVirtualMachine) createExternalAddress(
+	ctx context.Context,
+	driver StepCreateVirtualMachineDriver,
+	ui packer.Ui,
+	externalAddressName string,
+) (*ipaddress.IPAddress, error) {
+	if !s.UseExternalAddress {
+		return nil, nil
+	}
+	ui.Sayf("Creating external address %q...", externalAddressName)
+	result, err := driver.CreateExternalAddress(ctx, drivermws.CreateExternalAddressParams{
+		ExternalAddressName: externalAddressName,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("create external address %q: %w", externalAddressName, err)
+	}
+	ui.Sayf("External address %q created", externalAddressName)
+	return result, nil
+}
+
+func (s *StepCreateVirtualMachine) createNetwork(
+	ctx context.Context,
+	driver StepCreateVirtualMachineDriver,
+	ui packer.Ui,
+	networkName string,
+) error {
+	if s.NetworkName != "" {
+		return nil
+	}
+	ui.Sayf("Creating network %q...", networkName)
+	err := driver.CreateNetwork(ctx, drivermws.CreateNetworkParams{
+		NetworkName: networkName,
+	})
+	if err != nil {
+		return fmt.Errorf("create network %q: %w", networkName, err)
+	}
+	ui.Sayf("Network %q created", networkName)
+	return nil
+}
+
+func (s *StepCreateVirtualMachine) createSubnet(
+	ctx context.Context,
+	driver StepCreateVirtualMachineDriver,
+	ui packer.Ui,
+	subnetName string,
+	networkName string,
+) error {
+	if s.SubnetName != "" {
+		return nil
+	}
+	ui.Sayf("Creating subnet %q...", subnetName)
+	err := driver.CreateSubnet(ctx, drivermws.CreateSubnetParams{
+		NetworkName: networkName,
+		SubnetName:  subnetName,
+		SubnetCidr:  cidraddress.MustParseCIDR4AddressString(s.SubnetCidr),
+	})
+	if err != nil {
+		return fmt.Errorf("create subnet %q: %w", subnetName, err)
+	}
+	ui.Sayf("Subnet %q created", subnetName)
+	return nil
+}
+
+func (s *StepCreateVirtualMachine) createVirtualMachine(
+	ctx context.Context,
+	driver StepCreateVirtualMachineDriver,
+	ui packer.Ui,
+	virtualMachineName string,
+	exportDiskName string,
+	bootDiskName string,
+	externalAddressName string,
+	networkName string,
+	subnetName string,
+) (*ipaddress.IPAddress, error) {
+	ui.Sayf("Creating virtual machine %q...", virtualMachineName)
+	result, err := driver.CreateVirtualMachine(ctx, drivermws.CreateVirtualMachineParams{
+		VirtualMachineName: virtualMachineName,
+		VMType:             s.VMType,
+		Zone:               s.Zone,
+		SSHUsername:        s.Communicator.SSHUsername,
+		SSHPublicKey:       string(s.Communicator.SSHPublicKey),
+		CloudConfig:        s.CloudConfig,
+		ServiceAccountRef:  s.serviceAccountRef(),
+		BootDiskRef:        new(computeref.NewDiskRef(s.Project, bootDiskName)),
+		ExportDiskRef:      s.exportDiskRef(exportDiskName),
+		ExternalAddressRef: s.externalAddressRef(externalAddressName),
+		SubnetRef:          new(vpcref.NewSubnetRef(s.Project, networkName, subnetName)),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("create virtual machine %q: %w", virtualMachineName, err)
+	}
+	ui.Sayf("Virtual machine %q created", virtualMachineName)
+	return result, nil
+}
+
+func (s *StepCreateVirtualMachine) createFirewallRule(
+	ctx context.Context,
+	driver StepCreateVirtualMachineDriver,
+	ui packer.Ui,
+	firewallRuleName string,
+	networkName string,
+	internalAddress *ipaddress.IPAddress,
+) error {
+	if !s.UseExternalAddress {
+		return nil
+	}
+	ui.Sayf("Creating firewall rule %q...", firewallRuleName)
+	err := driver.CreateFirewallRule(ctx, drivermws.CreateFirewallRuleParams{
+		NetworkName:                   networkName,
+		FirewallRuleName:              firewallRuleName,
+		VirtualMachineInternalAddress: internalAddress,
+	})
+	if err != nil {
+		return fmt.Errorf("create firewall rule %q: %w", firewallRuleName, err)
+	}
+	ui.Sayf("Firewall rule %q created", firewallRuleName)
+	return nil
 }
 
 func (s *StepCreateVirtualMachine) exportImageRef() *computeref.ImageRef {
@@ -294,7 +386,7 @@ func (s *StepCreateVirtualMachine) externalAddressRef(externalAddressName string
 	return nil
 }
 
-// separeted from other subStep params because of nil pointer dereference in DiskForExportConfig fields
+// separated from other subStep params because of nil pointer dereference in DiskForExportConfig fields
 func (s *StepCreateVirtualMachine) exportDiskParams(exportDiskName string) drivermws.CreateDiskParams {
 	if s.DiskForExportConfig == nil {
 		return drivermws.CreateDiskParams{}
