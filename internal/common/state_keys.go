@@ -18,7 +18,6 @@ const (
 	InstanceIPKey = "instance_ip"
 	InstanceIDKey = "instance_id"
 
-	DiskForExportNameKey  = "disk_for_export_name"
 	HMACAccessKeyStateKey = "hmac_access_key"
 	HMACSecretKeyStateKey = "hmac_secret_key"
 
