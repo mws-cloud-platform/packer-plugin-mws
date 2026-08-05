@@ -40,13 +40,14 @@ func (p *PostProcessor) Configure(raws ...any) error {
 }
 
 func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, artifact packer.Artifact) (packer.Artifact, bool, bool, error) {
+	diskForExportConfig := p.config.DiskForExportConfig
 	switch artifact.BuilderId() {
 	case "packer.mws", "packer.post-processor.artifice":
-		p.config.ImageForExportProject, _ = artifact.State("ImageProject").(string)
-		p.config.ImageForExport, _ = artifact.State("ImageName").(string)
+		diskForExportConfig.ImageForExportProject, _ = artifact.State("ImageProject").(string)
+		diskForExportConfig.ImageForExport, _ = artifact.State("ImageName").(string)
 	}
 
-	if p.config.ImageForExport == "" {
+	if diskForExportConfig.ImageForExport == "" {
 		return nil, false, false, consterr.Error("image_for_export is not provided")
 	}
 
@@ -77,7 +78,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, artifact 
 		return nil, false, false, fmt.Errorf("create driver mws: %w", err)
 	}
 
-	ui.Sayf("Exporting image %s to %s", p.config.ImageForExport, objectStoragePath)
+	ui.Sayf("Exporting image %s to %s", diskForExportConfig.ImageForExport, objectStoragePath)
 
 	state := new(multistep.BasicStateBag)
 	state.Put(common.DriverKey, driver)
@@ -106,7 +107,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, artifact 
 			Zone:                 p.config.Zone,
 			Communicator:         &p.config.Communicator,
 			VirtualMachineConfig: p.config.VirtualMachineConfig,
-			DiskForExportConfig:  &p.config.DiskForExportConfig,
+			DiskForExportConfig:  &diskForExportConfig,
 			GeneratedData:        &packerbuilderdata.GeneratedData{State: state},
 		},
 		&communicator.StepConnect{
