@@ -5,6 +5,7 @@ package driver
 
 import (
 	"go.mws.cloud/go-sdk/pkg/apimodels/cidraddress"
+	"go.mws.cloud/go-sdk/pkg/apimodels/ipaddress"
 	"go.mws.cloud/go-sdk/pkg/apimodels/units/bytesize"
 	computeref "go.mws.cloud/go-sdk/service/resources/references/compute"
 	iamref "go.mws.cloud/go-sdk/service/resources/references/iam"
@@ -14,7 +15,7 @@ import (
 type CreateDiskParams struct {
 	DiskName      string
 	DiskType      string
-	Size          bytesize.ByteSize
+	Size          *bytesize.ByteSize
 	Iops          int64
 	ImageRef      *computeref.ImageRef
 	DiskBackupRef *computeref.DiskBackupRef
@@ -43,7 +44,8 @@ type CreateVirtualMachineParams struct {
 	SSHPublicKey       string
 	CloudConfig        string
 	ServiceAccountRef  *iamref.ServiceAccountRef
-	DiskRef            *computeref.DiskRef
+	BootDiskRef        *computeref.DiskRef
+	ExportDiskRef      *computeref.DiskRef
 	ExternalAddressRef *vpcref.ExternalAddressRef
 	SubnetRef          *vpcref.SubnetRef
 }
@@ -58,7 +60,7 @@ type CreateImageParams struct {
 type CreateFirewallRuleParams struct {
 	NetworkName                   string
 	FirewallRuleName              string
-	VirtualMachineInternalAddress string
+	VirtualMachineInternalAddress *ipaddress.IPAddress
 }
 
 type ImportImageParams struct {

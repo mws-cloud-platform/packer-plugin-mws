@@ -22,9 +22,9 @@ func DeleteWithUI(
 	err := deleteMethod(ctx, resourceName)
 	switch {
 	case err == nil:
-		ui.Sayf("%s %q deleted", upperFirst(resourceType), resourceName)
+		ui.Sayf("%s %q deleted", UpperFirst(resourceType), resourceName)
 	case mwserrors.IsAPIErrorNotFoundStatus(err):
-		ui.Sayf("%s %q not found", upperFirst(resourceType), resourceName)
+		ui.Sayf("%s %q not found", UpperFirst(resourceType), resourceName)
 	default:
 		ui.Errorf("Error deleting %s %q. Please delete it manually.\n"+
 			"Error: %v.", resourceType, resourceName, err)
@@ -44,16 +44,16 @@ func DeleteSubWithUI(
 	err := deleteMethod(ctx, parentName, resourceName)
 	switch {
 	case err == nil:
-		ui.Sayf("%s %q from %s %q deleted", upperFirst(resourceType), resourceName, parentType, parentName)
+		ui.Sayf("%s %q from %s %q deleted", UpperFirst(resourceType), resourceName, parentType, parentName)
 	case mwserrors.IsAPIErrorNotFoundStatus(err):
-		ui.Sayf("%s %q not found in %s %q", upperFirst(resourceType), resourceName, parentType, parentName)
+		ui.Sayf("%s %q not found in %s %q", UpperFirst(resourceType), resourceName, parentType, parentName)
 	default:
 		ui.Errorf("Error deleting %s %q from %s %q. Please delete it manually.\n"+
 			"Error: %v.", resourceType, resourceName, parentType, parentName, err)
 	}
 }
 
-func upperFirst(s string) string {
+func UpperFirst(s string) string {
 	if len(s) == 0 {
 		return ""
 	}

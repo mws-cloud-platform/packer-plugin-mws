@@ -111,24 +111,6 @@ configured for this post-processor.
 
 <!-- End of code generated from the comments of the AccessConfig struct in internal/config/access.go; -->
 
-<!-- Code generated from the comments of the VirtualMachineConfig struct in internal/config/virtual_machine.go; DO NOT EDIT MANUALLY -->
-
-- `virtual_machine_name` (string) - Name for the temporary build VM (defaults to "packer-{{uuid}}-vm").
-
-- `vm_type` (string) - The VM type (defaults to "gen-2-8").
-
-- `cloud_config` (string) - Configuration script for initial setup of a virtual machine in the
-  [#cloud-config](https://docs.cloud-init.io/en/latest/explanation/format/cloud-config.html)
-  format. Note that this configuration would be extended with SSH key used
-  for Packer communicator.
-
-- `vm_service_account` (string) - Servise account can be connected to virtual machine so that applications and scripts
-  on a virtual machine can work with MWS Cloud Platform services.
-
-- `cleanup_timeout` (duration string | ex: "1h5m2s") - Timeout for resources cleanup (defaults to "1h").
-
-<!-- End of code generated from the comments of the VirtualMachineConfig struct in internal/config/virtual_machine.go; -->
-
 <!-- Code generated from the comments of the DiskForExportConfig struct in internal/config/disk_for_export.go; DO NOT EDIT MANUALLY -->
 
 - `disk_for_export_type` (string) - Type of the disk used for image export (defaults to "nbs-pl2").
@@ -141,6 +123,65 @@ configured for this post-processor.
   without mws builder.
 
 <!-- End of code generated from the comments of the DiskForExportConfig struct in internal/config/disk_for_export.go; -->
+
+<!-- Code generated from the comments of the DiskConfig struct in internal/config/disk.go; DO NOT EDIT MANUALLY -->
+
+- `disk_name` (string) - Name for the disk (defaults to "packer-{{uuid}}-disk").
+
+- `disk_type` (string) - Type of disk to create (defaults to "nbs-pl2").
+
+- `disk_size` (string) - Size of the disk (defaults to source minDiskSize, in export post-processor minDiskSize of image_for_export is added).
+
+- `disk_iops` (int64) - IOPS for the disk (defaults to 1000).
+
+- `source_project` (string) - Project ID where the source_image/source_disk_backup exists (defaults to the `project`).
+
+- `source_image` (string) - ID of an existing image to use as a base (required unless using `source_disk_backup`).
+
+- `source_disk_backup` (string) - ID of an existing disk backup to use as a base (required unless using `source_image`).
+
+<!-- End of code generated from the comments of the DiskConfig struct in internal/config/disk.go; -->
+
+<!-- Code generated from the comments of the NetworkConfig struct in internal/config/network.go; DO NOT EDIT MANUALLY -->
+
+- `network_name` (string) - Name for the network (defaults to "packer-{{uuid}}-network").
+  If specified, Packer will use existing network.
+
+- `subnet_name` (string) - Name for the subnet (defaults to "packer-{{uuid}}-subnet").
+  If specified, Packer will use existing subnet.
+
+- `subnet_cidr` (string) - Subnet CIDR (defaults to "192.168.0.0/16").
+
+- `use_external_address` (bool) - Use external address for connection to virtual machine from internet (defaults to "false").
+
+- `external_address_name` (string) - External address name (defaults to "packer-{{uuid}}-external-address").
+  Can be specified only if external address usage is enabled.
+
+- `nat64_enable` (bool) - Enables virtual machine ip conversion from ipv4 to ipv6 with RFC 6052 (defaults to "false").
+  Meant to be used when packer is in ipv6 only network.
+
+- `nat64_ipv6_prefix` (string) - Prefix used in nat64 conversion (defaults to "64:ff9b::/96" (RFC 6052 Well-Known Prefix)).
+  CIDR notation only.
+
+<!-- End of code generated from the comments of the NetworkConfig struct in internal/config/network.go; -->
+
+<!-- Code generated from the comments of the VirtualMachineConfig struct in internal/config/virtual_machine.go; DO NOT EDIT MANUALLY -->
+
+- `virtual_machine_name` (string) - Name for the temporary build VM (defaults to "packer-{{uuid}}-vm").
+
+- `vm_type` (string) - The VM type (defaults to "gen-2-8").
+
+- `cloud_config` (string) - Configuration script for initial setup of a virtual machine in the
+  [#cloud-config](https://docs.cloud-init.io/en/latest/explanation/format/cloud-config.html)
+  format. Note that this configuration would be extended with SSH key used
+  for Packer communicator.
+
+- `vm_service_account` (string) - Service account can be connected to virtual machine so that applications and scripts
+  on a virtual machine can work with MWS Cloud Platform services.
+
+- `cleanup_timeout` (duration string | ex: "1h5m2s") - Timeout for resources cleanup (defaults to "1h").
+
+<!-- End of code generated from the comments of the VirtualMachineConfig struct in internal/config/virtual_machine.go; -->
 
 <!-- Code generated from the comments of the ObjectStorageConfig struct in internal/config/object_storage.go; DO NOT EDIT MANUALLY -->
 
@@ -186,7 +227,6 @@ build {
     
     source_project = "mws-ubuntu"
     source_image   = "mws-ubuntu-2404-lts-v20260526"
-    disk_size      = "20 GB"
     use_external_address = true
 
     service_account = "your-service-account"
@@ -218,7 +258,6 @@ build {
     
     source_project = "mws-ubuntu"
     source_image   = "mws-ubuntu-2404-lts-v20260526"
-    disk_size      = "20 GB"
     use_external_address = true
     
     access_key = "your-access-key"

@@ -1,7 +1,7 @@
 {
  "DiskName": "",
  "DiskType": "nbs-pl2",
- "DiskSize": "10 GB",
+ "DiskSize": "",
  "DiskIOPS": 1000,
  "SourceProject": "",
  "SourceImage": "",

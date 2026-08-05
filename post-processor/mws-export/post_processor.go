@@ -18,7 +18,6 @@ import (
 	"github.com/mws-cloud-platform/packer-plugin-mws/internal/common"
 	"github.com/mws-cloud-platform/packer-plugin-mws/internal/driver"
 	"github.com/mws-cloud-platform/packer-plugin-mws/internal/steps"
-	computeref "go.mws.cloud/go-sdk/service/resources/references/compute"
 	"go.mws.cloud/util-toolset/pkg/utils/consterr"
 )
 
@@ -41,18 +40,14 @@ func (p *PostProcessor) Configure(raws ...any) error {
 }
 
 func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, artifact packer.Artifact) (packer.Artifact, bool, bool, error) {
-	projectForExport := ""
-	imageForExport := ""
+	diskForExportConfig := p.config.DiskForExportConfig
 	switch artifact.BuilderId() {
 	case "packer.mws", "packer.post-processor.artifice":
-		projectForExport, _ = artifact.State("ImageProject").(string)
-		imageForExport, _ = artifact.State("ImageName").(string)
-	default:
-		projectForExport = p.config.ImageForExportProject
-		imageForExport = p.config.ImageForExport
+		diskForExportConfig.ImageForExportProject, _ = artifact.State("ImageProject").(string)
+		diskForExportConfig.ImageForExport, _ = artifact.State("ImageName").(string)
 	}
 
-	if imageForExport == "" {
+	if diskForExportConfig.ImageForExport == "" {
 		return nil, false, false, consterr.Error("image_for_export is not provided")
 	}
 
@@ -83,7 +78,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, artifact 
 		return nil, false, false, fmt.Errorf("create driver mws: %w", err)
 	}
 
-	ui.Sayf("Exporting image %s to %s", imageForExport, objectStoragePath)
+	ui.Sayf("Exporting image %s to %s", diskForExportConfig.ImageForExport, objectStoragePath)
 
 	state := new(multistep.BasicStateBag)
 	state.Put(common.DriverKey, driver)
@@ -112,15 +107,8 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, artifact 
 			Zone:                 p.config.Zone,
 			Communicator:         &p.config.Communicator,
 			VirtualMachineConfig: p.config.VirtualMachineConfig,
+			DiskForExportConfig:  &diskForExportConfig,
 			GeneratedData:        &packerbuilderdata.GeneratedData{State: state},
-		},
-		&StepAttachDisk{
-			Project:        p.config.Project,
-			Zone:           p.config.Zone,
-			DiskType:       p.config.DiskForExportType,
-			DiskIOPS:       p.config.DiskForExportIOPS,
-			ImageRef:       computeref.NewImageRef(projectForExport, imageForExport),
-			CleanupTimeout: p.config.CleanupTimeout,
 		},
 		&communicator.StepConnect{
 			Config:    &p.config.Communicator,

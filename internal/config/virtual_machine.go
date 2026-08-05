@@ -25,7 +25,7 @@ type VirtualMachineConfig struct {
 	// for Packer communicator.
 	CloudConfig string `mapstructure:"cloud_config" required:"false"`
 
-	// Servise account can be connected to virtual machine so that applications and scripts
+	// Service account can be connected to virtual machine so that applications and scripts
 	// on a virtual machine can work with MWS Cloud Platform services.
 	VMServiceAccount string `mapstructure:"vm_service_account" required:"false"`
 

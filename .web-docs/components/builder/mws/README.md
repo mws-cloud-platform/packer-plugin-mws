@@ -85,7 +85,7 @@ configured for this builder.
 
 - `disk_type` (string) - Type of disk to create (defaults to "nbs-pl2").
 
-- `disk_size` (string) - Size of the disk (defaults to "10 GB").
+- `disk_size` (string) - Size of the disk (defaults to source minDiskSize, in export post-processor minDiskSize of image_for_export is added).
 
 - `disk_iops` (int64) - IOPS for the disk (defaults to 1000).
 
@@ -131,7 +131,7 @@ configured for this builder.
   format. Note that this configuration would be extended with SSH key used
   for Packer communicator.
 
-- `vm_service_account` (string) - Servise account can be connected to virtual machine so that applications and scripts
+- `vm_service_account` (string) - Service account can be connected to virtual machine so that applications and scripts
   on a virtual machine can work with MWS Cloud Platform services.
 
 - `cleanup_timeout` (duration string | ex: "1h5m2s") - Timeout for resources cleanup (defaults to "1h").

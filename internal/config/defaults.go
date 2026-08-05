@@ -14,7 +14,6 @@ const (
 	DefaultZone                  = mws.DefaultZone
 	DefaultImageDescription      = "Image created by Packer"
 	DefaultDiskType              = "nbs-pl2"
-	DefaultDiskSize              = "10 GB"
 	DefaultDiskIOPS              = int64(1000)
 	DefaultSubnetCidr            = "192.168.0.0/16"
 	DefaultIPV6Prefix            = "64:ff9b::/96"

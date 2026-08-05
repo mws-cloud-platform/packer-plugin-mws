@@ -14,7 +14,7 @@ import (
 	"go.mws.cloud/go-sdk/mws/wait"
 	"go.mws.cloud/go-sdk/pkg/apimodels/cidraddress"
 	"go.mws.cloud/go-sdk/pkg/apimodels/ipaddress"
-	"go.mws.cloud/go-sdk/pkg/optional"
+	"go.mws.cloud/go-sdk/pkg/apimodels/units/bytesize"
 	commonmodel "go.mws.cloud/go-sdk/service/common/model"
 	computeclient "go.mws.cloud/go-sdk/service/compute/client"
 	computemodel "go.mws.cloud/go-sdk/service/compute/model"
@@ -37,6 +37,7 @@ type Driver struct {
 	virtualMachines   *computesdk.VirtualMachine
 	firewallRules     *vpcsdk.FirewallRule
 	images            *computesdk.Image
+	diskBackups       *computesdk.DiskBackup
 	hmacKeys          *iamsdk.ServiceAccountHmacKey
 
 	cleanupTimeout time.Duration
@@ -101,9 +102,14 @@ func NewDriver(ctx context.Context, c Config) (*Driver, error) {
 		return nil, fmt.Errorf("create image client: %w", err)
 	}
 
+	diskBackups, err := computesdk.NewDiskBackup(ctx, sdk)
+	if err != nil {
+		return nil, fmt.Errorf("create disk backup client: %w", err)
+	}
+
 	hmacKeys, err := iamsdk.NewServiceAccountHmacKey(ctx, sdk)
 	if err != nil {
-		return nil, fmt.Errorf("create hmac keys client: %w", err)
+		return nil, fmt.Errorf("create hmac key client: %w", err)
 	}
 
 	return &Driver{
@@ -114,6 +120,7 @@ func NewDriver(ctx context.Context, c Config) (*Driver, error) {
 		virtualMachines:   virtualMachines,
 		firewallRules:     firewallRules,
 		images:            images,
+		diskBackups:       diskBackups,
 		hmacKeys:          hmacKeys,
 		cleanupTimeout:    c.CleanupTimeout,
 	}, nil
@@ -128,7 +135,7 @@ func (d *Driver) CreateDisk(ctx context.Context, params CreateDiskParams) error 
 			},
 			Spec: computemodel.DiskSpecRequest{
 				Zone: params.Zone,
-				Size: new(params.Size),
+				Size: params.Size,
 				Source: &computemodel.DiskSpecSourceRequest{
 					Image:      params.ImageRef,
 					DiskBackup: params.DiskBackupRef,
@@ -220,6 +227,24 @@ func (d *Driver) CreateVirtualMachine(ctx context.Context, params CreateVirtualM
 		}
 	}
 
+	disks := []computemodel.StorageDiskSpecOrRefWithAttachmentsRequest{
+		{
+			Name: "boot",
+			Boot: new(true),
+			Disk: computemodel.StorageDiskSpecOrRefRequest{
+				Ref: params.BootDiskRef,
+			},
+		},
+	}
+	if params.ExportDiskRef != nil {
+		disks = append(disks, computemodel.StorageDiskSpecOrRefWithAttachmentsRequest{
+			Name: DiskForExportName,
+			Disk: computemodel.StorageDiskSpecOrRefRequest{
+				Ref: params.ExportDiskRef,
+			},
+		})
+	}
+
 	req := computeclient.UpsertVirtualMachineRequest{
 		VirtualMachine: params.VirtualMachineName,
 		Body: computemodel.VirtualMachineRequest{
@@ -242,15 +267,7 @@ func (d *Driver) CreateVirtualMachine(ctx context.Context, params CreateVirtualM
 					},
 				},
 				Storage: computemodel.StorageSpecRequest{
-					Disks: []computemodel.StorageDiskSpecOrRefWithAttachmentsRequest{
-						{
-							Name: "boot",
-							Boot: new(true),
-							Disk: computemodel.StorageDiskSpecOrRefRequest{
-								Ref: params.DiskRef,
-							},
-						},
-					},
+					Disks: disks,
 				},
 				Network: computemodel.NetworkSpecRequest{
 					NetworkInterfaces: []computemodel.NetworkInterfaceSpecRequest{
@@ -285,7 +302,7 @@ func (d *Driver) CreateVirtualMachine(ctx context.Context, params CreateVirtualM
 }
 
 func (d *Driver) CreateFirewallRule(ctx context.Context, params CreateFirewallRuleParams) error {
-	destAddress, err := cidraddress.ParseCIDR4AddressString(params.VirtualMachineInternalAddress + "/32")
+	destAddress, err := cidraddress.ParseCIDR4AddressString(params.VirtualMachineInternalAddress.String() + "/32")
 	if err != nil {
 		return fmt.Errorf("parse destination CIDR for firewall rule: %w", err)
 	}
@@ -368,7 +385,10 @@ func (d *Driver) CreateHMACKey(ctx context.Context, serviceAccount, name string)
 	return hmacKey.GetStatus().GetAccessKeyIdOr(""), hmacKey.GetStatus().GetSecretAccessKeyOr(""), nil
 }
 
-func (d *Driver) GetImage(ctx context.Context, imageRef computeref.ImageRef) (*computemodel.ImageOptionalResponse, error) {
+func (d *Driver) GetImageMinDiskSize(ctx context.Context, imageRef *computeref.ImageRef) (*bytesize.ByteSize, error) {
+	if imageRef == nil {
+		return new(bytesize.MustNewFromInt64(0, bytesize.B)), nil
+	}
 	image, err := d.images.GetImage(ctx, computeclient.GetImageRequest{
 		Project: imageRef.GetProject(),
 		Image:   imageRef.GetImage(),
@@ -376,8 +396,31 @@ func (d *Driver) GetImage(ctx context.Context, imageRef computeref.ImageRef) (*c
 	if err != nil {
 		return nil, fmt.Errorf("get image: %w", err)
 	}
+	minDiskSize := image.GetStatus().GetMinDiskSize()
+	if minDiskSize == nil {
+		return nil, fmt.Errorf("%q image minDiskSize is not available", imageRef.GetImage())
+	}
 
-	return image, nil
+	return minDiskSize, nil
+}
+
+func (d *Driver) GetDiskBackupMinDiskSize(ctx context.Context, diskBackupRef *computeref.DiskBackupRef) (*bytesize.ByteSize, error) {
+	if diskBackupRef == nil {
+		return new(bytesize.MustNewFromInt64(0, bytesize.B)), nil
+	}
+	image, err := d.diskBackups.GetDiskBackup(ctx, computeclient.GetDiskBackupRequest{
+		Project:    diskBackupRef.GetProject(),
+		DiskBackup: diskBackupRef.GetDiskBackup(),
+	}, computeclient.WithWait())
+	if err != nil {
+		return nil, fmt.Errorf("get disk backup: %w", err)
+	}
+	minDiskSize := image.GetStatus().GetMinDiskSize()
+	if minDiskSize == nil {
+		return nil, fmt.Errorf("%q disk backup minDiskSize is not available", diskBackupRef.GetDiskBackup())
+	}
+
+	return minDiskSize, nil
 }
 
 func (d *Driver) ImportImage(ctx context.Context, params ImportImageParams) (*computemodel.ImageOptionalResponse, error) {
@@ -404,50 +447,6 @@ func (d *Driver) ImportImage(ctx context.Context, params ImportImageParams) (*co
 	}
 
 	return image, nil
-}
-
-func (d *Driver) AttachDiskToVirtualMachine(ctx context.Context, vmName string, diskRef computeref.DiskRef) error {
-	_, err := d.virtualMachines.UpdateVirtualMachine(ctx, computeclient.UpdateVirtualMachineRequest{
-		VirtualMachine: vmName,
-		Body: computemodel.UpdateVirtualMachineRequest{
-			Spec: optional.NewOptional(computemodel.UpdateVirtualMachineSpecRequest{
-				Storage: optional.NewOptional(computemodel.UpdateStorageSpecRequest{
-					Disks: optional.NewOptional([]computemodel.UpdateStorageDiskSpecOrRefWithAttachmentsRequest{
-						{Name: optional.NewOptional("boot")},
-						{
-							Name: optional.NewOptional(DiskForExportName),
-							Disk: optional.NewOptional(computemodel.UpdateStorageDiskSpecOrRefRequest{
-								Ref: optional.NewOptional(diskRef),
-							}),
-						},
-					}),
-				}),
-			}),
-		},
-	}, computeclient.WithWait())
-	if err != nil {
-		return fmt.Errorf("attach disk to virtual machine: %w", err)
-	}
-	return nil
-}
-
-func (d *Driver) DetachSecondaryDisksFromVirtualMachine(ctx context.Context, virtualMachineName string) error {
-	_, err := d.virtualMachines.UpdateVirtualMachine(ctx, computeclient.UpdateVirtualMachineRequest{
-		VirtualMachine: virtualMachineName,
-		Body: computemodel.UpdateVirtualMachineRequest{
-			Spec: optional.NewOptional(computemodel.UpdateVirtualMachineSpecRequest{
-				Storage: optional.NewOptional(computemodel.UpdateStorageSpecRequest{
-					Disks: optional.NewOptional([]computemodel.UpdateStorageDiskSpecOrRefWithAttachmentsRequest{
-						{Name: optional.NewOptional("boot")},
-					}),
-				}),
-			}),
-		},
-	}, computeclient.WithWait())
-	if err != nil {
-		return fmt.Errorf("detach disk from virtual machine: %w", err)
-	}
-	return nil
 }
 
 func (d *Driver) DeleteDisk(ctx context.Context, diskName string) error {
