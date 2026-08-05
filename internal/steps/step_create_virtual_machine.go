@@ -165,7 +165,11 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	state.Put(common.DiskRefKey, new(computeref.NewDiskRef(s.Project, bootDiskName)))
 
 	s.GeneratedData.Put("SourceProject", s.SourceProject)
-	s.GeneratedData.Put("SourceImageName", s.SourceImage)
+	if s.SourceImage != "" {
+		s.GeneratedData.Put("SourceImageName", s.SourceImage)
+	} else {
+		s.GeneratedData.Put("SourceImageName", s.SourceDiskBackup)
+	}
 	s.GeneratedData.Put("SourceDiskBackupName", s.SourceDiskBackup)
 
 	return multistep.ActionContinue

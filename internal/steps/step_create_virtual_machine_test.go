@@ -45,9 +45,13 @@ const (
 	testVirtualMachineName  = "test-vm"
 	testSSHPublicKey        = "test-public-key"
 	testSourceImage         = "test-source-image"
+	testSourceDiskBackup    = "test-source-disk-backup"
 	testDiskSize            = "10 GB"
+	testImageForExport      = "test-image-for-export"
+	testImageForExportSize  = "20 GB"
 
-	defaultDiskName            = packerPrefix + "boot-disk"
+	defaultExportDiskName      = packerPrefix + "disk-for-export"
+	defaultBootDiskName        = packerPrefix + "boot-disk"
 	defaultExternalAddressName = packerPrefix + "external-address"
 	defaultNetworkName         = packerPrefix + "network"
 	defaultSubnetName          = packerPrefix + "subnet"
@@ -62,14 +66,16 @@ var (
 	testExternalAddress = new(ipaddress.MustParseIPAddressString("10.20.30.40"))
 )
 
+//nolint:cyclop // Test function with complex logic
 func TestStepCreateVirtualMachine_Run(t *testing.T) {
 	t.Parallel()
 	expectedDir := golden.NewDir(t, golden.WithPath(path.Join("testdata", t.Name())), golden.WithRecreateOnUpdate())
 
 	for _, tt := range []struct {
-		name      string
-		step      *steps.StepCreateVirtualMachine
-		errorStep string
+		name                 string
+		step                 *steps.StepCreateVirtualMachine
+		expectedBootDiskSize *bytesize.ByteSize
+		errorStep            string
 	}{
 		{
 			name: "all_set",
@@ -88,6 +94,95 @@ func TestStepCreateVirtualMachine_Run(t *testing.T) {
 					VirtualMachineName: testVirtualMachineName,
 				},
 			},
+		},
+		{
+			name: "with_export_disk",
+			step: &steps.StepCreateVirtualMachine{
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
+				},
+				DiskForExportConfig: &commonconfig.DiskForExportConfig{
+					ImageForExport: testImageForExport,
+				},
+			},
+			expectedBootDiskSize: new(bytesize.MustNewFromInt64(30, bytesize.GB)),
+		},
+		{
+			name: "with_export_disk_and_explicit_disk_size",
+			step: &steps.StepCreateVirtualMachine{
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						DiskSize: testDiskSize,
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
+				},
+				DiskForExportConfig: &commonconfig.DiskForExportConfig{
+					ImageForExport: testImageForExport,
+				},
+			},
+		},
+		{
+			name: "with_source_disk_backup_and_export_disk",
+			step: &steps.StepCreateVirtualMachine{
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					DiskConfig: commonconfig.DiskConfig{
+						SourceDiskBackup: "test-source-disk-backup",
+					},
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
+				},
+				DiskForExportConfig: &commonconfig.DiskForExportConfig{
+					ImageForExport: testImageForExport,
+				},
+			},
+			expectedBootDiskSize: new(bytesize.MustNewFromInt64(30, bytesize.GB)),
+		},
+		{
+			name: "error_getting_source_image_min_disk_size",
+			step: &steps.StepCreateVirtualMachine{
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
+				},
+				DiskForExportConfig: &commonconfig.DiskForExportConfig{
+					ImageForExport: testImageForExport,
+				},
+			},
+			errorStep: "GetImageMinDiskSizeSource",
+		},
+		{
+			name: "error_getting_export_image_min_disk_size",
+			step: &steps.StepCreateVirtualMachine{
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
+				},
+				DiskForExportConfig: &commonconfig.DiskForExportConfig{
+					ImageForExport: testImageForExport,
+				},
+			},
+			errorStep: "GetImageMinDiskSizeExport",
+		},
+		{
+			name: "error_creating_export_disk",
+			step: &steps.StepCreateVirtualMachine{
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
+				},
+				DiskForExportConfig: &commonconfig.DiskForExportConfig{
+					ImageForExport: testImageForExport,
+				},
+			},
+			errorStep: "CreateExportDisk",
 		},
 		{
 			name: "network_set",
@@ -140,7 +235,7 @@ func TestStepCreateVirtualMachine_Run(t *testing.T) {
 			},
 		},
 		{
-			name: "error_at_CreateDisk_use_external_address",
+			name: "error_at_CreateBootDisk_use_external_address",
 			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
 					NetworkConfig: commonconfig.NetworkConfig{
@@ -148,7 +243,7 @@ func TestStepCreateVirtualMachine_Run(t *testing.T) {
 					},
 				},
 			},
-			errorStep: "CreateDisk",
+			errorStep: "CreateBootDisk",
 		},
 		{
 			name: "error_at_CreateExternalAddress_use_external_address",
@@ -206,7 +301,7 @@ func TestStepCreateVirtualMachine_Run(t *testing.T) {
 			errorStep: "CreateFirewallRule",
 		},
 		{
-			name: "error_at_CreateDisk_no_external_address",
+			name: "error_at_CreateBootDisk_no_external_address",
 			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
 					NetworkConfig: commonconfig.NetworkConfig{
@@ -216,7 +311,7 @@ func TestStepCreateVirtualMachine_Run(t *testing.T) {
 					},
 				},
 			},
-			errorStep: "CreateDisk",
+			errorStep: "CreateBootDisk",
 		},
 		{
 			name: "error_at_CreateVirtualMachine_no_external_address",
@@ -238,14 +333,16 @@ func TestStepCreateVirtualMachine_Run(t *testing.T) {
 			writer, state := prepareState(driver)
 			prepareStep(t, tt.step, state)
 
-			expectedDiskName := cmp.Or(tt.step.DiskName, defaultDiskName)
+			expectedExportDiskName := defaultExportDiskName
+			expectedBootDiskName := cmp.Or(tt.step.DiskName, defaultBootDiskName)
 			expectedExternalAddressName := cmp.Or(tt.step.ExternalAddressName, defaultExternalAddressName)
 			expectedNetworkName := cmp.Or(tt.step.NetworkName, defaultNetworkName)
 			expectedSubnetName := cmp.Or(tt.step.SubnetName, defaultSubnetName)
 			expectedVirtualMachineName := cmp.Or(tt.step.VirtualMachineName, defaultVirtualMachineName)
 			expectedFirewallRuleName := defaultFirewallRuleName
 
-			expectedDiskRef := new(computeref.NewDiskRef(tt.step.Project, expectedDiskName))
+			var expectedExportDiskRef *computeref.DiskRef
+			expectedBootDiskRef := new(computeref.NewDiskRef(tt.step.Project, expectedBootDiskName))
 			expectedInstanceIP := testInternalAddress
 			var expectedExternalAddressRef *vpcref.ExternalAddressRef
 			if tt.step.UseExternalAddress {
@@ -256,18 +353,92 @@ func TestStepCreateVirtualMachine_Run(t *testing.T) {
 			expectedErrors := map[string]error{tt.errorStep: errors.New("test error")}
 			requireStateKV := make(map[string]any)
 			func() {
-				driver.EXPECT().
-					CreateDisk(gomock.Any(), drivermws.CreateDiskParams{
-						DiskName: expectedDiskName,
+				var expectedBootDiskSize *bytesize.ByteSize
+				if tt.step.DiskSize != "" {
+					expectedBootDiskSize = new(bytesize.MustParseString(tt.step.DiskSize))
+				} else {
+					sourceImageSize := new(bytesize.MustParseString(testDiskSize))
+					sourceDiskBackupSize := new(bytesize.MustParseString(testDiskSize))
+					exportImageSize := new(bytesize.MustParseString(testImageForExportSize))
+					zeroSize := new(bytesize.MustNewFromInt64(0, bytesize.B))
+
+					driver.EXPECT().
+						GetImageMinDiskSize(gomock.Any(), nil).
+						Return(zeroSize, nil).
+						AnyTimes()
+
+					if tt.step.DiskForExportConfig != nil && tt.step.ImageForExport != "" {
+						imageForExportProject := cmp.Or(tt.step.ImageForExportProject, tt.step.Project)
+						driver.EXPECT().
+							GetImageMinDiskSize(gomock.Any(), new(computeref.NewImageRef(imageForExportProject, tt.step.DiskForExportConfig.ImageForExport))).
+							Return(exportImageSize, expectedErrors["GetImageMinDiskSizeExport"]).
+							MaxTimes(1)
+						if tt.errorStep == "GetImageMinDiskSizeExport" {
+							return
+						}
+					}
+
+					if tt.step.SourceImage != "" {
+						driver.EXPECT().
+							GetImageMinDiskSize(gomock.Any(), new(computeref.NewImageRef(tt.step.Project, tt.step.SourceImage))).
+							Return(sourceImageSize, expectedErrors["GetImageMinDiskSizeSource"]).
+							MaxTimes(1)
+						if tt.errorStep == "GetImageMinDiskSizeSource" {
+							return
+						}
+					}
+
+					if tt.step.SourceDiskBackup != "" {
+						driver.EXPECT().
+							GetDiskBackupMinDiskSize(gomock.Any(), new(computeref.NewDiskBackupRef(tt.step.Project, tt.step.SourceDiskBackup))).
+							Return(sourceDiskBackupSize, expectedErrors["GetDiskBackupMinDiskSizeSource"]).
+							MaxTimes(1)
+						if tt.errorStep == "GetDiskBackupMinDiskSizeSource" {
+							return
+						}
+					}
+
+					expectedBootDiskSize = new(bytesize.MustNewFromInt64(10, bytesize.GB))
+					if tt.expectedBootDiskSize != nil {
+						expectedBootDiskSize = tt.expectedBootDiskSize
+					}
+				}
+
+				if tt.step.DiskForExportConfig != nil {
+					expectedExportDiskRef = new(computeref.NewDiskRef(tt.step.Project, expectedExportDiskName))
+					createExportDiskParams := drivermws.CreateDiskParams{
+						DiskName: expectedExportDiskName,
 						DiskType: commonconfig.DefaultDiskType,
-						Size:     new(bytesize.MustParseString(testDiskSize)),
 						Iops:     commonconfig.DefaultDiskIOPS,
-						ImageRef: new(computeref.NewImageRef(tt.step.Project, testSourceImage)),
+						ImageRef: new(computeref.NewImageRef(tt.step.Project, testImageForExport)),
 						Zone:     commonconfig.DefaultZone,
-					}).
-					Return(expectedErrors["CreateDisk"]).
-					Times(1)
-				if tt.errorStep == "CreateDisk" {
+					}
+					driver.EXPECT().
+						CreateDisk(gomock.Any(), createExportDiskParams).
+						Return(expectedErrors["CreateExportDisk"]).MinTimes(1).MaxTimes(2)
+					if expectedErrors["CreateExportDisk"] != nil {
+						return
+					}
+				}
+
+				createBootDiskParams := drivermws.CreateDiskParams{
+					DiskName: expectedBootDiskName,
+					DiskType: commonconfig.DefaultDiskType,
+					Size:     expectedBootDiskSize,
+					Iops:     commonconfig.DefaultDiskIOPS,
+					Zone:     commonconfig.DefaultZone,
+				}
+
+				if tt.step.SourceImage != "" {
+					createBootDiskParams.ImageRef = new(computeref.NewImageRef(tt.step.Project, testSourceImage))
+				} else if tt.step.SourceDiskBackup != "" {
+					createBootDiskParams.DiskBackupRef = new(computeref.NewDiskBackupRef(tt.step.Project, testSourceDiskBackup))
+				}
+
+				driver.EXPECT().
+					CreateDisk(gomock.Any(), createBootDiskParams).
+					Return(expectedErrors["CreateBootDisk"])
+				if tt.errorStep == "CreateBootDisk" {
 					return
 				}
 
@@ -316,7 +487,8 @@ func TestStepCreateVirtualMachine_Run(t *testing.T) {
 						Zone:               commonconfig.DefaultZone,
 						SSHUsername:        commonconfig.DefaultSSHUsername,
 						SSHPublicKey:       testSSHPublicKey,
-						BootDiskRef:        expectedDiskRef,
+						BootDiskRef:        expectedBootDiskRef,
+						ExportDiskRef:      expectedExportDiskRef,
 						ExternalAddressRef: expectedExternalAddressRef,
 						SubnetRef:          new(vpcref.NewSubnetRef(tt.step.Project, expectedNetworkName, expectedSubnetName)),
 					}).
@@ -342,7 +514,7 @@ func TestStepCreateVirtualMachine_Run(t *testing.T) {
 
 				requireStateKV[common.InstanceIPKey] = expectedInstanceIP.String()
 				requireStateKV[common.InstanceIDKey] = expectedVirtualMachineName
-				requireStateKV[common.DiskRefKey] = expectedDiskRef
+				requireStateKV[common.DiskRefKey] = expectedBootDiskRef
 			}()
 
 			if tt.errorStep != "" {
@@ -351,7 +523,11 @@ func TestStepCreateVirtualMachine_Run(t *testing.T) {
 				testutil.RequireActionContinue(t, state, tt.step.Run(t.Context(), state))
 				testutil.RequireStateGets(t, state, requireStateKV)
 				testutil.RequireGeneratedDataGet(t, state, "SourceProject", testProjectName)
-				testutil.RequireGeneratedDataGet(t, state, "SourceImageName", testSourceImage)
+				if tt.step.SourceImage != "" {
+					testutil.RequireGeneratedDataGet(t, state, "SourceImageName", testSourceImage)
+				} else {
+					testutil.RequireGeneratedDataGet(t, state, "SourceImageName", testSourceDiskBackup)
+				}
 			}
 
 			expectedDir.String(t, tt.name+".out", writer.String())
@@ -382,6 +558,19 @@ func TestStepCreateVirtualMachine_Cleanup(t *testing.T) {
 						UseExternalAddress:  true,
 					},
 					VirtualMachineName: testVirtualMachineName,
+				},
+			},
+		},
+		{
+			name: "with_export_disk",
+			step: &steps.StepCreateVirtualMachine{
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
+				},
+				DiskForExportConfig: &commonconfig.DiskForExportConfig{
+					ImageForExport: testImageForExport,
 				},
 			},
 		},
@@ -459,7 +648,8 @@ func TestStepCreateVirtualMachine_Cleanup(t *testing.T) {
 			writer, state := prepareState(driver)
 			prepareStep(t, tt.step, state)
 
-			expectedDiskName := cmp.Or(tt.step.DiskName, defaultDiskName)
+			expectedExportDiskName := defaultExportDiskName
+			expectedBootDiskName := cmp.Or(tt.step.DiskName, defaultBootDiskName)
 			expectedExternalAddressName := cmp.Or(tt.step.ExternalAddressName, defaultExternalAddressName)
 			expectedNetworkName := cmp.Or(tt.step.NetworkName, defaultNetworkName)
 			expectedSubnetName := cmp.Or(tt.step.SubnetName, defaultSubnetName)
@@ -484,8 +674,13 @@ func TestStepCreateVirtualMachine_Cleanup(t *testing.T) {
 				driver.EXPECT().DeleteFirewallRule(gomock.Any(), expectedNetworkName, expectedFirewallRuleName).
 					Return(tt.expectedErr).Times(1)
 			}
-			driver.EXPECT().DeleteDisk(gomock.Any(), expectedDiskName).
+			driver.EXPECT().DeleteDisk(gomock.Any(), expectedBootDiskName).
 				Return(tt.expectedErr).Times(1)
+
+			if tt.step.DiskForExportConfig != nil {
+				driver.EXPECT().DeleteDisk(gomock.Any(), expectedExportDiskName).
+					Return(tt.expectedErr).Times(1)
+			}
 
 			tt.step.Cleanup(state)
 			expectedDir.String(t, tt.name+".out", writer.String())
@@ -496,8 +691,9 @@ func TestStepCreateVirtualMachine_Cleanup(t *testing.T) {
 func prepareStep(t *testing.T, step *steps.StepCreateVirtualMachine, state multistep.StateBag) {
 	step.Project = testProjectName
 	step.SourceProject = testProjectName
-	step.SourceImage = testSourceImage
-	step.DiskSize = testDiskSize
+	if step.SourceDiskBackup == "" {
+		step.SourceImage = testSourceImage
+	}
 	step.Zone = commonconfig.DefaultZone
 	step.Communicator = &communicator.Config{
 		SSH: communicator.SSH{
@@ -505,6 +701,13 @@ func prepareStep(t *testing.T, step *steps.StepCreateVirtualMachine, state multi
 			SSHPublicKey: []byte(testSSHPublicKey),
 		},
 	}
+
+	if step.DiskForExportConfig != nil {
+		step.ImageForExportProject = testProjectName
+		step.DiskForExportConfig.SetDefaults()
+		require.NoError(t, step.DiskForExportConfig.Validate())
+	}
+
 	step.VirtualMachineConfig.SetDefaults()
 	require.NoError(t, step.VirtualMachineConfig.Validate())
 	step.GeneratedData = &packerbuilderdata.GeneratedData{State: state}
