@@ -29,6 +29,9 @@ type VirtualMachineConfig struct {
 	// on a virtual machine can work with MWS Cloud Platform services.
 	VMServiceAccount string `mapstructure:"vm_service_account" required:"false"`
 
+	// File path to save virtual machine serial port output.
+	SerialPortLogFile string `mapstructure:"serial_console_log_file" required:"false"`
+
 	// Timeout for resources cleanup (defaults to "1h").
 	CleanupTimeout time.Duration `mapstructure:"cleanup_timeout" required:"false"`
 }

@@ -579,3 +579,42 @@ func (c *MockStepCreateVirtualMachineDriverGetImageMinDiskSizeCall) DoAndReturn(
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
+
+// GetSerialPortOutput mocks base method.
+func (m *MockStepCreateVirtualMachineDriver) GetSerialPortOutput(arg0 context.Context, arg1 string, arg2 int) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSerialPortOutput", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSerialPortOutput indicates an expected call of GetSerialPortOutput.
+func (mr *MockStepCreateVirtualMachineDriverMockRecorder) GetSerialPortOutput(arg0, arg1, arg2 any) *MockStepCreateVirtualMachineDriverGetSerialPortOutputCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSerialPortOutput", reflect.TypeOf((*MockStepCreateVirtualMachineDriver)(nil).GetSerialPortOutput), arg0, arg1, arg2)
+	return &MockStepCreateVirtualMachineDriverGetSerialPortOutputCall{Call: call}
+}
+
+// MockStepCreateVirtualMachineDriverGetSerialPortOutputCall wrap *gomock.Call
+type MockStepCreateVirtualMachineDriverGetSerialPortOutputCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockStepCreateVirtualMachineDriverGetSerialPortOutputCall) Return(arg0 []byte, arg1 error) *MockStepCreateVirtualMachineDriverGetSerialPortOutputCall {
+	c.Call = c.Call.Return(arg0, arg1)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockStepCreateVirtualMachineDriverGetSerialPortOutputCall) Do(f func(context.Context, string, int) ([]byte, error)) *MockStepCreateVirtualMachineDriverGetSerialPortOutputCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockStepCreateVirtualMachineDriverGetSerialPortOutputCall) DoAndReturn(f func(context.Context, string, int) ([]byte, error)) *MockStepCreateVirtualMachineDriverGetSerialPortOutputCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}

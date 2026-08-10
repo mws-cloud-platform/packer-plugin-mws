@@ -33,5 +33,6 @@
  "VMType": "gen-2-16",
  "CloudConfig": "#cloud-config\npackages:\n  - nginx",
  "VMServiceAccount": "test-admin",
+ "SerialPortLogFile": "serial_console.log",
  "CleanupTimeout": 7200000000000
 }
