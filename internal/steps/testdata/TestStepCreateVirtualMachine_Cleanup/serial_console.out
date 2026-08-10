@@ -1,3 +1,4 @@
+Getting virtual machine "packer-vm" serial port output.
 Virtual machine "packer-vm" serial port output saved to file "serial_console.log".
 Deleting firewall rule "packer-ssh-access" from network "packer-network"...
 Firewall rule "packer-ssh-access" from network "packer-network" deleted

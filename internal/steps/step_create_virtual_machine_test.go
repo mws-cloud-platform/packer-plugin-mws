@@ -627,7 +627,7 @@ func TestStepCreateVirtualMachine_Cleanup(t *testing.T) {
 					NetworkConfig: commonconfig.NetworkConfig{
 						UseExternalAddress: true,
 					},
-					SerialPortLogFile: "serial_console.log",
+					SerialConsoleLogFile: "serial_console.log",
 				},
 			},
 		},
@@ -660,7 +660,7 @@ func TestStepCreateVirtualMachine_Cleanup(t *testing.T) {
 			fw := mocksteps.NewMockFileWriter(ctrl)
 			writer, state := prepareState(driver)
 			prepareStep(t, tt.step, state)
-			tt.step.FW = fw
+			tt.step.FileWriter = fw
 
 			expectedExportDiskName := defaultExportDiskName
 			expectedBootDiskName := cmp.Or(tt.step.DiskName, defaultBootDiskName)
@@ -670,7 +670,7 @@ func TestStepCreateVirtualMachine_Cleanup(t *testing.T) {
 			expectedVirtualMachineName := cmp.Or(tt.step.VirtualMachineName, defaultVirtualMachineName)
 			expectedFirewallRuleName := defaultFirewallRuleName
 
-			if tt.step.SerialPortLogFile != "" {
+			if tt.step.SerialConsoleLogFile != "" {
 				data := []byte("virtual machine logs...\none more line of logs...")
 				driver.EXPECT().GetSerialPortOutput(gomock.Any(), expectedVirtualMachineName, 1).
 					Return(data, nil).Times(1)
