@@ -30,6 +30,7 @@
  "VMType": "gen-2-8",
  "CloudConfig": "",
  "VMServiceAccount": "",
+ "SerialConsoleLogFile": "",
  "CleanupTimeout": 3600000000000,
  "DiskForExportType": "nbs-pl2",
  "DiskForExportIOPS": 1000,

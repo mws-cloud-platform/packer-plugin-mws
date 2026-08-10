@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"cmp"
 	"errors"
+	"io/fs"
 	"path"
 	"testing"
 
@@ -620,6 +621,17 @@ func TestStepCreateVirtualMachine_Cleanup(t *testing.T) {
 			},
 		},
 		{
+			name: "serial_console",
+			step: &steps.StepCreateVirtualMachine{
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
+					SerialConsoleLogFile: "serial_console.log",
+				},
+			},
+		},
+		{
 			name: "error_not_found",
 			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
@@ -645,8 +657,10 @@ func TestStepCreateVirtualMachine_Cleanup(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			driver := mocksteps.NewMockStepCreateVirtualMachineDriver(ctrl)
+			fw := mocksteps.NewMockFileWriter(ctrl)
 			writer, state := prepareState(driver)
 			prepareStep(t, tt.step, state)
+			tt.step.FileWriter = fw
 
 			expectedExportDiskName := defaultExportDiskName
 			expectedBootDiskName := cmp.Or(tt.step.DiskName, defaultBootDiskName)
@@ -656,6 +670,13 @@ func TestStepCreateVirtualMachine_Cleanup(t *testing.T) {
 			expectedVirtualMachineName := cmp.Or(tt.step.VirtualMachineName, defaultVirtualMachineName)
 			expectedFirewallRuleName := defaultFirewallRuleName
 
+			if tt.step.SerialConsoleLogFile != "" {
+				data := []byte("virtual machine logs...\none more line of logs...")
+				driver.EXPECT().GetSerialPortOutput(gomock.Any(), expectedVirtualMachineName, 1).
+					Return(data, nil).Times(1)
+				fw.EXPECT().WriteFile("serial_console.log", data, fs.FileMode(0644)).
+					Return(nil).Times(1)
+			}
 			if tt.step.UseExternalAddress {
 				driver.EXPECT().DeleteExternalAddress(gomock.Any(), expectedExternalAddressName).
 					Return(tt.expectedErr).Times(1)

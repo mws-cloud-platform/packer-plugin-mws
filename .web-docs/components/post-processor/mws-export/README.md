@@ -179,6 +179,8 @@ configured for this post-processor.
 - `vm_service_account` (string) - Service account can be connected to virtual machine so that applications and scripts
   on a virtual machine can work with MWS Cloud Platform services.
 
+- `serial_console_log_file` (string) - File path to save virtual machine serial port output.
+
 - `cleanup_timeout` (duration string | ex: "1h5m2s") - Timeout for resources cleanup (defaults to "1h").
 
 <!-- End of code generated from the comments of the VirtualMachineConfig struct in internal/config/virtual_machine.go; -->

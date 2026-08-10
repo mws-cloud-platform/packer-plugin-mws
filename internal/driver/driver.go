@@ -5,6 +5,7 @@ package driver
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"time"
 
@@ -23,6 +24,9 @@ import (
 	iammodel "go.mws.cloud/go-sdk/service/iam/model"
 	iamsdk "go.mws.cloud/go-sdk/service/iam/sdk"
 	computeref "go.mws.cloud/go-sdk/service/resources/references/compute"
+	serialconsoleclient "go.mws.cloud/go-sdk/service/serialconsole/client"
+	serialconsolemodel "go.mws.cloud/go-sdk/service/serialconsole/model"
+	serialconsolesdk "go.mws.cloud/go-sdk/service/serialconsole/sdk"
 	vpcclient "go.mws.cloud/go-sdk/service/vpc/client"
 	vpcmodel "go.mws.cloud/go-sdk/service/vpc/model"
 	vpcsdk "go.mws.cloud/go-sdk/service/vpc/sdk"
@@ -39,30 +43,13 @@ type Driver struct {
 	images            *computesdk.Image
 	diskBackups       *computesdk.DiskBackup
 	hmacKeys          *iamsdk.ServiceAccountHmacKey
+	serialPorts       *serialconsolesdk.SerialPort
 
 	cleanupTimeout time.Duration
 }
 
 func NewDriver(ctx context.Context, c Config) (*Driver, error) {
-	config, err := mws.LoadConfig()
-	if err != nil {
-		return nil, fmt.Errorf("load sdk config: %w", err)
-	}
-
-	config.Project = c.Project
-	if c.BaseEndpoint != "" {
-		config.BaseEndpoint = c.BaseEndpoint
-	}
-	if c.ServiceAccountAuthorizedKeyPath != "" {
-		config.ServiceAccountAuthorizedKeyPath = c.ServiceAccountAuthorizedKeyPath
-	}
-	if c.Token != "" {
-		config.Token = c.Token
-	}
-
-	userAgent := "packer-plugin-mws/" + version.PluginVersion.FormattedVersion()
-
-	sdk, err := mws.Load(ctx, mws.WithConfig(*config), mws.WithUserAgent(userAgent))
+	sdk, err := loadSDK(ctx, c)
 	if err != nil {
 		return nil, fmt.Errorf("load sdk: %w", err)
 	}
@@ -112,6 +99,11 @@ func NewDriver(ctx context.Context, c Config) (*Driver, error) {
 		return nil, fmt.Errorf("create hmac key client: %w", err)
 	}
 
+	serialPorts, err := serialconsolesdk.NewSerialPort(ctx, sdk)
+	if err != nil {
+		return nil, fmt.Errorf("create serial port client: %w", err)
+	}
+
 	return &Driver{
 		disks:             disks,
 		externalAddresses: externalAddresses,
@@ -122,8 +114,31 @@ func NewDriver(ctx context.Context, c Config) (*Driver, error) {
 		images:            images,
 		diskBackups:       diskBackups,
 		hmacKeys:          hmacKeys,
+		serialPorts:       serialPorts,
 		cleanupTimeout:    c.CleanupTimeout,
 	}, nil
+}
+
+func loadSDK(ctx context.Context, c Config) (*mws.SDK, error) {
+	config, err := mws.LoadConfig()
+	if err != nil {
+		return nil, fmt.Errorf("load sdk config: %w", err)
+	}
+
+	config.Project = c.Project
+	if c.BaseEndpoint != "" {
+		config.BaseEndpoint = c.BaseEndpoint
+	}
+	if c.ServiceAccountAuthorizedKeyPath != "" {
+		config.ServiceAccountAuthorizedKeyPath = c.ServiceAccountAuthorizedKeyPath
+	}
+	if c.Token != "" {
+		config.Token = c.Token
+	}
+
+	userAgent := "packer-plugin-mws/" + version.PluginVersion.FormattedVersion()
+
+	return mws.Load(ctx, mws.WithConfig(*config), mws.WithUserAgent(userAgent))
 }
 
 func (d *Driver) CreateDisk(ctx context.Context, params CreateDiskParams) error {
@@ -408,19 +423,41 @@ func (d *Driver) GetDiskBackupMinDiskSize(ctx context.Context, diskBackupRef *co
 	if diskBackupRef == nil {
 		return new(bytesize.MustNewFromInt64(0, bytesize.B)), nil
 	}
-	image, err := d.diskBackups.GetDiskBackup(ctx, computeclient.GetDiskBackupRequest{
+	diskBackup, err := d.diskBackups.GetDiskBackup(ctx, computeclient.GetDiskBackupRequest{
 		Project:    diskBackupRef.GetProject(),
 		DiskBackup: diskBackupRef.GetDiskBackup(),
 	}, computeclient.WithWait())
 	if err != nil {
 		return nil, fmt.Errorf("get disk backup: %w", err)
 	}
-	minDiskSize := image.GetStatus().GetMinDiskSize()
+	minDiskSize := diskBackup.GetStatus().GetMinDiskSize()
 	if minDiskSize == nil {
 		return nil, fmt.Errorf("%q disk backup minDiskSize is not available", diskBackupRef.GetDiskBackup())
 	}
 
 	return minDiskSize, nil
+}
+
+func (d *Driver) GetSerialPortOutput(ctx context.Context, virtualMachineName string, serialPort int) ([]byte, error) {
+	serialPortOutput, err := d.serialPorts.GetComputeSerialPortOutput(ctx, serialconsoleclient.GetComputeSerialPortOutputRequest{
+		VirtualMachine: virtualMachineName,
+		SerialPort:     serialPort,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("get serial port output: %w", err)
+	}
+	switch serialPortOutput.Type {
+	case serialconsolemodel.SerialPortOutputTypeResponse_OUTPUT, serialconsolemodel.SerialPortOutputTypeResponse_ERROR:
+		return []byte(*serialPortOutput.Output), nil
+	case serialconsolemodel.SerialPortOutputTypeResponse_BINARY:
+		decoded, err := base64.StdEncoding.DecodeString(*serialPortOutput.Output)
+		if err != nil {
+			return nil, fmt.Errorf("decoding binary serial console output: %w", err)
+		}
+		return decoded, nil
+	default:
+		return nil, fmt.Errorf("unexpected serial console output type %q", serialPortOutput.Type)
+	}
 }
 
 func (d *Driver) ImportImage(ctx context.Context, params ImportImageParams) (*computemodel.ImageOptionalResponse, error) {

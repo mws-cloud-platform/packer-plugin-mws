@@ -33,11 +33,12 @@ func TestVirtualMachineConfig(t *testing.T) {
 			name: "valid_full",
 			raws: []any{
 				map[string]any{
-					"virtual_machine_name": "test-vm",
-					"vm_type":              "gen-2-16",
-					"cloud_config":         testCloudConfig,
-					"vm_service_account":   "test-admin",
-					"cleanup_timeout":      "2h",
+					"virtual_machine_name":    "test-vm",
+					"vm_type":                 "gen-2-16",
+					"cloud_config":            testCloudConfig,
+					"vm_service_account":      "test-admin",
+					"serial_console_log_file": "serial_console.log",
+					"cleanup_timeout":         "2h",
 					// DiskConfig
 					"disk_name":      "test-disk",
 					"disk_type":      "nbs-pl3",

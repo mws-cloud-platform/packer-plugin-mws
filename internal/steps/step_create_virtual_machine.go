@@ -24,6 +24,8 @@ import (
 	vpcref "go.mws.cloud/go-sdk/service/resources/references/vpc"
 )
 
+const serialPort = 1
+
 type StepCreateVirtualMachine struct {
 	Project      string
 	Zone         string
@@ -32,6 +34,7 @@ type StepCreateVirtualMachine struct {
 	*commonconfig.DiskForExportConfig
 
 	GeneratedData *packerbuilderdata.GeneratedData
+	FileWriter    FileWriter
 }
 
 func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
@@ -128,6 +131,7 @@ func (s *StepCreateVirtualMachine) Cleanup(state multistep.StateBag) {
 	virtualMachineName := cmp.Or(s.VirtualMachineName, prefix+"vm")
 	firewallRuleName := prefix + "ssh-access"
 
+	s.saveSerialPort(ctx, driver, ui, virtualMachineName)
 	if s.UseExternalAddress {
 		common.DeleteSubWithUI(ctx, ui, "firewall rule", firewallRuleName, "network", networkName, driver.DeleteFirewallRule)
 	}
@@ -398,4 +402,26 @@ func (s *StepCreateVirtualMachine) exportDiskParams(exportDiskName string) drive
 		ImageRef: s.exportImageRef(),
 		Zone:     s.Zone,
 	}
+}
+
+func (s *StepCreateVirtualMachine) saveSerialPort(ctx context.Context, driver StepCreateVirtualMachineDriver, ui packer.Ui, virtualMachineName string) {
+	if s.SerialConsoleLogFile == "" {
+		return
+	}
+	ui.Sayf("Getting virtual machine %q serial port output.", virtualMachineName)
+	output, err := driver.GetSerialPortOutput(ctx, virtualMachineName, serialPort)
+	if err != nil {
+		ui.Errorf("Error getting virtual machine %q serial port output.\n"+
+			"Error: %v.", virtualMachineName, err)
+		return
+	}
+
+	fw := cmp.Or[FileWriter](s.FileWriter, RealFileWriter{})
+	err = fw.WriteFile(s.SerialConsoleLogFile, output, 0644)
+	if err != nil {
+		ui.Errorf("Error saving virtual machine %q serial port output to file %q.\n"+
+			"Error: %v.", virtualMachineName, s.SerialConsoleLogFile, err)
+		return
+	}
+	ui.Sayf("Virtual machine %q serial port output saved to file %q.", virtualMachineName, s.SerialConsoleLogFile)
 }

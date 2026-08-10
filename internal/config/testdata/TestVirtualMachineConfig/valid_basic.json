@@ -17,5 +17,6 @@
  "VMType": "gen-2-8",
  "CloudConfig": "",
  "VMServiceAccount": "",
+ "SerialConsoleLogFile": "",
  "CleanupTimeout": 3600000000000
 }

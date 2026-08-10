@@ -26,6 +26,7 @@ type StepCreateVirtualMachineDriver interface {
 
 	GetImageMinDiskSize(context.Context, *computeref.ImageRef) (*bytesize.ByteSize, error)
 	GetDiskBackupMinDiskSize(context.Context, *computeref.DiskBackupRef) (*bytesize.ByteSize, error)
+	GetSerialPortOutput(context.Context, string, int) ([]byte, error)
 
 	DeleteDisk(context.Context, string) error
 	DeleteExternalAddress(context.Context, string) error

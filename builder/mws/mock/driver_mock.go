@@ -657,3 +657,42 @@ func (c *MockDriverGetImageMinDiskSizeCall) DoAndReturn(f func(context.Context, 
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
+
+// GetSerialPortOutput mocks base method.
+func (m *MockDriver) GetSerialPortOutput(arg0 context.Context, arg1 string, arg2 int) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSerialPortOutput", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSerialPortOutput indicates an expected call of GetSerialPortOutput.
+func (mr *MockDriverMockRecorder) GetSerialPortOutput(arg0, arg1, arg2 any) *MockDriverGetSerialPortOutputCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSerialPortOutput", reflect.TypeOf((*MockDriver)(nil).GetSerialPortOutput), arg0, arg1, arg2)
+	return &MockDriverGetSerialPortOutputCall{Call: call}
+}
+
+// MockDriverGetSerialPortOutputCall wrap *gomock.Call
+type MockDriverGetSerialPortOutputCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockDriverGetSerialPortOutputCall) Return(arg0 []byte, arg1 error) *MockDriverGetSerialPortOutputCall {
+	c.Call = c.Call.Return(arg0, arg1)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockDriverGetSerialPortOutputCall) Do(f func(context.Context, string, int) ([]byte, error)) *MockDriverGetSerialPortOutputCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockDriverGetSerialPortOutputCall) DoAndReturn(f func(context.Context, string, int) ([]byte, error)) *MockDriverGetSerialPortOutputCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}

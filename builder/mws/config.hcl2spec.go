@@ -93,6 +93,7 @@ type FlatConfig struct {
 	VMType                          *string           `mapstructure:"vm_type" required:"false" cty:"vm_type" hcl:"vm_type"`
 	CloudConfig                     *string           `mapstructure:"cloud_config" required:"false" cty:"cloud_config" hcl:"cloud_config"`
 	VMServiceAccount                *string           `mapstructure:"vm_service_account" required:"false" cty:"vm_service_account" hcl:"vm_service_account"`
+	SerialConsoleLogFile            *string           `mapstructure:"serial_console_log_file" required:"false" cty:"serial_console_log_file" hcl:"serial_console_log_file"`
 	CleanupTimeout                  *string           `mapstructure:"cleanup_timeout" required:"false" cty:"cleanup_timeout" hcl:"cleanup_timeout"`
 }
 
@@ -191,6 +192,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"vm_type":                             &hcldec.AttrSpec{Name: "vm_type", Type: cty.String, Required: false},
 		"cloud_config":                        &hcldec.AttrSpec{Name: "cloud_config", Type: cty.String, Required: false},
 		"vm_service_account":                  &hcldec.AttrSpec{Name: "vm_service_account", Type: cty.String, Required: false},
+		"serial_console_log_file":             &hcldec.AttrSpec{Name: "serial_console_log_file", Type: cty.String, Required: false},
 		"cleanup_timeout":                     &hcldec.AttrSpec{Name: "cleanup_timeout", Type: cty.String, Required: false},
 	}
 	return s
