@@ -146,6 +146,7 @@ func TestConvertToIPv6(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			var ipv4 net.IP
 			if tt.ipv4 != "" {
 				ipv4 = net.ParseIP(tt.ipv4)
