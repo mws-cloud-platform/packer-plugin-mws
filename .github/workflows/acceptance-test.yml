@@ -18,7 +18,9 @@ jobs:
         with:
           version: "1.15.4"
       - name: Create service account key file
-        run: echo "${{ secrets.MWS_SERVICE_ACCOUNT_KEY }}" > service_account_authorized_key_packer_acctest.dms
+        env:
+          MWS_SERVICE_ACCOUNT_KEY: ${{ secrets.MWS_SERVICE_ACCOUNT_KEY }}
+        run: printf '%s' "$MWS_SERVICE_ACCOUNT_KEY" > service_account_authorized_key_packer_acctest.dms
       - name: Run acceptance test
         run: make testacc
         env:
