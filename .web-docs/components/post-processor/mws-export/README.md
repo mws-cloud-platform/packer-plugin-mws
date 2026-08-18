@@ -80,12 +80,6 @@ configured for this post-processor.
 
 **Required**
 
-<!-- Code generated from the comments of the AccessConfig struct in internal/config/access.go; DO NOT EDIT MANUALLY -->
-
-- `project` (string) - The project identifier where resources will be created.
-
-<!-- End of code generated from the comments of the AccessConfig struct in internal/config/access.go; -->
-
 <!-- Code generated from the comments of the Config struct in post-processor/mws-export/config.go; DO NOT EDIT MANUALLY -->
 
 - `object_storage_path` (string) - MWS Cloud Platform Object Storage path where the image will be stored.
@@ -96,6 +90,9 @@ configured for this post-processor.
 **Optional**
 
 <!-- Code generated from the comments of the AccessConfig struct in internal/config/access.go; DO NOT EDIT MANUALLY -->
+
+- `project` (string) - The project identifier where resources will be created.
+  Can be specified using the `MWS_PROJECT` environment variable.
 
 - `zone` (string) - The zone in which the VM will be created (defaults to "ru-central1-a")
 

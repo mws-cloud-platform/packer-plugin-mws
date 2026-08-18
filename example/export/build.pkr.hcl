@@ -10,14 +10,6 @@ packer {
   }
 }
 
-variable "project" {
-  type = string
-}
-
-variable "service_account_authorized_key_path" {
-  type = string
-}
-
 # Variables specific to export operations
 variable "service_account" {
   type = string
@@ -28,9 +20,6 @@ variable "object_storage_bucket" {
 }
 
 source "mws" "example" {
-  project                             = var.project
-  service_account_authorized_key_path = var.service_account_authorized_key_path
-
   source_project = "mws-ubuntu"
   source_image   = "mws-ubuntu-2404-lts-v20260324"
 
@@ -47,9 +36,6 @@ build {
   }
 
   post-processor "mws-export" {
-    project                             = var.project
-    service_account_authorized_key_path = var.service_account_authorized_key_path
-
     source_project = "mws-ubuntu"
     source_image   = "mws-ubuntu-2404-lts-v20260324"
 
