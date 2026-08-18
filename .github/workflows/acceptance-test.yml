@@ -1,0 +1,28 @@
+name: acceptance test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  acceptance-test:
+    name: Acceptance Test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.26"
+          cache: false
+      - uses: hashicorp/setup-packer@v3
+        with:
+          version: "1.15.4"
+      - name: Create service account key file
+        run: echo "${{ secrets.MWS_SERVICE_ACCOUNT_KEY }}" > service_account_authorized_key_packer_acctest.dms
+      - name: Run acceptance test
+        run: make testacc
+        env:
+          MWS_PROJECT: "${{ vars.MWS_TEST_PROJECT }}"
+          MWS_SERVICE_ACCOUNT_AUTHORIZED_KEY_PATH: "${{ github.workspace }}/service_account_authorized_key_packer_acctest.dms"
+      - name: Clean up service account key file
+        run: rm -f service_account_authorized_key_packer_acctest.dms
