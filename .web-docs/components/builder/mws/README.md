@@ -44,26 +44,12 @@ configured for this builder.
 
 <!-- Builder Configuration Fields -->
 
-**Required**
-
-<!--
-  Optional Configuration Fields
-
-  Configuration options that are not required or have reasonable defaults
-  should be listed under the optionals section. Defaults values should be
-  noted in the description of the field
--->
+**Optional**
 
 <!-- Code generated from the comments of the AccessConfig struct in internal/config/access.go; DO NOT EDIT MANUALLY -->
 
 - `project` (string) - The project identifier where resources will be created.
-
-<!-- End of code generated from the comments of the AccessConfig struct in internal/config/access.go; -->
-
-
-**Optional**
-
-<!-- Code generated from the comments of the AccessConfig struct in internal/config/access.go; DO NOT EDIT MANUALLY -->
+  Can be specified using the `MWS_PROJECT` environment variable.
 
 - `zone` (string) - The zone in which the VM will be created (defaults to "ru-central1-a")
 

@@ -18,7 +18,7 @@ type FlatConfig struct {
 	PackerOnError                   *string           `mapstructure:"packer_on_error" cty:"packer_on_error" hcl:"packer_on_error"`
 	PackerUserVars                  map[string]string `mapstructure:"packer_user_variables" cty:"packer_user_variables" hcl:"packer_user_variables"`
 	PackerSensitiveVars             []string          `mapstructure:"packer_sensitive_variables" cty:"packer_sensitive_variables" hcl:"packer_sensitive_variables"`
-	Project                         *string           `mapstructure:"project" required:"true" cty:"project" hcl:"project"`
+	Project                         *string           `mapstructure:"project" required:"false" cty:"project" hcl:"project"`
 	Zone                            *string           `mapstructure:"zone" required:"false" cty:"zone" hcl:"zone"`
 	BaseEndpoint                    *string           `mapstructure:"base_endpoint" required:"false" cty:"base_endpoint" hcl:"base_endpoint"`
 	ServiceAccountAuthorizedKeyPath *string           `mapstructure:"service_account_authorized_key_path" required:"false" cty:"service_account_authorized_key_path" hcl:"service_account_authorized_key_path"`

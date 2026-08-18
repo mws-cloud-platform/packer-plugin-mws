@@ -67,7 +67,7 @@ type FlatConfig struct {
 	WinRMUseSSL                     *bool             `mapstructure:"winrm_use_ssl" cty:"winrm_use_ssl" hcl:"winrm_use_ssl"`
 	WinRMInsecure                   *bool             `mapstructure:"winrm_insecure" cty:"winrm_insecure" hcl:"winrm_insecure"`
 	WinRMUseNTLM                    *bool             `mapstructure:"winrm_use_ntlm" cty:"winrm_use_ntlm" hcl:"winrm_use_ntlm"`
-	Project                         *string           `mapstructure:"project" required:"true" cty:"project" hcl:"project"`
+	Project                         *string           `mapstructure:"project" required:"false" cty:"project" hcl:"project"`
 	Zone                            *string           `mapstructure:"zone" required:"false" cty:"zone" hcl:"zone"`
 	BaseEndpoint                    *string           `mapstructure:"base_endpoint" required:"false" cty:"base_endpoint" hcl:"base_endpoint"`
 	ServiceAccountAuthorizedKeyPath *string           `mapstructure:"service_account_authorized_key_path" required:"false" cty:"service_account_authorized_key_path" hcl:"service_account_authorized_key_path"`

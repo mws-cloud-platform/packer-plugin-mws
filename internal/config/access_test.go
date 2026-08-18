@@ -9,11 +9,12 @@ import (
 
 	"github.com/mws-cloud-platform/packer-plugin-mws/internal/config"
 
+	"go.mws.cloud/go-sdk/mws"
 	"go.mws.cloud/util-toolset/pkg/testing/golden"
 )
 
 func TestAccessConfig(t *testing.T) {
-	t.Parallel()
+	t.Setenv(mws.ProjectEnv, "")
 	tests := []ConfigTestCase{
 		{
 			name: "valid_basic",

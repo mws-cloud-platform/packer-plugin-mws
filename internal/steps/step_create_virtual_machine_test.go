@@ -329,6 +329,7 @@ func TestStepCreateVirtualMachine_Run(t *testing.T) {
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			ctrl := gomock.NewController(t)
 			driver := mocksteps.NewMockStepCreateVirtualMachineDriver(ctrl)
 			writer, state := prepareState(driver)
@@ -655,6 +656,7 @@ func TestStepCreateVirtualMachine_Cleanup(t *testing.T) {
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			ctrl := gomock.NewController(t)
 			driver := mocksteps.NewMockStepCreateVirtualMachineDriver(ctrl)
 			fw := mocksteps.NewMockFileWriter(ctrl)

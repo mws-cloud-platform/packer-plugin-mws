@@ -14,21 +14,15 @@ Initialize the Packer plugin:
 packer init .
 ```
 
-Build the image by specifying required variables:
+Build the image by specifying required environment variables:
 
 ```bash
-packer build -var project=YOUR_PROJECT_ID -var service_account_authorized_key_path=/path/to/your/key.dms .
-```
-
-Alternatively, you can specify variables in a file:
-
-```bash
-packer build -var-file=variables.pkrvars.hcl .
+MWS_PROJECT="YOUR_PROJECT_ID" MWS_SERVICE_ACCOUNT_AUTHORIZED_KEY_PATH="/path/to/your/key.dms" packer build .
 ```
 
 The example declares all required variables directly in the configuration file, with sensible defaults for all other parameters.
 
-## Required Variables
+## Required Environment Variables
 
-- `project` - MWS Cloud Platform project ID for creation of virtual machine
-- `service_account_authorized_key_path` - Path to authorized key for service account on whose behalf Packer will perform operations in the MWS Cloud
+- `MWS_PROJECT` - MWS Cloud Platform project ID for creation of virtual machine
+- `MWS_SERVICE_ACCOUNT_AUTHORIZED_KEY_PATH` - Path to authorized key for service account on whose behalf Packer will perform operations in the MWS Cloud

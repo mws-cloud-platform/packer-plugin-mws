@@ -10,19 +10,12 @@ packer {
   }
 }
 
-# Required variables for authentication
-variable "project" {
+variable "image_name" {
   type = string
-}
-
-variable "service_account_authorized_key_path" {
-  type = string
+  default = ""
 }
 
 source "mws" "example" {
-  project                             = var.project
-  service_account_authorized_key_path = var.service_account_authorized_key_path
-
   source_project = "mws-ubuntu"
   source_image   = "mws-ubuntu-2404-lts-v20260324"
 
@@ -33,6 +26,8 @@ source "mws" "example" {
   disk_iops = 1000
 
   use_external_address = true
+
+  image_name = var.image_name 
 }
 
 build {

@@ -10,15 +10,6 @@ packer {
   }
 }
 
-# Required variables for authentication
-variable "project" {
-  type = string
-}
-
-variable "service_account_authorized_key_path" {
-  type = string
-}
-
 # Variables specific to import operations
 variable "import_object_storage_path" {
   type = string
@@ -36,9 +27,6 @@ build {
   sources = ["source.null.empty"]
 
   post-processor "mws-import" {
-    project                             = var.project
-    service_account_authorized_key_path = var.service_account_authorized_key_path
-
     service_account     = var.service_account
     object_storage_path = var.import_object_storage_path
 

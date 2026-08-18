@@ -7,13 +7,16 @@ package config
 
 import (
 	"cmp"
+	"os"
 
+	"go.mws.cloud/go-sdk/mws"
 	"go.mws.cloud/util-toolset/pkg/utils/consterr"
 )
 
 type AccessConfig struct {
 	// The project identifier where resources will be created.
-	Project string `mapstructure:"project" required:"true"`
+	// Can be specified using the `MWS_PROJECT` environment variable.
+	Project string `mapstructure:"project" required:"false"`
 	// The zone in which the VM will be created (defaults to "ru-central1-a")
 	Zone string `mapstructure:"zone" required:"false"`
 
@@ -30,6 +33,7 @@ type AccessConfig struct {
 }
 
 func (c *AccessConfig) SetDefaults() {
+	c.Project = cmp.Or(c.Project, os.Getenv(mws.ProjectEnv))
 	c.Zone = cmp.Or(c.Zone, DefaultZone)
 }
 
