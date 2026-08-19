@@ -5,6 +5,9 @@ on:
   push:
     branches:
       - '*'
+  pull_request:
+    branches:
+      - '*'
       
 jobs:
   generate:
@@ -13,6 +16,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
+        with:
+          go-version: "1.26"
+          cache: false
       - name: Run code generation
         run: make generate
       - name: Verify no changes were generated
@@ -27,6 +33,7 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version: "1.26"
+          cache: false
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
