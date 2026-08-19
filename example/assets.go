@@ -9,3 +9,6 @@ import (
 
 //go:embed builder/build.pkr.hcl
 var BuilderHCL string
+
+//go:embed export/build.pkr.hcl
+var ExportHCL string

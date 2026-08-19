@@ -11,7 +11,7 @@ packer {
 }
 
 variable "image_name" {
-  type = string
+  type    = string
   default = ""
 }
 
@@ -27,7 +27,7 @@ source "mws" "example" {
 
   use_external_address = true
 
-  image_name = var.image_name 
+  image_name = var.image_name
 }
 
 build {

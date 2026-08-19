@@ -10,6 +10,11 @@ packer {
   }
 }
 
+variable "image_name" {
+  type    = string
+  default = ""
+}
+
 # Variables specific to export operations
 variable "service_account" {
   type = string
@@ -24,6 +29,8 @@ source "mws" "example" {
   source_image   = "mws-ubuntu-2404-lts-v20260324"
 
   use_external_address = true
+
+  image_name = var.image_name
 }
 
 build {
