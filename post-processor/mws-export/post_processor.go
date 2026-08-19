@@ -40,18 +40,7 @@ func (p *PostProcessor) Configure(raws ...any) error {
 }
 
 func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, artifact packer.Artifact) (packer.Artifact, bool, bool, error) {
-	diskForExportConfig := p.config.DiskForExportConfig
-	switch artifact.BuilderId() {
-	case "packer.mws", "packer.post-processor.artifice":
-		diskForExportConfig.ImageForExportProject, _ = artifact.State("ImageProject").(string)
-		diskForExportConfig.ImageForExport, _ = artifact.State("ImageName").(string)
-	}
-
-	if diskForExportConfig.ImageForExport == "" {
-		return nil, false, false, consterr.Error("image_for_export is not provided")
-	}
-
-	// prepare and render values
+	// prepare values for interpolation
 	var generatedData map[any]any
 	stateData := artifact.State(common.GeneratedDataKey)
 	if stateData != nil {
@@ -60,8 +49,24 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, artifact 
 	if generatedData == nil {
 		generatedData = make(map[any]any)
 	}
-	p.config.ctx.Data = generatedData
 
+	diskForExportConfig := p.config.DiskForExportConfig
+	switch artifact.BuilderId() {
+	case "packer.mws", "packer.post-processor.artifice":
+		diskForExportConfig.ImageForExportProject, _ = artifact.State("ImageProject").(string)
+		diskForExportConfig.ImageForExport, _ = artifact.State("ImageName").(string)
+	default:
+		// put values for interpolation in case of exporting image without builder
+		generatedData["ImageProject"] = diskForExportConfig.ImageForExportProject
+		generatedData["ImageName"] = diskForExportConfig.ImageForExport
+	}
+
+	if diskForExportConfig.ImageForExport == "" {
+		return nil, false, false, consterr.Error("image_for_export is not provided")
+	}
+
+	p.config.ctx.Data = generatedData
+	// interpolate values
 	objectStoragePath, err := interpolate.Render(p.config.ObjectStoragePath, &p.config.ctx)
 	if err != nil {
 		return nil, false, false, fmt.Errorf("interpolate object_storage_path: %w", err)
