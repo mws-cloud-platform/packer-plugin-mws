@@ -26,6 +26,10 @@ import (
 )
 
 func TestAccMWSExport(t *testing.T) {
+	if os.Getenv(acctest.TestEnvVar) == "" {
+		t.Skipf("Acceptance tests skipped unless env '%s' set", acctest.TestEnvVar)
+		return
+	}
 	ctx := t.Context()
 	serviceAccount := os.Getenv("PKR_VAR_service_account")
 	objectStorageBucket := os.Getenv("PKR_VAR_object_storage_bucket")
