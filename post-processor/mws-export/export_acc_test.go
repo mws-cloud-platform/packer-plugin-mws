@@ -34,41 +34,38 @@ func TestAccMWSExport(t *testing.T) {
 	require.NoError(t, err, "load AWS config")
 	t.Cleanup(awsCleanup)
 
-	imageName := fmt.Sprintf("packer-acctest-%s-image", random.AlphaNumLower(6))
+	imageNameWithBuilder := fmt.Sprintf("packer-acctest-%s-image", random.AlphaNumLower(6))
+	imageNameWithoutBuilder := "image-for-export-test"
 
-	testCase := &acctest.PluginTestCase{
-		Name:     "export_example",
-		Template: example.ExportHCL,
-		Type:     "mws",
-		BuildExtraArgs: []string{
-			"-var", "image_name=" + imageName,
+	testCases := []acctest.PluginTestCase{
+		{
+			Name:     "export_with_builder_example",
+			Template: example.ExportHCL,
+			Type:     "mws",
+			BuildExtraArgs: []string{
+				"-var", "image_name=" + imageNameWithBuilder,
+			},
+			Check:    check(ctx, awsClient, objectStorageBucket, imageNameWithBuilder),
+			Teardown: teardown(ctx, awsClient, objectStorageBucket, imageNameWithBuilder),
 		},
-		Check: func(buildCommand *exec.Cmd, logfile string) error {
-			if buildCommand.ProcessState != nil && buildCommand.ProcessState.ExitCode() != 0 {
-				return fmt.Errorf("Bad exit code. Logfile: %s", logfile)
-			}
-			if _, err := awsClient.GetObject(ctx, &s3.GetObjectInput{
-				Bucket: &objectStorageBucket,
-				Key:    new(imageName + ".qcow2"),
-			}); err != nil {
-				return fmt.Errorf("get image from object storage: %w", err)
-			}
-			return nil
-		},
-		Teardown: func() error {
-			if _, err := awsClient.DeleteObject(ctx, &s3.DeleteObjectInput{
-				Bucket: &objectStorageBucket,
-				Key:    new(imageName + ".qcow2"),
-			}); err != nil {
-				return fmt.Errorf("delete image from object storage: %w", err)
-			}
-
-			return nil
+		{
+			Name:     "export_of_existing_image_example",
+			Template: example.ExportOfExistingImageHCL,
+			Type:     "mws",
+			BuildExtraArgs: []string{
+				"-var", "image_name=" + imageNameWithoutBuilder,
+			},
+			Check:    check(ctx, awsClient, objectStorageBucket, imageNameWithoutBuilder),
+			Teardown: teardown(ctx, awsClient, objectStorageBucket, imageNameWithoutBuilder),
 		},
 	}
 
-	acctest.TestPlugin(t, testCase)
-
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+			acctest.TestPlugin(t, &testCase)
+		})
+	}
 }
 
 func loadAWSClient(ctx context.Context, serviceAccount string) (*s3.Client, func(), error) {
@@ -118,4 +115,32 @@ func loadAWSClient(ctx context.Context, serviceAccount string) (*s3.Client, func
 	}
 
 	return awsClient, cleanup, nil
+}
+
+func check(ctx context.Context, awsClient *s3.Client, objectStorageBucket, imageName string) func(buildCommand *exec.Cmd, logfile string) error {
+	return func(buildCommand *exec.Cmd, logfile string) error {
+		if buildCommand.ProcessState != nil && buildCommand.ProcessState.ExitCode() != 0 {
+			return fmt.Errorf("Bad exit code. Logfile: %s", logfile)
+		}
+		if _, err := awsClient.GetObject(ctx, &s3.GetObjectInput{
+			Bucket: &objectStorageBucket,
+			Key:    new(imageName + ".qcow2"),
+		}); err != nil {
+			return fmt.Errorf("get image from object storage: %w", err)
+		}
+		return nil
+	}
+}
+
+func teardown(ctx context.Context, awsClient *s3.Client, objectStorageBucket, imageName string) func() error {
+	return func() error {
+		if _, err := awsClient.DeleteObject(ctx, &s3.DeleteObjectInput{
+			Bucket: &objectStorageBucket,
+			Key:    new(imageName + ".qcow2"),
+		}); err != nil {
+			return fmt.Errorf("delete image from object storage: %w", err)
+		}
+
+		return nil
+	}
 }
