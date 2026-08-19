@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v7
       - name: Run code generation
         run: make generate
       - name: Verify no changes were generated
@@ -24,7 +24,7 @@ jobs:
     needs: generate
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v7
         with:
           go-version: "1.26"
       - name: golangci-lint
@@ -38,7 +38,7 @@ jobs:
     needs: generate
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v7
         with:
           go-version: "1.26"
           cache: false
@@ -51,7 +51,7 @@ jobs:
     needs: generate
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v7
         with:
           go-version: "1.26"
           cache: false
