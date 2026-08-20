@@ -20,6 +20,9 @@ import (
 	"github.com/mws-cloud-platform/packer-plugin-mws/internal/config"
 	"github.com/stretchr/testify/require"
 	"go.mws.cloud/go-sdk/mws"
+	computeclient "go.mws.cloud/go-sdk/service/compute/client"
+	computesdk "go.mws.cloud/go-sdk/service/compute/sdk"
+
 	iamclient "go.mws.cloud/go-sdk/service/iam/client"
 	iammodel "go.mws.cloud/go-sdk/service/iam/model"
 	iamsdk "go.mws.cloud/go-sdk/service/iam/sdk"
@@ -29,16 +32,27 @@ func TestAccMWSExport(t *testing.T) {
 	if os.Getenv(acctest.TestEnvVar) == "" {
 		t.Skipf("Acceptance tests skipped unless env '%s' set", acctest.TestEnvVar)
 	}
-	ctx := t.Context()
 	serviceAccount := os.Getenv("PKR_VAR_service_account")
+	require.NotZero(t, serviceAccount, "PKR_VAR_service_account env is required prerequisite")
 	objectStorageBucket := os.Getenv("PKR_VAR_object_storage_bucket")
+	require.NotZero(t, objectStorageBucket, "PKR_VAR_object_storage_bucket env is required prerequisite")
 
-	awsClient, awsCleanup, err := loadAWSClient(ctx, serviceAccount)
-	require.NoError(t, err, "load AWS client")
-	t.Cleanup(awsCleanup)
+	ctx := t.Context()
+	sdk, err := mws.Load(ctx)
+	require.NoError(t, err, "load MWS sdk")
+	imageClient, err := computesdk.NewImage(ctx, sdk)
+	require.NoError(t, err, "create image client")
 
 	imageNameWithBuilder := fmt.Sprintf("packer-acctest-%s-image", random.AlphaNumLower(6))
 	imageNameWithoutBuilder := "image-for-export-test"
+	_, err = imageClient.GetImage(ctx, computeclient.GetImageRequest{
+		Image: imageNameWithoutBuilder,
+	})
+	require.NoErrorf(t, err, "%q image is required prerequisite", imageNameWithoutBuilder)
+
+	awsClient, awsCleanup, err := loadAWSClient(ctx, sdk, serviceAccount)
+	require.NoError(t, err, "load AWS client")
+	t.Cleanup(awsCleanup)
 
 	testCases := []acctest.PluginTestCase{
 		{
@@ -71,12 +85,7 @@ func TestAccMWSExport(t *testing.T) {
 	}
 }
 
-func loadAWSClient(ctx context.Context, serviceAccount string) (*s3.Client, func(), error) {
-	sdk, err := mws.Load(ctx)
-	if err != nil {
-		return nil, nil, fmt.Errorf("load mws sdk: %w", err)
-	}
-
+func loadAWSClient(ctx context.Context, sdk *mws.SDK, serviceAccount string) (*s3.Client, func(), error) {
 	hmacKeys, err := iamsdk.NewServiceAccountHmacKey(ctx, sdk)
 	if err != nil {
 		return nil, nil, fmt.Errorf("create hmac key client: %w", err)
