@@ -111,7 +111,7 @@ func loadAWSClient(ctx context.Context, serviceAccount string) (*s3.Client, func
 	awsClient := s3.NewFromConfig(awsConfig)
 
 	cleanup := func() {
-		_ = hmacKeys.DeleteHmacKey(ctx, iamclient.DeleteHmacKeyRequest{
+		_ = hmacKeys.DeleteHmacKey(context.Background(), iamclient.DeleteHmacKeyRequest{
 			ServiceAccount: serviceAccount,
 			KeyName:        hmacKeyName,
 		})
