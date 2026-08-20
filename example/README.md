@@ -18,7 +18,8 @@ Each example is contained in its own directory with a detailed README:
 
 - [Builder Example](./builder/README.md) - Creating VM images
 - [Import Example](./import/README.md) - Importing images from MWS Cloud Platform Object Storage
-- [Export Example](./export/README.md) - Exporting images to MWS Cloud Platform Object Storage
+- [Export Example](./export/README.md) - Exporting images created by builder to MWS Cloud Platform Object Storage
+- [Export Existing Image Example](./export-of-existing-image/README.md) - Exporting existing images to MWS Cloud Platform Object Storage
 
 ## Security Notes
 

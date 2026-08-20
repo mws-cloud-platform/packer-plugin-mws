@@ -1,10 +1,11 @@
 // Copyright 2026 MTS Web Services, LLC.
 // SPDX-License-Identifier: MPL-2.0
 
-package mws
+package mws_test
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"testing"
 
@@ -13,16 +14,19 @@ import (
 	"github.com/mws-cloud-platform/packer-plugin-mws/example"
 	"github.com/stretchr/testify/require"
 	"go.mws.cloud/go-sdk/mws"
-	"go.mws.cloud/go-sdk/service/compute/client"
+	computeclient "go.mws.cloud/go-sdk/service/compute/client"
 	computesdk "go.mws.cloud/go-sdk/service/compute/sdk"
 )
 
 func TestAccMWSBuilder(t *testing.T) {
+	if os.Getenv(acctest.TestEnvVar) == "" {
+		t.Skipf("Acceptance tests skipped unless env '%s' set", acctest.TestEnvVar)
+	}
 	ctx := t.Context()
 	sdk, err := mws.Load(ctx)
-	require.NoError(t, err)
+	require.NoError(t, err, "load MWS sdk")
 	imageClient, err := computesdk.NewImage(ctx, sdk)
-	require.NoError(t, err)
+	require.NoError(t, err, "create image client")
 
 	imageName := fmt.Sprintf("packer-acctest-%s-image", random.AlphaNumLower(6))
 
@@ -35,17 +39,17 @@ func TestAccMWSBuilder(t *testing.T) {
 			if buildCommand.ProcessState != nil && buildCommand.ProcessState.ExitCode() != 0 {
 				return fmt.Errorf("Bad exit code. Logfile: %s", logfile)
 			}
-			if _, err := imageClient.GetImage(ctx, client.GetImageRequest{
+			if _, err := imageClient.GetImage(ctx, computeclient.GetImageRequest{
 				Image: imageName,
-			}, client.WithWait()); err != nil {
+			}, computeclient.WithWait()); err != nil {
 				return fmt.Errorf("get image: %w", err)
 			}
 			return nil
 		},
 		Teardown: func() error {
-			if err := imageClient.DeleteImage(ctx, client.DeleteImageRequest{
+			if err := imageClient.DeleteImage(ctx, computeclient.DeleteImageRequest{
 				Image: imageName,
-			}, client.WithWait()); err != nil {
+			}, computeclient.WithWait()); err != nil {
 				return fmt.Errorf("delete image: %w", err)
 			}
 			return nil

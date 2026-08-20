@@ -12,7 +12,6 @@ packer {
 
 variable "image_name" {
   type    = string
-  default = ""
 }
 
 # Variables specific to export operations
@@ -24,23 +23,12 @@ variable "object_storage_bucket" {
   type = string
 }
 
-source "mws" "example" {
-  source_project = "mws-ubuntu"
-  source_image   = "mws-ubuntu-2404-lts-v20260324"
-
-  use_external_address = true
-
-  image_name = var.image_name
+source "null" "empty" {
+  communicator = "none"
 }
 
 build {
-  sources = ["source.mws.example"]
-
-  provisioner "shell" {
-    inline = [
-      "echo 'Preparing image for export...'",
-    ]
-  }
+  sources = ["source.null.empty"]
 
   post-processor "mws-export" {
     source_project = "mws-ubuntu"
@@ -48,7 +36,9 @@ build {
 
     use_external_address = true
 
+    image_for_export = var.image_name
+
     service_account     = var.service_account
-    object_storage_path = "${var.object_storage_bucket}/{{build `ImageName` }}.qcow2"
+    object_storage_path = "${var.object_storage_bucket}/${var.image_name}.qcow2"
   }
 }
