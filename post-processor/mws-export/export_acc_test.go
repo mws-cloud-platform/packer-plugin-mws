@@ -28,14 +28,13 @@ import (
 func TestAccMWSExport(t *testing.T) {
 	if os.Getenv(acctest.TestEnvVar) == "" {
 		t.Skipf("Acceptance tests skipped unless env '%s' set", acctest.TestEnvVar)
-		return
 	}
 	ctx := t.Context()
 	serviceAccount := os.Getenv("PKR_VAR_service_account")
 	objectStorageBucket := os.Getenv("PKR_VAR_object_storage_bucket")
 
 	awsClient, awsCleanup, err := loadAWSClient(ctx, serviceAccount)
-	require.NoError(t, err, "load AWS config")
+	require.NoError(t, err, "load AWS client")
 	t.Cleanup(awsCleanup)
 
 	imageNameWithBuilder := fmt.Sprintf("packer-acctest-%s-image", random.AlphaNumLower(6))
@@ -126,7 +125,7 @@ func check(ctx context.Context, awsClient *s3.Client, objectStorageBucket, image
 		if buildCommand.ProcessState != nil && buildCommand.ProcessState.ExitCode() != 0 {
 			return fmt.Errorf("Bad exit code. Logfile: %s", logfile)
 		}
-		if _, err := awsClient.GetObject(ctx, &s3.GetObjectInput{
+		if _, err := awsClient.HeadObject(ctx, &s3.HeadObjectInput{
 			Bucket: &objectStorageBucket,
 			Key:    new(imageName + ".qcow2"),
 		}); err != nil {

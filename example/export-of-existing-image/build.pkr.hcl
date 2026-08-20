@@ -12,7 +12,6 @@ packer {
 
 variable "image_name" {
   type    = string
-  default = ""
 }
 
 # Variables specific to export operations
@@ -40,6 +39,6 @@ build {
     image_for_export = var.image_name
 
     service_account     = var.service_account
-    object_storage_path = "${var.object_storage_bucket}/{{build `ImageName` }}.qcow2"
+    object_storage_path = "${var.object_storage_bucket}/${var.image_name}.qcow2"
   }
 }
