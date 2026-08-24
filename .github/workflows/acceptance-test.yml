@@ -2,13 +2,26 @@ name: acceptance test
 
 on:
   workflow_call:
+    secrets:
+      MWS_SERVICE_ACCOUNT_KEY:
+        required: true
+      MWS_HMAC_ACCESS_KEY:
+        required: true  
+      MWS_HMAC_SECRET_KEY:
+        required: true
+    inputs:
+      MWS_TEST_PROJECT:
+        required: true
+        type: string
+      MWS_TEST_OBJECT_STORAGE_BUCKET:
+        required: true
+        type: string
   workflow_dispatch:
 
 jobs:
   acceptance-test:
     name: Acceptance Test
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
@@ -25,9 +38,10 @@ jobs:
       - name: Run acceptance test
         run: make testacc
         env:
-          MWS_PROJECT: "${{ vars.MWS_TEST_PROJECT }}"
+          MWS_PROJECT: "${{ inputs.MWS_TEST_PROJECT || vars.MWS_TEST_PROJECT }}"
           MWS_SERVICE_ACCOUNT_AUTHORIZED_KEY_PATH: "${{ github.workspace }}/service_account_authorized_key_packer_acctest.dms"
-          PKR_VAR_service_account: "${{ vars.MWS_TEST_SERVICE_ACCOUNT }}"
-          PKR_VAR_object_storage_bucket: "${{ vars.MWS_TEST_OBJECT_STORAGE_BUCKET }}"
+          PKR_VAR_access_key: "${{ secrets.MWS_HMAC_ACCESS_KEY }}"
+          PKR_VAR_secret_key: "${{ secrets.MWS_HMAC_SECRET_KEY }}"
+          PKR_VAR_object_storage_bucket: "${{ inputs.MWS_TEST_OBJECT_STORAGE_BUCKET || vars.MWS_TEST_OBJECT_STORAGE_BUCKET }}"
       - name: Clean up service account key file
         run: rm -f service_account_authorized_key_packer_acctest.dms

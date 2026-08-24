@@ -11,12 +11,23 @@ packer {
 }
 
 variable "image_name" {
-  type    = string
+  type = string
 }
 
 # Variables specific to export operations
 variable "service_account" {
-  type = string
+  type    = string
+  default = ""
+}
+
+variable "access_key" {
+  type    = string
+  default = ""
+}
+
+variable "secret_key" {
+  type    = string
+  default = ""
 }
 
 variable "object_storage_bucket" {
@@ -39,6 +50,8 @@ build {
     image_for_export = var.image_name
 
     service_account     = var.service_account
+    access_key          = var.access_key
+    secret_key          = var.secret_key
     object_storage_path = "${var.object_storage_bucket}/${var.image_name}.qcow2"
   }
 }

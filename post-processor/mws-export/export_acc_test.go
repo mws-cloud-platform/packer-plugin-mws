@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"testing"
-	"time"
 
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
@@ -22,18 +21,16 @@ import (
 	"go.mws.cloud/go-sdk/mws"
 	computeclient "go.mws.cloud/go-sdk/service/compute/client"
 	computesdk "go.mws.cloud/go-sdk/service/compute/sdk"
-
-	iamclient "go.mws.cloud/go-sdk/service/iam/client"
-	iammodel "go.mws.cloud/go-sdk/service/iam/model"
-	iamsdk "go.mws.cloud/go-sdk/service/iam/sdk"
 )
 
 func TestAccMWSExport(t *testing.T) {
 	if os.Getenv(acctest.TestEnvVar) == "" {
 		t.Skipf("Acceptance tests skipped unless env '%s' set", acctest.TestEnvVar)
 	}
-	serviceAccount := os.Getenv("PKR_VAR_service_account")
-	require.NotZero(t, serviceAccount, "PKR_VAR_service_account env is required prerequisite")
+	accessKey := os.Getenv("PKR_VAR_access_key")
+	require.NotZero(t, accessKey, "PKR_VAR_access_key env is required prerequisite")
+	secretKey := os.Getenv("PKR_VAR_secret_key")
+	require.NotZero(t, secretKey, "PKR_VAR_secret_key env is required prerequisite")
 	objectStorageBucket := os.Getenv("PKR_VAR_object_storage_bucket")
 	require.NotZero(t, objectStorageBucket, "PKR_VAR_object_storage_bucket env is required prerequisite")
 
@@ -50,9 +47,8 @@ func TestAccMWSExport(t *testing.T) {
 	})
 	require.NoErrorf(t, err, "%q image is required prerequisite", imageNameWithoutBuilder)
 
-	awsClient, awsCleanup, err := loadAWSClient(ctx, sdk, serviceAccount)
+	awsClient, err := loadAWSClient(ctx, accessKey, secretKey)
 	require.NoError(t, err, "load AWS client")
-	t.Cleanup(awsCleanup)
 
 	testCases := []acctest.PluginTestCase{
 		{
@@ -85,48 +81,20 @@ func TestAccMWSExport(t *testing.T) {
 	}
 }
 
-func loadAWSClient(ctx context.Context, sdk *mws.SDK, serviceAccount string) (*s3.Client, func(), error) {
-	hmacKeys, err := iamsdk.NewServiceAccountHmacKey(ctx, sdk)
-	if err != nil {
-		return nil, nil, fmt.Errorf("create hmac key client: %w", err)
-	}
-
-	hmacKeyName := fmt.Sprintf("packer-acctest-%s-hmac-key", random.AlphaNumLower(6))
-
-	hmacKeyResp, err := hmacKeys.CreateHmacKey(ctx, iamclient.UpsertHmacKeyRequest{
-		ServiceAccount: serviceAccount,
-		KeyName:        hmacKeyName,
-		Body: iammodel.HmacKeyRequest{
-			Spec: iammodel.HmacKeySpecRequest{
-				ExpirationTime: new(time.Now().Add(time.Hour)),
-			},
-		},
-	})
-	if err != nil {
-		return nil, nil, fmt.Errorf("create hmac key: %w", err)
-	}
-	hmacAccessKey := hmacKeyResp.GetStatus().GetAccessKeyIdOr("")
-	hmacSecretKey := hmacKeyResp.GetStatus().GetSecretAccessKeyOr("")
-	creds := credentials.NewStaticCredentialsProvider(hmacAccessKey, hmacSecretKey, "")
+func loadAWSClient(ctx context.Context, accessKey, secretKey string) (*s3.Client, error) {
+	creds := credentials.NewStaticCredentialsProvider(accessKey, secretKey, "")
 	awsConfig, err := awsconfig.LoadDefaultConfig(ctx,
 		awsconfig.WithRegion(config.DefaultObjectStorageRegion),
 		awsconfig.WithCredentialsProvider(creds),
 		awsconfig.WithBaseEndpoint(config.DefaultObjectStorageEndpoint),
 	)
 	if err != nil {
-		return nil, nil, fmt.Errorf("load AWS config: %w", err)
+		return nil, fmt.Errorf("load AWS config: %w", err)
 	}
 
 	awsClient := s3.NewFromConfig(awsConfig)
 
-	cleanup := func() {
-		_ = hmacKeys.DeleteHmacKey(context.Background(), iamclient.DeleteHmacKeyRequest{
-			ServiceAccount: serviceAccount,
-			KeyName:        hmacKeyName,
-		})
-	}
-
-	return awsClient, cleanup, nil
+	return awsClient, nil
 }
 
 func check(ctx context.Context, awsClient *s3.Client, objectStorageBucket, imageName string) func(buildCommand *exec.Cmd, logfile string) error {

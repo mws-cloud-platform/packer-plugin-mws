@@ -17,7 +17,18 @@ variable "image_name" {
 
 # Variables specific to export operations
 variable "service_account" {
-  type = string
+  type    = string
+  default = ""
+}
+
+variable "access_key" {
+  type    = string
+  default = ""
+}
+
+variable "secret_key" {
+  type    = string
+  default = ""
 }
 
 variable "object_storage_bucket" {
@@ -49,6 +60,8 @@ build {
     use_external_address = true
 
     service_account     = var.service_account
+    access_key          = var.access_key
+    secret_key          = var.secret_key
     object_storage_path = "${var.object_storage_bucket}/{{build `ImageName` }}.qcow2"
   }
 }

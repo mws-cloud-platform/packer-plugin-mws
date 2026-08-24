@@ -14,13 +14,25 @@ Initialize the Packer plugin:
 packer init .
 ```
 
+### Using Service Account Authentication (Recommended)
+
+Note: service account must have permissions to create [HMAC keys](https://mws.ru/docs/cloud-platform/iam/general/keys.html#hmackey) for the specified Object Storage bucket.
+
 Build and export the image by specifying required variables:
 
 ```bash
 MWS_PROJECT="YOUR_PROJECT_ID" MWS_SERVICE_ACCOUNT_AUTHORIZED_KEY_PATH="/path/to/your/key.dms" packer build -var service_account=YOUR_SERVICE_ACCOUNT -var object_storage_bucket=YOUR_BUCKET .
 ```
 
-Alternatively, you can specify variables in a file:
+### Using Direct HMAC Key Authentication
+
+Build and export the image by specifying HMAC key variables:
+
+```bash
+MWS_PROJECT="YOUR_PROJECT_ID" MWS_SERVICE_ACCOUNT_AUTHORIZED_KEY_PATH="/path/to/your/key.dms" packer build -var access_key=YOUR_ACCESS_KEY -var secret_key=YOUR_SECRET_KEY -var object_storage_bucket=YOUR_BUCKET .
+```
+
+### Alternatively, you can specify variables in a file:
 
 ```bash
 MWS_PROJECT="YOUR_PROJECT_ID" MWS_SERVICE_ACCOUNT_AUTHORIZED_KEY_PATH="/path/to/your/key.dms" packer build -var-file=variables.pkrvars.hcl .
@@ -35,7 +47,15 @@ The example declares all required variables directly in the configuration file, 
 
 ## Required Variables
 
+One of the following authentication methods must be provided:
+
+### Option 1: Service Account (Recommended)
 - `service_account` - Name of the service account that will be used to access the MWS Cloud Platform Object Storage
+- `object_storage_bucket` - Object storage bucket for exported image
+
+### Option 2: Direct HMAC Key Authentication
+- `access_key` - HMAC key identifier for authenticating with Object Storage
+- `secret_key` - HMAC key secret for accessing Object Storage
 - `object_storage_bucket` - Object storage bucket for exported image
 
 ## Prerequisites

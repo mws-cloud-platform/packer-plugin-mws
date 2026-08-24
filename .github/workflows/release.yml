@@ -23,6 +23,13 @@ jobs:
   acceptance-test:
     needs: ci
     uses: ./.github/workflows/acceptance-test.yml
+    secrets:
+      MWS_SERVICE_ACCOUNT_KEY: ${{ secrets.MWS_SERVICE_ACCOUNT_KEY }}
+      MWS_HMAC_ACCESS_KEY: ${{ secrets.MWS_HMAC_ACCESS_KEY }}
+      MWS_HMAC_SECRET_KEY: ${{ secrets.MWS_HMAC_SECRET_KEY }}
+    with:
+      MWS_TEST_PROJECT: ${{ vars.MWS_TEST_PROJECT }}
+      MWS_TEST_OBJECT_STORAGE_BUCKET: ${{ vars.MWS_TEST_OBJECT_STORAGE_BUCKET }}
   get-go-version:
     runs-on: ubuntu-latest
     needs: acceptance-test
