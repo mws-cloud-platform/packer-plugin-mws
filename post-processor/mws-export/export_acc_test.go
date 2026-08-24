@@ -10,13 +10,11 @@ import (
 	"os/exec"
 	"testing"
 
-	awsconfig "github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/hashicorp/packer-plugin-sdk/acctest"
 	"github.com/hashicorp/packer-plugin-sdk/random"
 	"github.com/mws-cloud-platform/packer-plugin-mws/example"
-	"github.com/mws-cloud-platform/packer-plugin-mws/internal/config"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/testutil"
 	"github.com/stretchr/testify/require"
 	"go.mws.cloud/go-sdk/mws"
 	computeclient "go.mws.cloud/go-sdk/service/compute/client"
@@ -27,6 +25,8 @@ func TestAccMWSExport(t *testing.T) {
 	if os.Getenv(acctest.TestEnvVar) == "" {
 		t.Skipf("Acceptance tests skipped unless env '%s' set", acctest.TestEnvVar)
 	}
+	t.Parallel()
+
 	accessKey := os.Getenv("PKR_VAR_access_key")
 	require.NotZero(t, accessKey, "PKR_VAR_access_key env is required prerequisite")
 	secretKey := os.Getenv("PKR_VAR_secret_key")
@@ -40,14 +40,14 @@ func TestAccMWSExport(t *testing.T) {
 	imageClient, err := computesdk.NewImage(ctx, sdk)
 	require.NoError(t, err, "create image client")
 
-	imageNameWithBuilder := fmt.Sprintf("packer-acctest-%s-image", random.AlphaNumLower(6))
+	imageNameWithBuilder := fmt.Sprintf("packer-acctest-%s-exported-image", random.AlphaNumLower(6))
 	imageNameWithoutBuilder := "image-for-export-test"
 	_, err = imageClient.GetImage(ctx, computeclient.GetImageRequest{
 		Image: imageNameWithoutBuilder,
 	})
 	require.NoErrorf(t, err, "%q image is required prerequisite", imageNameWithoutBuilder)
 
-	awsClient, err := loadAWSClient(ctx, accessKey, secretKey)
+	awsClient, err := testutil.LoadAWSClient(ctx, accessKey, secretKey)
 	require.NoError(t, err, "load AWS client")
 
 	testCases := []acctest.PluginTestCase{
@@ -79,22 +79,6 @@ func TestAccMWSExport(t *testing.T) {
 			acctest.TestPlugin(t, &testCase)
 		})
 	}
-}
-
-func loadAWSClient(ctx context.Context, accessKey, secretKey string) (*s3.Client, error) {
-	creds := credentials.NewStaticCredentialsProvider(accessKey, secretKey, "")
-	awsConfig, err := awsconfig.LoadDefaultConfig(ctx,
-		awsconfig.WithRegion(config.DefaultObjectStorageRegion),
-		awsconfig.WithCredentialsProvider(creds),
-		awsconfig.WithBaseEndpoint(config.DefaultObjectStorageEndpoint),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("load AWS config: %w", err)
-	}
-
-	awsClient := s3.NewFromConfig(awsConfig)
-
-	return awsClient, nil
 }
 
 func check(ctx context.Context, awsClient *s3.Client, objectStorageBucket, imageName string) func(buildCommand *exec.Cmd, logfile string) error {

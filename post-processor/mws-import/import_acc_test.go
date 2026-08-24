@@ -1,7 +1,7 @@
 // Copyright 2026 MTS Web Services, LLC.
 // SPDX-License-Identifier: MPL-2.0
 
-package mws_test
+package mwsimport_test
 
 import (
 	"fmt"
@@ -9,20 +9,29 @@ import (
 	"os/exec"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/hashicorp/packer-plugin-sdk/acctest"
 	"github.com/hashicorp/packer-plugin-sdk/random"
 	"github.com/mws-cloud-platform/packer-plugin-mws/example"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/testutil"
 	"github.com/stretchr/testify/require"
 	"go.mws.cloud/go-sdk/mws"
 	computeclient "go.mws.cloud/go-sdk/service/compute/client"
 	computesdk "go.mws.cloud/go-sdk/service/compute/sdk"
 )
 
-func TestAccMWSBuilder(t *testing.T) {
+func TestAccMWSImport(t *testing.T) {
 	if os.Getenv(acctest.TestEnvVar) == "" {
 		t.Skipf("Acceptance tests skipped unless env '%s' set", acctest.TestEnvVar)
 	}
 	t.Parallel()
+
+	accessKey := os.Getenv("PKR_VAR_access_key")
+	require.NotZero(t, accessKey, "PKR_VAR_access_key env is required prerequisite")
+	secretKey := os.Getenv("PKR_VAR_secret_key")
+	require.NotZero(t, secretKey, "PKR_VAR_secret_key env is required prerequisite")
+	objectStorageBucket := os.Getenv("PKR_VAR_object_storage_bucket")
+	require.NotZero(t, objectStorageBucket, "PKR_VAR_object_storage_bucket env is required prerequisite")
 
 	ctx := t.Context()
 	sdk, err := mws.Load(ctx)
@@ -30,19 +39,33 @@ func TestAccMWSBuilder(t *testing.T) {
 	imageClient, err := computesdk.NewImage(ctx, sdk)
 	require.NoError(t, err, "create image client")
 
-	imageName := fmt.Sprintf("packer-acctest-%s-image", random.AlphaNumLower(6))
+	awsClient, err := testutil.LoadAWSClient(ctx, accessKey, secretKey)
+	require.NoError(t, err, "load AWS client")
+
+	importedImageName := fmt.Sprintf("packer-acctest-%s-imported-image", random.AlphaNumLower(6))
+	imageNameInObjectStorage := "image-for-import-test.qcow2"
+	importObjectStoragePath := fmt.Sprintf("%s/%s", objectStorageBucket, imageNameInObjectStorage)
+
+	_, err = awsClient.HeadObject(ctx, &s3.HeadObjectInput{
+		Bucket: &objectStorageBucket,
+		Key:    &imageNameInObjectStorage,
+	})
+	require.NoErrorf(t, err, "%q image in object storage is required prerequisite", importObjectStoragePath)
 
 	testCase := &acctest.PluginTestCase{
-		Name:           "builder_example",
-		Template:       example.BuilderHCL,
-		Type:           "mws",
-		BuildExtraArgs: []string{"-var", "image_name=" + imageName},
+		Name:     "import_example",
+		Template: example.ImportHCL,
+		Type:     "mws",
+		BuildExtraArgs: []string{
+			"-var", "import_object_storage_path=" + importObjectStoragePath,
+			"-var", "image_name=" + importedImageName,
+		},
 		Check: func(buildCommand *exec.Cmd, logfile string) error {
 			if buildCommand.ProcessState != nil && buildCommand.ProcessState.ExitCode() != 0 {
 				return fmt.Errorf("Bad exit code. Logfile: %s", logfile)
 			}
 			if _, err := imageClient.GetImage(ctx, computeclient.GetImageRequest{
-				Image: imageName,
+				Image: importedImageName,
 			}, computeclient.WithWait()); err != nil {
 				return fmt.Errorf("get image: %w", err)
 			}
@@ -50,10 +73,11 @@ func TestAccMWSBuilder(t *testing.T) {
 		},
 		Teardown: func() error {
 			if err := imageClient.DeleteImage(ctx, computeclient.DeleteImageRequest{
-				Image: imageName,
+				Image: importedImageName,
 			}, computeclient.WithWait()); err != nil {
 				return fmt.Errorf("delete image: %w", err)
 			}
+
 			return nil
 		},
 	}

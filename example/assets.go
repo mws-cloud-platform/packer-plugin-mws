@@ -15,3 +15,6 @@ var ExportHCL string
 
 //go:embed export-of-existing-image/build.pkr.hcl
 var ExportOfExistingImageHCL string
+
+//go:embed import/build.pkr.hcl
+var ImportHCL string
