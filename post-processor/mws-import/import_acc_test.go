@@ -4,26 +4,23 @@
 package mwsimport_test
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"os/exec"
 	"testing"
 
-	awsconfig "github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/hashicorp/packer-plugin-sdk/acctest"
 	"github.com/hashicorp/packer-plugin-sdk/random"
 	"github.com/mws-cloud-platform/packer-plugin-mws/example"
-	"github.com/mws-cloud-platform/packer-plugin-mws/internal/config"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/testutil"
 	"github.com/stretchr/testify/require"
 	"go.mws.cloud/go-sdk/mws"
 	computeclient "go.mws.cloud/go-sdk/service/compute/client"
 	computesdk "go.mws.cloud/go-sdk/service/compute/sdk"
 )
 
-func TestAccMWSExport(t *testing.T) {
+func TestAccMWSImport(t *testing.T) {
 	if os.Getenv(acctest.TestEnvVar) == "" {
 		t.Skipf("Acceptance tests skipped unless env '%s' set", acctest.TestEnvVar)
 	}
@@ -42,7 +39,7 @@ func TestAccMWSExport(t *testing.T) {
 	imageClient, err := computesdk.NewImage(ctx, sdk)
 	require.NoError(t, err, "create image client")
 
-	awsClient, err := loadAWSClient(ctx, accessKey, secretKey)
+	awsClient, err := testutil.LoadAWSClient(ctx, accessKey, secretKey)
 	require.NoError(t, err, "load AWS client")
 
 	importedImageName := fmt.Sprintf("packer-acctest-%s-imported-image", random.AlphaNumLower(6))
@@ -86,20 +83,4 @@ func TestAccMWSExport(t *testing.T) {
 	}
 
 	acctest.TestPlugin(t, testCase)
-}
-
-func loadAWSClient(ctx context.Context, accessKey, secretKey string) (*s3.Client, error) {
-	creds := credentials.NewStaticCredentialsProvider(accessKey, secretKey, "")
-	awsConfig, err := awsconfig.LoadDefaultConfig(ctx,
-		awsconfig.WithRegion(config.DefaultObjectStorageRegion),
-		awsconfig.WithCredentialsProvider(creds),
-		awsconfig.WithBaseEndpoint(config.DefaultObjectStorageEndpoint),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("load AWS config: %w", err)
-	}
-
-	awsClient := s3.NewFromConfig(awsConfig)
-
-	return awsClient, nil
 }

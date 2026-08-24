@@ -53,7 +53,7 @@ jobs:
             post-processor/mws-export/packer_log_export_of_existing_image_example.txt
             post-processor/mws-export/packer_log_export_with_builder_example.txt
             post-processor/mws-import/packer_log_import_example.txt
-          retention-days: 7
+          retention-days: 1
           if-no-files-found: ignore # packer deletes logs if tests completed successfully
       - name: Clean up service account key file
         run: rm -f service_account_authorized_key_packer_acctest.dms

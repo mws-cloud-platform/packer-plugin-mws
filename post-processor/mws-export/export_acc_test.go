@@ -10,13 +10,11 @@ import (
 	"os/exec"
 	"testing"
 
-	awsconfig "github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/hashicorp/packer-plugin-sdk/acctest"
 	"github.com/hashicorp/packer-plugin-sdk/random"
 	"github.com/mws-cloud-platform/packer-plugin-mws/example"
-	"github.com/mws-cloud-platform/packer-plugin-mws/internal/config"
+	"github.com/mws-cloud-platform/packer-plugin-mws/internal/testutil"
 	"github.com/stretchr/testify/require"
 	"go.mws.cloud/go-sdk/mws"
 	computeclient "go.mws.cloud/go-sdk/service/compute/client"
@@ -49,7 +47,7 @@ func TestAccMWSExport(t *testing.T) {
 	})
 	require.NoErrorf(t, err, "%q image is required prerequisite", imageNameWithoutBuilder)
 
-	awsClient, err := loadAWSClient(ctx, accessKey, secretKey)
+	awsClient, err := testutil.LoadAWSClient(ctx, accessKey, secretKey)
 	require.NoError(t, err, "load AWS client")
 
 	testCases := []acctest.PluginTestCase{
@@ -81,22 +79,6 @@ func TestAccMWSExport(t *testing.T) {
 			acctest.TestPlugin(t, &testCase)
 		})
 	}
-}
-
-func loadAWSClient(ctx context.Context, accessKey, secretKey string) (*s3.Client, error) {
-	creds := credentials.NewStaticCredentialsProvider(accessKey, secretKey, "")
-	awsConfig, err := awsconfig.LoadDefaultConfig(ctx,
-		awsconfig.WithRegion(config.DefaultObjectStorageRegion),
-		awsconfig.WithCredentialsProvider(creds),
-		awsconfig.WithBaseEndpoint(config.DefaultObjectStorageEndpoint),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("load AWS config: %w", err)
-	}
-
-	awsClient := s3.NewFromConfig(awsConfig)
-
-	return awsClient, nil
 }
 
 func check(ctx context.Context, awsClient *s3.Client, objectStorageBucket, imageName string) func(buildCommand *exec.Cmd, logfile string) error {
