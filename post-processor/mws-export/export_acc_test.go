@@ -27,6 +27,8 @@ func TestAccMWSExport(t *testing.T) {
 	if os.Getenv(acctest.TestEnvVar) == "" {
 		t.Skipf("Acceptance tests skipped unless env '%s' set", acctest.TestEnvVar)
 	}
+	t.Parallel()
+
 	accessKey := os.Getenv("PKR_VAR_access_key")
 	require.NotZero(t, accessKey, "PKR_VAR_access_key env is required prerequisite")
 	secretKey := os.Getenv("PKR_VAR_secret_key")
@@ -40,7 +42,7 @@ func TestAccMWSExport(t *testing.T) {
 	imageClient, err := computesdk.NewImage(ctx, sdk)
 	require.NoError(t, err, "create image client")
 
-	imageNameWithBuilder := fmt.Sprintf("packer-acctest-%s-image", random.AlphaNumLower(6))
+	imageNameWithBuilder := fmt.Sprintf("packer-acctest-%s-exported-image", random.AlphaNumLower(6))
 	imageNameWithoutBuilder := "image-for-export-test"
 	_, err = imageClient.GetImage(ctx, computeclient.GetImageRequest{
 		Image: imageNameWithoutBuilder,

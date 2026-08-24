@@ -10,6 +10,11 @@ packer {
   }
 }
 
+variable "image_name" {
+  type    = string
+  default = ""
+}
+
 # Variables specific to import operations
 variable "import_object_storage_path" {
   type = string
@@ -43,6 +48,7 @@ build {
     secret_key          = var.secret_key
     object_storage_path = var.import_object_storage_path
 
+    image_name         = var.image_name
     image_display_name = "Imported image from object storage"
   }
 }

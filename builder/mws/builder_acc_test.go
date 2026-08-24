@@ -22,6 +22,8 @@ func TestAccMWSBuilder(t *testing.T) {
 	if os.Getenv(acctest.TestEnvVar) == "" {
 		t.Skipf("Acceptance tests skipped unless env '%s' set", acctest.TestEnvVar)
 	}
+	t.Parallel()
+
 	ctx := t.Context()
 	sdk, err := mws.Load(ctx)
 	require.NoError(t, err, "load MWS sdk")
