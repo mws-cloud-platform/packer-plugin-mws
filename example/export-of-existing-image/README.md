@@ -16,13 +16,15 @@ packer init .
 
 ### Using Service Account Authentication (Recommended)
 
+Note: service account must have permissions to create [HMAC keys](https://mws.ru/docs/cloud-platform/iam/general/keys.html#hmackey) for the specified Object Storage bucket.
+
 Export the image by specifying required variables:
 
 ```bash
 MWS_PROJECT="YOUR_PROJECT_ID" MWS_SERVICE_ACCOUNT_AUTHORIZED_KEY_PATH="/path/to/your/key.dms" packer build -var service_account=YOUR_SERVICE_ACCOUNT -var object_storage_bucket=YOUR_BUCKET -var image_name=YOUR_EXISTING_IMAGE_TO_EXPORT .
 ```
 
-### Using Direct HMAC Key Authentication (Does not require service account with iam admin role)
+### Using Direct HMAC Key Authentication
 
 Export the image by specifying HMAC key variables:
 
@@ -52,7 +54,7 @@ One of the following authentication methods must be provided:
 - `object_storage_bucket` - Object storage bucket for exported image
 - `image_name` - Name of the image to export
 
-### Option 2: Direct HMAC Key Authentication (Does not require service account with iam admin role)
+### Option 2: Direct HMAC Key Authentication
 - `access_key` - HMAC key identifier for authenticating with Object Storage
 - `secret_key` - HMAC key secret for accessing Object Storage
 - `object_storage_bucket` - Object storage bucket for exported image
