@@ -19,7 +19,7 @@ type DiskConfig struct {
 	DiskName string `mapstructure:"disk_name" required:"false"`
 	// Type of disk to create (defaults to "nbs-pl2").
 	DiskType string `mapstructure:"disk_type" required:"false"`
-	// Size of the disk (defaults to source minDiskSize, in export post-processor minDiskSize of image_for_export is added).
+	// Size of the disk (defaults to source minDiskSize, in export post-processor minDiskSize of image_for_export is added twice).
 	DiskSize string `mapstructure:"disk_size" required:"false"`
 	// IOPS for the disk (defaults to 1000).
 	DiskIOPS int64 `mapstructure:"disk_iops" required:"false"`

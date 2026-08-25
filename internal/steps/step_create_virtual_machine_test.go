@@ -108,7 +108,7 @@ func TestStepCreateVirtualMachine_Run(t *testing.T) {
 					ImageForExport: testImageForExport,
 				},
 			},
-			expectedBootDiskSize: new(bytesize.MustNewFromInt64(30, bytesize.GB)),
+			expectedBootDiskSize: new(bytesize.MustNewFromInt64(50, bytesize.GB)),
 		},
 		{
 			name: "with_export_disk_and_explicit_disk_size",
@@ -141,7 +141,7 @@ func TestStepCreateVirtualMachine_Run(t *testing.T) {
 					ImageForExport: testImageForExport,
 				},
 			},
-			expectedBootDiskSize: new(bytesize.MustNewFromInt64(30, bytesize.GB)),
+			expectedBootDiskSize: new(bytesize.MustNewFromInt64(50, bytesize.GB)),
 		},
 		{
 			name: "error_getting_source_image_min_disk_size",

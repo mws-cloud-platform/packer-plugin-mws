@@ -176,6 +176,8 @@ func (s *StepCreateVirtualMachine) bootDiskSize(ctx context.Context, driver Step
 
 	// add bootSize and exportSize
 	sum := new(big.Int).Add(bootSize.BigInt(), exportSize.BigInt())
+	// add exportSize second time to provide a safety margin for temporary files
+	sum.Add(sum, exportSize.BigInt())
 	// convert to GB
 	divGB, modGB := new(big.Int).DivMod(sum, bytesize.GB.GetValue(), new(big.Int))
 	// round up if necessary
