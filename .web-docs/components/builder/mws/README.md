@@ -71,7 +71,7 @@ configured for this builder.
 
 - `disk_type` (string) - Type of disk to create (defaults to "nbs-pl2").
 
-- `disk_size` (string) - Size of the disk (defaults to source minDiskSize, in export post-processor minDiskSize of image_for_export is added).
+- `disk_size` (string) - Size of the disk (defaults to source minDiskSize, in export post-processor minDiskSize of image_for_export is added twice).
 
 - `disk_iops` (int64) - IOPS for the disk (defaults to 1000).
 
