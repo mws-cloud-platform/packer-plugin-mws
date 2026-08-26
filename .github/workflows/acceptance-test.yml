@@ -44,7 +44,7 @@ jobs:
           PKR_VAR_secret_key: "${{ secrets.MWS_HMAC_SECRET_KEY }}"
           PKR_VAR_object_storage_bucket: "${{ inputs.MWS_TEST_OBJECT_STORAGE_BUCKET || vars.MWS_TEST_OBJECT_STORAGE_BUCKET }}"
       - name: Upload Test Logs Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: packer-acceptance-test-logs
