@@ -28,6 +28,8 @@ type StepCreateVirtualMachineDriver interface {
 	GetDiskBackupMinDiskSize(context.Context, *computeref.DiskBackupRef) (*bytesize.ByteSize, error)
 	GetSerialPortOutput(context.Context, string, int) ([]byte, error)
 
+	AttachDiskToVirtualMachine(context.Context, string, *computeref.DiskRef) error
+
 	DeleteDisk(context.Context, string) error
 	DeleteExternalAddress(context.Context, string) error
 	DeleteNetwork(context.Context, string) error
