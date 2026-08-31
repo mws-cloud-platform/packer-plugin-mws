@@ -479,7 +479,7 @@ func (d *Driver) ImportImage(ctx context.Context, params ImportImageParams) (*co
 
 func (d *Driver) AttachDiskToVirtualMachine(ctx context.Context, vmName string, diskRef *computeref.DiskRef) error {
 	if diskRef == nil {
-		return consterr.Error("attach disk to virtual machine: diskRef in nil")
+		return consterr.Error("attach disk to virtual machine: diskRef is nil")
 	}
 	_, err := d.virtualMachines.UpdateVirtualMachine(ctx, computeclient.UpdateVirtualMachineRequest{
 		VirtualMachine: vmName,
