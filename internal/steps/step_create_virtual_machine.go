@@ -75,7 +75,10 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 		return common.ActionHaltWithError(state, err)
 	}
 	if internalAddress, err = s.createVirtualMachine(ctx, driver, ui, virtualMachineName,
-		exportDiskName, bootDiskName, externalAddressName, networkName, subnetName); err != nil {
+		bootDiskName, externalAddressName, networkName, subnetName); err != nil {
+		return common.ActionHaltWithError(state, err)
+	}
+	if err = s.attachDiskForExport(ctx, driver, ui, virtualMachineName, exportDiskName); err != nil {
 		return common.ActionHaltWithError(state, err)
 	}
 	if err = s.createFirewallRule(ctx, driver, ui, firewallRuleName, networkName, internalAddress); err != nil {
@@ -299,7 +302,6 @@ func (s *StepCreateVirtualMachine) createVirtualMachine(
 	driver StepCreateVirtualMachineDriver,
 	ui packer.Ui,
 	virtualMachineName string,
-	exportDiskName string,
 	bootDiskName string,
 	externalAddressName string,
 	networkName string,
@@ -315,7 +317,6 @@ func (s *StepCreateVirtualMachine) createVirtualMachine(
 		CloudConfig:        s.CloudConfig,
 		ServiceAccountRef:  s.serviceAccountRef(),
 		BootDiskRef:        new(computeref.NewDiskRef(s.Project, bootDiskName)),
-		ExportDiskRef:      s.exportDiskRef(exportDiskName),
 		ExternalAddressRef: s.externalAddressRef(externalAddressName),
 		SubnetRef:          new(vpcref.NewSubnetRef(s.Project, networkName, subnetName)),
 	})
@@ -324,6 +325,25 @@ func (s *StepCreateVirtualMachine) createVirtualMachine(
 	}
 	ui.Sayf("Virtual machine %q created", virtualMachineName)
 	return result, nil
+}
+
+func (s *StepCreateVirtualMachine) attachDiskForExport(
+	ctx context.Context,
+	driver StepCreateVirtualMachineDriver,
+	ui packer.Ui,
+	virtualMachineName string,
+	exportDiskName string,
+) error {
+	if s.DiskForExportConfig == nil {
+		return nil
+	}
+	ui.Sayf("Attaching disk for export %q to the virtual machine %q...", exportDiskName, virtualMachineName)
+	err := driver.AttachDiskToVirtualMachine(ctx, virtualMachineName, s.exportDiskRef(exportDiskName))
+	if err != nil {
+		return fmt.Errorf("attach disk export %q to virtual machine %q: %w", exportDiskName, virtualMachineName, err)
+	}
+	ui.Sayf("Disk for export %q attached to the virtual machine %q", exportDiskName, virtualMachineName)
+	return nil
 }
 
 func (s *StepCreateVirtualMachine) createFirewallRule(

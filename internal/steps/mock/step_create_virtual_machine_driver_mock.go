@@ -44,6 +44,44 @@ func (m *MockStepCreateVirtualMachineDriver) EXPECT() *MockStepCreateVirtualMach
 	return m.recorder
 }
 
+// AttachDiskToVirtualMachine mocks base method.
+func (m *MockStepCreateVirtualMachineDriver) AttachDiskToVirtualMachine(arg0 context.Context, arg1 string, arg2 *compute.DiskRef) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AttachDiskToVirtualMachine", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AttachDiskToVirtualMachine indicates an expected call of AttachDiskToVirtualMachine.
+func (mr *MockStepCreateVirtualMachineDriverMockRecorder) AttachDiskToVirtualMachine(arg0, arg1, arg2 any) *MockStepCreateVirtualMachineDriverAttachDiskToVirtualMachineCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AttachDiskToVirtualMachine", reflect.TypeOf((*MockStepCreateVirtualMachineDriver)(nil).AttachDiskToVirtualMachine), arg0, arg1, arg2)
+	return &MockStepCreateVirtualMachineDriverAttachDiskToVirtualMachineCall{Call: call}
+}
+
+// MockStepCreateVirtualMachineDriverAttachDiskToVirtualMachineCall wrap *gomock.Call
+type MockStepCreateVirtualMachineDriverAttachDiskToVirtualMachineCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockStepCreateVirtualMachineDriverAttachDiskToVirtualMachineCall) Return(arg0 error) *MockStepCreateVirtualMachineDriverAttachDiskToVirtualMachineCall {
+	c.Call = c.Call.Return(arg0)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockStepCreateVirtualMachineDriverAttachDiskToVirtualMachineCall) Do(f func(context.Context, string, *compute.DiskRef) error) *MockStepCreateVirtualMachineDriverAttachDiskToVirtualMachineCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockStepCreateVirtualMachineDriverAttachDiskToVirtualMachineCall) DoAndReturn(f func(context.Context, string, *compute.DiskRef) error) *MockStepCreateVirtualMachineDriverAttachDiskToVirtualMachineCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
 // CreateDisk mocks base method.
 func (m *MockStepCreateVirtualMachineDriver) CreateDisk(arg0 context.Context, arg1 driver.CreateDiskParams) error {
 	m.ctrl.T.Helper()

@@ -16,6 +16,7 @@ import (
 	"go.mws.cloud/go-sdk/pkg/apimodels/cidraddress"
 	"go.mws.cloud/go-sdk/pkg/apimodels/ipaddress"
 	"go.mws.cloud/go-sdk/pkg/apimodels/units/bytesize"
+	"go.mws.cloud/go-sdk/pkg/optional"
 	commonmodel "go.mws.cloud/go-sdk/service/common/model"
 	computeclient "go.mws.cloud/go-sdk/service/compute/client"
 	computemodel "go.mws.cloud/go-sdk/service/compute/model"
@@ -242,24 +243,6 @@ func (d *Driver) CreateVirtualMachine(ctx context.Context, params CreateVirtualM
 		}
 	}
 
-	disks := []computemodel.StorageDiskSpecOrRefWithAttachmentsRequest{
-		{
-			Name: "boot",
-			Boot: new(true),
-			Disk: computemodel.StorageDiskSpecOrRefRequest{
-				Ref: params.BootDiskRef,
-			},
-		},
-	}
-	if params.ExportDiskRef != nil {
-		disks = append(disks, computemodel.StorageDiskSpecOrRefWithAttachmentsRequest{
-			Name: DiskForExportName,
-			Disk: computemodel.StorageDiskSpecOrRefRequest{
-				Ref: params.ExportDiskRef,
-			},
-		})
-	}
-
 	req := computeclient.UpsertVirtualMachineRequest{
 		VirtualMachine: params.VirtualMachineName,
 		Body: computemodel.VirtualMachineRequest{
@@ -282,7 +265,15 @@ func (d *Driver) CreateVirtualMachine(ctx context.Context, params CreateVirtualM
 					},
 				},
 				Storage: computemodel.StorageSpecRequest{
-					Disks: disks,
+					Disks: []computemodel.StorageDiskSpecOrRefWithAttachmentsRequest{
+						{
+							Name: "boot",
+							Boot: new(true),
+							Disk: computemodel.StorageDiskSpecOrRefRequest{
+								Ref: params.BootDiskRef,
+							},
+						},
+					},
 				},
 				Network: computemodel.NetworkSpecRequest{
 					NetworkInterfaces: []computemodel.NetworkInterfaceSpecRequest{
@@ -484,6 +475,34 @@ func (d *Driver) ImportImage(ctx context.Context, params ImportImageParams) (*co
 	}
 
 	return image, nil
+}
+
+func (d *Driver) AttachDiskToVirtualMachine(ctx context.Context, vmName string, diskRef *computeref.DiskRef) error {
+	if diskRef == nil {
+		return consterr.Error("attach disk to virtual machine: diskRef is nil")
+	}
+	_, err := d.virtualMachines.UpdateVirtualMachine(ctx, computeclient.UpdateVirtualMachineRequest{
+		VirtualMachine: vmName,
+		Body: computemodel.UpdateVirtualMachineRequest{
+			Spec: optional.NewOptional(computemodel.UpdateVirtualMachineSpecRequest{
+				Storage: optional.NewOptional(computemodel.UpdateStorageSpecRequest{
+					Disks: optional.NewOptional([]computemodel.UpdateStorageDiskSpecOrRefWithAttachmentsRequest{
+						{Name: optional.NewOptional("boot")},
+						{
+							Name: optional.NewOptional(DiskForExportName),
+							Disk: optional.NewOptional(computemodel.UpdateStorageDiskSpecOrRefRequest{
+								Ref: optional.NewOptional(*diskRef),
+							}),
+						},
+					}),
+				}),
+			}),
+		},
+	}, computeclient.WithWait())
+	if err != nil {
+		return fmt.Errorf("attach disk to virtual machine: %w", err)
+	}
+	return nil
 }
 
 func (d *Driver) DeleteDisk(ctx context.Context, diskName string) error {

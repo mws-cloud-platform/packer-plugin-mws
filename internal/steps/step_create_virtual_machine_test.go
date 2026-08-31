@@ -291,6 +291,21 @@ func TestStepCreateVirtualMachine_Run(t *testing.T) {
 			errorStep: "CreateVirtualMachine",
 		},
 		{
+			name: "error_at_AttachDiskForExport_use_external_address",
+			step: &steps.StepCreateVirtualMachine{
+				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
+					NetworkConfig: commonconfig.NetworkConfig{
+						UseExternalAddress: true,
+					},
+				},
+				DiskForExportConfig: &commonconfig.DiskForExportConfig{
+					ImageForExport: testImageForExport,
+				},
+			},
+			expectedBootDiskSize: new(bytesize.MustNewFromInt64(50, bytesize.GB)),
+			errorStep:            "AttachDiskForExport",
+		},
+		{
 			name: "error_at_CreateFirewallRule_use_external_address",
 			step: &steps.StepCreateVirtualMachine{
 				VirtualMachineConfig: commonconfig.VirtualMachineConfig{
@@ -490,13 +505,21 @@ func TestStepCreateVirtualMachine_Run(t *testing.T) {
 						SSHUsername:        commonconfig.DefaultSSHUsername,
 						SSHPublicKey:       testSSHPublicKey,
 						BootDiskRef:        expectedBootDiskRef,
-						ExportDiskRef:      expectedExportDiskRef,
 						ExternalAddressRef: expectedExternalAddressRef,
 						SubnetRef:          new(vpcref.NewSubnetRef(tt.step.Project, expectedNetworkName, expectedSubnetName)),
 					}).
 					Return(testInternalAddress, expectedErrors["CreateVirtualMachine"]).
 					Times(1)
 				if tt.errorStep == "CreateVirtualMachine" {
+					return
+				}
+
+				if tt.step.DiskForExportConfig != nil {
+					driver.EXPECT().AttachDiskToVirtualMachine(gomock.Any(), expectedVirtualMachineName, expectedExportDiskRef).
+						Return(expectedErrors["AttachDiskForExport"]).
+						Times(1)
+				}
+				if tt.errorStep == "AttachDiskForExport" {
 					return
 				}
 

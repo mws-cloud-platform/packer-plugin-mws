@@ -45,7 +45,6 @@ type CreateVirtualMachineParams struct {
 	CloudConfig        string
 	ServiceAccountRef  *iamref.ServiceAccountRef
 	BootDiskRef        *computeref.DiskRef
-	ExportDiskRef      *computeref.DiskRef
 	ExternalAddressRef *vpcref.ExternalAddressRef
 	SubnetRef          *vpcref.SubnetRef
 }
