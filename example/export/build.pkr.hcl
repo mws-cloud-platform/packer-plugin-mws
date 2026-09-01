@@ -4,7 +4,7 @@
 packer {
   required_plugins {
     mws = {
-      version = ">= 0.7.0"
+      version = ">= 0.8.0"
       source  = "github.com/mws-cloud-platform/mws"
     }
   }
