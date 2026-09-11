@@ -17,6 +17,7 @@ var _ Driver = &drivermws.Driver{}
 
 type Driver interface {
 	steps.StepCreateVirtualMachineDriver
+	ShutdownVirtualMachine(context.Context, string) error
 	CreateImage(context.Context, drivermws.CreateImageParams) (*computemodel.ImageOptionalResponse, error)
 	DeleteImage(context.Context, string) error
 }

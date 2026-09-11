@@ -92,6 +92,9 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 		&commonsteps.StepCleanupTempKeys{
 			Comm: &b.config.Communicator,
 		},
+		&StepShutdownVirtualMachine{
+			VirtualMachineName: b.config.VirtualMachineName,
+		},
 		&StepCreateImage{
 			Project:          b.config.Project,
 			ImageName:        b.config.ImageName,
