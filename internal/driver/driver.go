@@ -505,6 +505,23 @@ func (d *Driver) AttachDiskToVirtualMachine(ctx context.Context, vmName string, 
 	return nil
 }
 
+func (d *Driver) ShutdownVirtualMachine(ctx context.Context, virtualMachineName string) error {
+	_, err := d.virtualMachines.UpdateVirtualMachine(ctx, computeclient.UpdateVirtualMachineRequest{
+		VirtualMachine: virtualMachineName,
+		Body: computemodel.UpdateVirtualMachineRequest{
+			Spec: optional.NewOptional(computemodel.UpdateVirtualMachineSpecRequest{
+				Hardware: optional.NewOptionalNil(computemodel.UpdateHardwareSpecRequest{
+					Power: optional.NewOptional(computemodel.HardwareSpecPowerRequest_OFF),
+				}),
+			}),
+		},
+	}, computeclient.WithWait())
+	if err != nil {
+		return fmt.Errorf("shut down virtual machine: %w", err)
+	}
+	return nil
+}
+
 func (d *Driver) DeleteDisk(ctx context.Context, diskName string) error {
 	if err := d.disks.DeleteDisk(ctx, computeclient.DeleteDiskRequest{
 		Disk: diskName,
