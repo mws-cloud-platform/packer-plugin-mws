@@ -6,7 +6,6 @@ package mws
 import (
 	"cmp"
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
@@ -27,7 +26,7 @@ func (s *StepShutdownVirtualMachine) Run(ctx context.Context, state multistep.St
 	ui.Sayf("Shut down virtual machine %q...", virtualMachineName)
 	err := driver.ShutdownVirtualMachine(ctx, virtualMachineName)
 	if err != nil {
-		return common.ActionHaltWithError(state, fmt.Errorf("shut down virtual machine %q: %w", virtualMachineName, err))
+		return common.ActionHaltWithErrorf(state, "shut down virtual machine %q: %w", virtualMachineName, err)
 	}
 	ui.Sayf("Virtual machine %q had been shut down", virtualMachineName)
 
