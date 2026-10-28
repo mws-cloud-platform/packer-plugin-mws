@@ -15,6 +15,7 @@ import (
 	"go.mws.cloud/go-sdk/mws/wait"
 	"go.mws.cloud/go-sdk/pkg/apimodels/cidraddress"
 	"go.mws.cloud/go-sdk/pkg/apimodels/ipaddress"
+	"go.mws.cloud/go-sdk/pkg/apimodels/sensitive"
 	"go.mws.cloud/go-sdk/pkg/apimodels/units/bytesize"
 	"go.mws.cloud/go-sdk/pkg/optional"
 	commonmodel "go.mws.cloud/go-sdk/service/common/model"
@@ -143,6 +144,10 @@ func loadSDK(ctx context.Context, c Config) (*mws.SDK, error) {
 }
 
 func (d *Driver) CreateDisk(ctx context.Context, params CreateDiskParams) error {
+	diskTypeRef, err := computeref.NewDiskTypeRef(params.DiskType)
+	if err != nil {
+		return fmt.Errorf("create disk type ref: %w", err)
+	}
 	if _, err := d.disks.CreateDisk(ctx, computeclient.UpsertDiskRequest{
 		Disk: params.DiskName,
 		Body: computemodel.DiskRequest{
@@ -156,7 +161,7 @@ func (d *Driver) CreateDisk(ctx context.Context, params CreateDiskParams) error 
 					Image:      params.ImageRef,
 					DiskBackup: params.DiskBackupRef,
 				},
-				DiskType: new(computeref.NewDiskTypeRef(params.DiskType)),
+				DiskType: new(diskTypeRef),
 				Iops:     new(computemodel.Iops(params.Iops)),
 			},
 		},
@@ -170,7 +175,7 @@ func (d *Driver) CreateDisk(ctx context.Context, params CreateDiskParams) error 
 func (d *Driver) CreateExternalAddress(ctx context.Context, params CreateExternalAddressParams) (*ipaddress.IPAddress, error) {
 	resp, err := d.externalAddresses.CreateExternalAddress(ctx, vpcclient.UpsertExternalAddressRequest{
 		ExternalAddress: params.ExternalAddressName,
-		Body: &vpcmodel.ExternalAddressRequest{
+		Body: vpcmodel.ExternalAddressRequest{
 			Metadata: &commonmodel.CommonTypedResourceMetadataRequest{
 				Description: new("External address created by Packer"),
 			},
@@ -243,6 +248,11 @@ func (d *Driver) CreateVirtualMachine(ctx context.Context, params CreateVirtualM
 		}
 	}
 
+	vmTypeRef, err := computeref.NewVmTypeRef(params.VMType)
+	if err != nil {
+		return nil, fmt.Errorf("create vm type ref: %w", err)
+	}
+
 	req := computeclient.UpsertVirtualMachineRequest{
 		VirtualMachine: params.VirtualMachineName,
 		Body: computemodel.VirtualMachineRequest{
@@ -253,7 +263,7 @@ func (d *Driver) CreateVirtualMachine(ctx context.Context, params CreateVirtualM
 			},
 			Spec: computemodel.VirtualMachineSpecRequest{
 				Zone:   params.Zone,
-				VmType: computeref.NewVmTypeRef(params.VMType),
+				VmType: vmTypeRef,
 				Hardware: &computemodel.HardwareSpecRequest{
 					Power: new(computemodel.HardwareSpecPowerRequest_ON),
 				},
@@ -388,7 +398,7 @@ func (d *Driver) CreateHMACKey(ctx context.Context, serviceAccount, name string)
 		return "", "", fmt.Errorf("create hmac key: %w", err)
 	}
 
-	return hmacKey.GetStatus().GetAccessKeyIdOr(""), hmacKey.GetStatus().GetSecretAccessKeyOr(""), nil
+	return hmacKey.GetStatus().GetAccessKeyIdOr(""), hmacKey.GetStatus().GetSecretAccessKeyOr(sensitive.New("")).Value(), nil
 }
 
 func (d *Driver) GetImageMinDiskSize(ctx context.Context, imageRef *computeref.ImageRef) (*bytesize.ByteSize, error) {
@@ -439,9 +449,9 @@ func (d *Driver) GetSerialPortOutput(ctx context.Context, virtualMachineName str
 	}
 	switch serialPortOutput.Type {
 	case serialconsolemodel.SerialPortOutputTypeResponse_OUTPUT, serialconsolemodel.SerialPortOutputTypeResponse_ERROR:
-		return []byte(*serialPortOutput.Output), nil
+		return []byte(serialPortOutput.Output.Value()), nil
 	case serialconsolemodel.SerialPortOutputTypeResponse_BINARY:
-		decoded, err := base64.StdEncoding.DecodeString(*serialPortOutput.Output)
+		decoded, err := base64.StdEncoding.DecodeString(serialPortOutput.Output.Value())
 		if err != nil {
 			return nil, fmt.Errorf("decoding binary serial console output: %w", err)
 		}

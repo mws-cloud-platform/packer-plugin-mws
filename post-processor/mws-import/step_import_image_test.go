@@ -43,7 +43,7 @@ func TestStepImportImage(t *testing.T) {
 
 	image := &computemodel.ImageOptionalResponse{
 		Metadata: optional.NewOptionalNil(commonmodel.CommonTypedResourceMetadataOptionalResponse{
-			Id:          new(resmodels.NewAnyResourceID(testImageName)),
+			Id:          new(resmodels.NewMustAnyResourceID(testImageName)),
 			Description: optional.NewOptional(testImageDescription),
 		}),
 	}
