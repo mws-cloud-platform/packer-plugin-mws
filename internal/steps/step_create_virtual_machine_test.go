@@ -359,12 +359,12 @@ func TestStepCreateVirtualMachine_Run(t *testing.T) {
 			expectedFirewallRuleName := defaultFirewallRuleName
 
 			var expectedExportDiskRef *computeref.DiskRef
-			expectedBootDiskRef := new(computeref.NewDiskRef(tt.step.Project, expectedBootDiskName))
+			expectedBootDiskRef := new(computeref.NewMustDiskRef(tt.step.Project, expectedBootDiskName))
 			expectedInstanceIP := testInternalAddress
 			var expectedExternalAddressRef *vpcref.ExternalAddressRef
 			if tt.step.UseExternalAddress {
 				expectedInstanceIP = testExternalAddress
-				expectedExternalAddressRef = new(vpcref.NewExternalAddressRef(tt.step.Project, expectedExternalAddressName))
+				expectedExternalAddressRef = new(vpcref.NewMustExternalAddressRef(tt.step.Project, expectedExternalAddressName))
 			}
 
 			expectedErrors := map[string]error{tt.errorStep: errors.New("test error")}
@@ -387,7 +387,7 @@ func TestStepCreateVirtualMachine_Run(t *testing.T) {
 					if tt.step.DiskForExportConfig != nil && tt.step.ImageForExport != "" {
 						imageForExportProject := cmp.Or(tt.step.ImageForExportProject, tt.step.Project)
 						driver.EXPECT().
-							GetImageMinDiskSize(gomock.Any(), new(computeref.NewImageRef(imageForExportProject, tt.step.DiskForExportConfig.ImageForExport))).
+							GetImageMinDiskSize(gomock.Any(), new(computeref.NewMustImageRef(imageForExportProject, tt.step.DiskForExportConfig.ImageForExport))).
 							Return(exportImageSize, expectedErrors["GetImageMinDiskSizeExport"]).
 							MaxTimes(1)
 						if tt.errorStep == "GetImageMinDiskSizeExport" {
@@ -397,7 +397,7 @@ func TestStepCreateVirtualMachine_Run(t *testing.T) {
 
 					if tt.step.SourceImage != "" {
 						driver.EXPECT().
-							GetImageMinDiskSize(gomock.Any(), new(computeref.NewImageRef(tt.step.Project, tt.step.SourceImage))).
+							GetImageMinDiskSize(gomock.Any(), new(computeref.NewMustImageRef(tt.step.Project, tt.step.SourceImage))).
 							Return(sourceImageSize, expectedErrors["GetImageMinDiskSizeSource"]).
 							MaxTimes(1)
 						if tt.errorStep == "GetImageMinDiskSizeSource" {
@@ -407,7 +407,7 @@ func TestStepCreateVirtualMachine_Run(t *testing.T) {
 
 					if tt.step.SourceDiskBackup != "" {
 						driver.EXPECT().
-							GetDiskBackupMinDiskSize(gomock.Any(), new(computeref.NewDiskBackupRef(tt.step.Project, tt.step.SourceDiskBackup))).
+							GetDiskBackupMinDiskSize(gomock.Any(), new(computeref.NewMustDiskBackupRef(tt.step.Project, tt.step.SourceDiskBackup))).
 							Return(sourceDiskBackupSize, expectedErrors["GetDiskBackupMinDiskSizeSource"]).
 							MaxTimes(1)
 						if tt.errorStep == "GetDiskBackupMinDiskSizeSource" {
@@ -422,12 +422,12 @@ func TestStepCreateVirtualMachine_Run(t *testing.T) {
 				}
 
 				if tt.step.DiskForExportConfig != nil {
-					expectedExportDiskRef = new(computeref.NewDiskRef(tt.step.Project, expectedExportDiskName))
+					expectedExportDiskRef = new(computeref.NewMustDiskRef(tt.step.Project, expectedExportDiskName))
 					createExportDiskParams := drivermws.CreateDiskParams{
 						DiskName: expectedExportDiskName,
 						DiskType: commonconfig.DefaultDiskType,
 						Iops:     commonconfig.DefaultDiskIOPS,
-						ImageRef: new(computeref.NewImageRef(tt.step.Project, testImageForExport)),
+						ImageRef: new(computeref.NewMustImageRef(tt.step.Project, testImageForExport)),
 						Zone:     commonconfig.DefaultZone,
 					}
 					driver.EXPECT().
@@ -447,9 +447,9 @@ func TestStepCreateVirtualMachine_Run(t *testing.T) {
 				}
 
 				if tt.step.SourceImage != "" {
-					createBootDiskParams.ImageRef = new(computeref.NewImageRef(tt.step.Project, testSourceImage))
+					createBootDiskParams.ImageRef = new(computeref.NewMustImageRef(tt.step.Project, testSourceImage))
 				} else if tt.step.SourceDiskBackup != "" {
-					createBootDiskParams.DiskBackupRef = new(computeref.NewDiskBackupRef(tt.step.Project, testSourceDiskBackup))
+					createBootDiskParams.DiskBackupRef = new(computeref.NewMustDiskBackupRef(tt.step.Project, testSourceDiskBackup))
 				}
 
 				driver.EXPECT().
@@ -506,7 +506,7 @@ func TestStepCreateVirtualMachine_Run(t *testing.T) {
 						SSHPublicKey:       testSSHPublicKey,
 						BootDiskRef:        expectedBootDiskRef,
 						ExternalAddressRef: expectedExternalAddressRef,
-						SubnetRef:          new(vpcref.NewSubnetRef(tt.step.Project, expectedNetworkName, expectedSubnetName)),
+						SubnetRef:          new(vpcref.NewMustSubnetRef(tt.step.Project, expectedNetworkName, expectedSubnetName)),
 					}).
 					Return(testInternalAddress, expectedErrors["CreateVirtualMachine"]).
 					Times(1)

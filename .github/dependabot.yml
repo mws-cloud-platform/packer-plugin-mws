@@ -10,6 +10,7 @@ updates:
     schedule:
       interval: "daily"
     allow:
+      - dependency-name: "go.mws.cloud/go-sdk"
       - dependency-name: "github.com/hashicorp/packer-plugin-sdk"
       - dependency-name: "golang.org/x/*"
     groups:

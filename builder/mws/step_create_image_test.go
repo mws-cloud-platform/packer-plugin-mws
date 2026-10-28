@@ -46,12 +46,12 @@ func TestStepCreateImage(t *testing.T) {
 
 	image := &computemodel.ImageOptionalResponse{
 		Metadata: optional.NewOptionalNil(commonmodel.CommonTypedResourceMetadataOptionalResponse{
-			Id:          new(resmodels.NewAnyResourceID(testImageName)),
+			Id:          new(resmodels.NewMustAnyResourceID(testImageName)),
 			Description: optional.NewOptional(testImageDescription),
 		}),
 	}
 
-	diskRef := new(computeref.NewDiskRef(testProjectName, testDiskName))
+	diskRef := new(computeref.NewMustDiskRef(testProjectName, testDiskName))
 
 	for _, tt := range []struct {
 		name             string

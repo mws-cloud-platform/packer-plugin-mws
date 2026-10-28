@@ -105,7 +105,11 @@ func (s *StepCreateVirtualMachine) Run(ctx context.Context, state multistep.Stat
 	state.Put(common.InstanceIDKey, virtualMachineName)
 
 	// for create image step
-	state.Put(common.DiskRefKey, new(computeref.NewDiskRef(s.Project, bootDiskName)))
+	diskRef, err := computeref.NewDiskRef(s.Project, bootDiskName)
+	if err != nil {
+		return common.ActionHaltWithErrorf(state, "new disk ref: %w", err)
+	}
+	state.Put(common.DiskRefKey, new(diskRef))
 
 	s.GeneratedData.Put("SourceProject", s.SourceProject)
 	if s.SourceImage != "" {
@@ -160,18 +164,31 @@ func (s *StepCreateVirtualMachine) bootDiskSize(ctx context.Context, driver Step
 		return new(bytesize.MustParseString(s.DiskSize)), nil
 	}
 
-	exportSize, err := driver.GetImageMinDiskSize(ctx, s.exportImageRef())
+	exportImageRef, err := s.exportImageRef()
+	if err != nil {
+		return nil, err
+	}
+
+	exportSize, err := driver.GetImageMinDiskSize(ctx, exportImageRef)
 	if err != nil {
 		return nil, err
 	}
 	var bootSize *bytesize.ByteSize
 	if s.SourceImage != "" {
-		bootSize, err = driver.GetImageMinDiskSize(ctx, s.bootImageRef())
+		bootImageRef, refErr := s.bootImageRef()
+		if refErr != nil {
+			return nil, fmt.Errorf("boot image ref: %w", refErr)
+		}
+		bootSize, err = driver.GetImageMinDiskSize(ctx, bootImageRef)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		bootSize, err = driver.GetDiskBackupMinDiskSize(ctx, s.bootDiskBackupRef())
+		bootDiskBackupRef, refErr := s.bootDiskBackupRef()
+		if refErr != nil {
+			return nil, fmt.Errorf("boot disk backup ref: %w", refErr)
+		}
+		bootSize, err = driver.GetDiskBackupMinDiskSize(ctx, bootDiskBackupRef)
 		if err != nil {
 			return nil, err
 		}
@@ -202,7 +219,11 @@ func (s *StepCreateVirtualMachine) createExportDisk(
 		return nil
 	}
 	ui.Sayf("Creating export disk %q...", exportDiskName)
-	err := driver.CreateDisk(ctx, s.exportDiskParams(exportDiskName))
+	params, err := s.exportDiskParams(exportDiskName)
+	if err != nil {
+		return err
+	}
+	err = driver.CreateDisk(ctx, params)
 	if err != nil {
 		return fmt.Errorf("create export disk %q: %w", exportDiskName, err)
 	}
@@ -218,13 +239,21 @@ func (s *StepCreateVirtualMachine) createBootDisk(
 	bootDiskSize *bytesize.ByteSize,
 ) error {
 	ui.Sayf("Creating boot disk %q...", bootDiskName)
-	err := driver.CreateDisk(ctx, drivermws.CreateDiskParams{
+	bootImageRef, err := s.bootImageRef()
+	if err != nil {
+		return fmt.Errorf("boot image ref: %w", err)
+	}
+	bootDiskBackupRef, err := s.bootDiskBackupRef()
+	if err != nil {
+		return fmt.Errorf("boot disk backup ref: %w", err)
+	}
+	err = driver.CreateDisk(ctx, drivermws.CreateDiskParams{
 		DiskName:      bootDiskName,
 		DiskType:      s.DiskType,
 		Size:          bootDiskSize,
 		Iops:          s.DiskIOPS,
-		ImageRef:      s.bootImageRef(),
-		DiskBackupRef: s.bootDiskBackupRef(),
+		ImageRef:      bootImageRef,
+		DiskBackupRef: bootDiskBackupRef,
 		Zone:          s.Zone,
 	})
 	if err != nil {
@@ -308,6 +337,22 @@ func (s *StepCreateVirtualMachine) createVirtualMachine(
 	subnetName string,
 ) (*ipaddress.IPAddress, error) {
 	ui.Sayf("Creating virtual machine %q...", virtualMachineName)
+	serviceAccountRef, err := s.serviceAccountRef()
+	if err != nil {
+		return nil, fmt.Errorf("service account ref: %w", err)
+	}
+	diskRef, err := computeref.NewDiskRef(s.Project, bootDiskName)
+	if err != nil {
+		return nil, fmt.Errorf("create disk ref: %w", err)
+	}
+	externalAddressRef, err := s.externalAddressRef(externalAddressName)
+	if err != nil {
+		return nil, fmt.Errorf("external address ref: %w", err)
+	}
+	subnetRef, err := vpcref.NewSubnetRef(s.Project, networkName, subnetName)
+	if err != nil {
+		return nil, fmt.Errorf("create subnet ref: %w", err)
+	}
 	result, err := driver.CreateVirtualMachine(ctx, drivermws.CreateVirtualMachineParams{
 		VirtualMachineName: virtualMachineName,
 		VMType:             s.VMType,
@@ -315,10 +360,10 @@ func (s *StepCreateVirtualMachine) createVirtualMachine(
 		SSHUsername:        s.Communicator.SSHUsername,
 		SSHPublicKey:       string(s.Communicator.SSHPublicKey),
 		CloudConfig:        s.CloudConfig,
-		ServiceAccountRef:  s.serviceAccountRef(),
-		BootDiskRef:        new(computeref.NewDiskRef(s.Project, bootDiskName)),
-		ExternalAddressRef: s.externalAddressRef(externalAddressName),
-		SubnetRef:          new(vpcref.NewSubnetRef(s.Project, networkName, subnetName)),
+		ServiceAccountRef:  serviceAccountRef,
+		BootDiskRef:        new(diskRef),
+		ExternalAddressRef: externalAddressRef,
+		SubnetRef:          new(subnetRef),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("create virtual machine %q: %w", virtualMachineName, err)
@@ -338,7 +383,11 @@ func (s *StepCreateVirtualMachine) attachDiskForExport(
 		return nil
 	}
 	ui.Sayf("Attaching disk for export %q to the virtual machine %q...", exportDiskName, virtualMachineName)
-	err := driver.AttachDiskToVirtualMachine(ctx, virtualMachineName, s.exportDiskRef(exportDiskName))
+	exportDiskRef, err := s.exportDiskRef(exportDiskName)
+	if err != nil {
+		return fmt.Errorf("disk export ref: %w", err)
+	}
+	err = driver.AttachDiskToVirtualMachine(ctx, virtualMachineName, exportDiskRef)
 	if err != nil {
 		return fmt.Errorf("attach disk export %q to virtual machine %q: %w", exportDiskName, virtualMachineName, err)
 	}
@@ -370,60 +419,88 @@ func (s *StepCreateVirtualMachine) createFirewallRule(
 	return nil
 }
 
-func (s *StepCreateVirtualMachine) exportImageRef() *computeref.ImageRef {
+func (s *StepCreateVirtualMachine) exportImageRef() (*computeref.ImageRef, error) {
 	if s.DiskForExportConfig != nil && s.ImageForExport != "" {
-		return new(computeref.NewImageRef(s.ImageForExportProject, s.ImageForExport))
+		ref, err := computeref.NewImageRef(s.ImageForExportProject, s.ImageForExport)
+		if err != nil {
+			return nil, err
+		}
+		return new(ref), nil
 	}
-	return nil
+	return nil, nil
 }
 
-func (s *StepCreateVirtualMachine) bootImageRef() *computeref.ImageRef {
+func (s *StepCreateVirtualMachine) bootImageRef() (*computeref.ImageRef, error) {
 	if s.SourceImage != "" {
-		return new(computeref.NewImageRef(s.SourceProject, s.SourceImage))
+		ref, err := computeref.NewImageRef(s.SourceProject, s.SourceImage)
+		if err != nil {
+			return nil, err
+		}
+		return new(ref), nil
 	}
-	return nil
+	return nil, nil
 }
 
-func (s *StepCreateVirtualMachine) bootDiskBackupRef() *computeref.DiskBackupRef {
+func (s *StepCreateVirtualMachine) bootDiskBackupRef() (*computeref.DiskBackupRef, error) {
 	if s.SourceDiskBackup != "" {
-		return new(computeref.NewDiskBackupRef(s.SourceProject, s.SourceDiskBackup))
+		ref, err := computeref.NewDiskBackupRef(s.SourceProject, s.SourceDiskBackup)
+		if err != nil {
+			return nil, err
+		}
+		return new(ref), nil
 	}
-	return nil
+	return nil, nil
 }
 
-func (s *StepCreateVirtualMachine) exportDiskRef(exportDiskName string) *computeref.DiskRef {
+func (s *StepCreateVirtualMachine) exportDiskRef(exportDiskName string) (*computeref.DiskRef, error) {
 	if s.DiskForExportConfig != nil {
-		return new(computeref.NewDiskRef(s.Project, exportDiskName))
+		ref, err := computeref.NewDiskRef(s.Project, exportDiskName)
+		if err != nil {
+			return nil, err
+		}
+		return new(ref), nil
 	}
-	return nil
+	return nil, nil
 }
 
-func (s *StepCreateVirtualMachine) serviceAccountRef() *iamref.ServiceAccountRef {
+func (s *StepCreateVirtualMachine) serviceAccountRef() (*iamref.ServiceAccountRef, error) {
 	if s.VMServiceAccount != "" {
-		return new(iamref.NewServiceAccountRef(s.Project, s.VMServiceAccount))
+		ref, err := iamref.NewServiceAccountRef(s.Project, s.VMServiceAccount)
+		if err != nil {
+			return nil, err
+		}
+		return new(ref), nil
 	}
-	return nil
+	return nil, nil
 }
 
-func (s *StepCreateVirtualMachine) externalAddressRef(externalAddressName string) *vpcref.ExternalAddressRef {
+func (s *StepCreateVirtualMachine) externalAddressRef(externalAddressName string) (*vpcref.ExternalAddressRef, error) {
 	if s.UseExternalAddress {
-		return new(vpcref.NewExternalAddressRef(s.Project, externalAddressName))
+		ref, err := vpcref.NewExternalAddressRef(s.Project, externalAddressName)
+		if err != nil {
+			return nil, err
+		}
+		return new(ref), nil
 	}
-	return nil
+	return nil, nil
 }
 
 // separated from other subStep params because of nil pointer dereference in DiskForExportConfig fields
-func (s *StepCreateVirtualMachine) exportDiskParams(exportDiskName string) drivermws.CreateDiskParams {
+func (s *StepCreateVirtualMachine) exportDiskParams(exportDiskName string) (drivermws.CreateDiskParams, error) {
 	if s.DiskForExportConfig == nil {
-		return drivermws.CreateDiskParams{}
+		return drivermws.CreateDiskParams{}, nil
+	}
+	exportImageRef, err := s.exportImageRef()
+	if err != nil {
+		return drivermws.CreateDiskParams{}, err
 	}
 	return drivermws.CreateDiskParams{
 		DiskName: exportDiskName,
 		DiskType: s.DiskForExportType,
 		Iops:     s.DiskForExportIOPS,
-		ImageRef: s.exportImageRef(),
+		ImageRef: exportImageRef,
 		Zone:     s.Zone,
-	}
+	}, nil
 }
 
 func (s *StepCreateVirtualMachine) saveSerialPort(ctx context.Context, driver StepCreateVirtualMachineDriver, ui packer.Ui, virtualMachineName string) {
