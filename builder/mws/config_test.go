@@ -43,6 +43,7 @@ func TestConfig_Prepare(t *testing.T) {
 					"image_name":         "test-image-name",
 					"image_display_name": "Test image display name",
 					"image_description":  "Test image description.",
+					"image_regions":      []string{"ru-central1", "ru-siberia1"},
 					// VirtualMachineConfig
 					"virtual_machine_name":    "test-vm",
 					"vm_type":                 "gen-2-16",

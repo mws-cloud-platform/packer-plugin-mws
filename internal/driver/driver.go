@@ -26,6 +26,7 @@ import (
 	iammodel "go.mws.cloud/go-sdk/service/iam/model"
 	iamsdk "go.mws.cloud/go-sdk/service/iam/sdk"
 	computeref "go.mws.cloud/go-sdk/service/resources/references/compute"
+	rmref "go.mws.cloud/go-sdk/service/resources/references/rm"
 	serialconsoleclient "go.mws.cloud/go-sdk/service/serialconsole/client"
 	serialconsolemodel "go.mws.cloud/go-sdk/service/serialconsole/model"
 	serialconsolesdk "go.mws.cloud/go-sdk/service/serialconsole/sdk"
@@ -363,6 +364,19 @@ func (d *Driver) CreateImage(ctx context.Context, params CreateImageParams) (*co
 	if params.ImageDisplayName != "" {
 		displayName = new(params.ImageDisplayName)
 	}
+
+	var regions []rmref.RegionRef
+	if len(params.Regions) > 0 {
+		regions = make([]rmref.RegionRef, len(params.Regions))
+		for i, r := range params.Regions {
+			ref, err := rmref.NewRegionRef(r)
+			if err != nil {
+				return nil, fmt.Errorf("create region ref for %q: %w", r, err)
+			}
+			regions[i] = ref
+		}
+	}
+
 	image, err := d.images.CreateImage(ctx, computeclient.UpsertImageRequest{
 		Image: params.ImageName,
 		Body: computemodel.ImageRequest{
@@ -374,6 +388,7 @@ func (d *Driver) CreateImage(ctx context.Context, params CreateImageParams) (*co
 				Source: computemodel.ImageSpecSourceRequest{
 					DiskId: params.DiskRef,
 				},
+				Regions: regions,
 			},
 		},
 	}, computeclient.WithWait())
@@ -466,6 +481,19 @@ func (d *Driver) ImportImage(ctx context.Context, params ImportImageParams) (*co
 	if params.ImageDisplayName != "" {
 		displayName = new(params.ImageDisplayName)
 	}
+
+	var regions []rmref.RegionRef
+	if len(params.Regions) > 0 {
+		regions = make([]rmref.RegionRef, len(params.Regions))
+		for i, r := range params.Regions {
+			ref, err := rmref.NewRegionRef(r)
+			if err != nil {
+				return nil, fmt.Errorf("create region ref for %q: %w", r, err)
+			}
+			regions[i] = ref
+		}
+	}
+
 	image, err := d.images.CreateImage(ctx, computeclient.UpsertImageRequest{
 		Image: params.ImageName,
 		Body: computemodel.ImageRequest{
@@ -477,6 +505,7 @@ func (d *Driver) ImportImage(ctx context.Context, params ImportImageParams) (*co
 				Source: computemodel.ImageSpecSourceRequest{
 					ExternalUrl: new(params.ExternalURL),
 				},
+				Regions: regions,
 			},
 		},
 	}, computeclient.WithWait())

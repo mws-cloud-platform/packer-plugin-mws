@@ -100,6 +100,7 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			ImageName:        b.config.ImageName,
 			ImageDisplayName: b.config.ImageDisplayName,
 			ImageDescription: b.config.ImageDescription,
+			Regions:          b.config.ImageRegions,
 			GeneratedData:    generatedData,
 		},
 	}

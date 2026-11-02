@@ -1,5 +1,6 @@
 {
  "ImageName": "",
  "ImageDisplayName": "",
- "ImageDescription": "Image created by Packer"
+ "ImageDescription": "Image created by Packer",
+ "ImageRegions": null
 }

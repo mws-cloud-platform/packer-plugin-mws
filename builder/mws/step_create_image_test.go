@@ -58,6 +58,7 @@ func TestStepCreateImage(t *testing.T) {
 		project          string
 		imageName        string
 		imageDescription string
+		regions          []string
 		prepare          func(multistep.StateBag, *mockmws.MockDriver)
 		expectedError    bool
 		expectedImage    *computemodel.ImageOptionalResponse
@@ -67,6 +68,7 @@ func TestStepCreateImage(t *testing.T) {
 			project:          testProjectName,
 			imageName:        testImageName,
 			imageDescription: testImageDescription,
+			regions:          []string{"ru-central1", "ru-siberia1"},
 			prepare: func(state multistep.StateBag, driver *mockmws.MockDriver) {
 				state.Put(common.DiskRefKey, diskRef)
 
@@ -75,6 +77,7 @@ func TestStepCreateImage(t *testing.T) {
 						ImageName:        testImageName,
 						ImageDescription: testImageDescription,
 						DiskRef:          diskRef,
+						Regions:          []string{"ru-central1", "ru-siberia1"},
 					}).
 					Return(image, nil).
 					Times(1)
@@ -86,6 +89,7 @@ func TestStepCreateImage(t *testing.T) {
 			project:          testProjectName,
 			imageName:        testImageName,
 			imageDescription: testImageDescription,
+			regions:          []string{"ru-central1"},
 			prepare: func(state multistep.StateBag, driver *mockmws.MockDriver) {
 				state.Put(common.DiskRefKey, diskRef)
 
@@ -94,6 +98,7 @@ func TestStepCreateImage(t *testing.T) {
 						ImageName:        testImageName,
 						ImageDescription: testImageDescription,
 						DiskRef:          diskRef,
+						Regions:          []string{"ru-central1"},
 					}).
 					Return(nil, errInternal).
 					Times(1)
@@ -129,6 +134,7 @@ func TestStepCreateImage(t *testing.T) {
 				Project:          tt.project,
 				ImageName:        tt.imageName,
 				ImageDescription: tt.imageDescription,
+				Regions:          tt.regions,
 				GeneratedData:    &packerbuilderdata.GeneratedData{State: state},
 			}
 

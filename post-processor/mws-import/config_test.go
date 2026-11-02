@@ -43,6 +43,7 @@ func TestConfig_Prepare(t *testing.T) {
 					"image_name":         "test-image-name",
 					"image_display_name": "Test image display name",
 					"image_description":  "Test image description.",
+					"image_regions":      []string{"ru-central1", "ru-siberia1"},
 					// ObjectStorageConfig
 					"service_account":         "test-service-account",
 					"object_storage_endpoint": "https://custom.api.mwsapis.ru",

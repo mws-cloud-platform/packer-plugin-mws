@@ -77,6 +77,7 @@ type FlatConfig struct {
 	ImageName                       *string           `mapstructure:"image_name" required:"false" cty:"image_name" hcl:"image_name"`
 	ImageDisplayName                *string           `mapstructure:"image_display_name" required:"false" cty:"image_display_name" hcl:"image_display_name"`
 	ImageDescription                *string           `mapstructure:"image_description" required:"false" cty:"image_description" hcl:"image_description"`
+	ImageRegions                    []string          `mapstructure:"image_regions" required:"false" cty:"image_regions" hcl:"image_regions"`
 	DiskName                        *string           `mapstructure:"disk_name" required:"false" cty:"disk_name" hcl:"disk_name"`
 	DiskType                        *string           `mapstructure:"disk_type" required:"false" cty:"disk_type" hcl:"disk_type"`
 	DiskSize                        *string           `mapstructure:"disk_size" required:"false" cty:"disk_size" hcl:"disk_size"`
@@ -178,6 +179,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"image_name":                          &hcldec.AttrSpec{Name: "image_name", Type: cty.String, Required: false},
 		"image_display_name":                  &hcldec.AttrSpec{Name: "image_display_name", Type: cty.String, Required: false},
 		"image_description":                   &hcldec.AttrSpec{Name: "image_description", Type: cty.String, Required: false},
+		"image_regions":                       &hcldec.AttrSpec{Name: "image_regions", Type: cty.List(cty.String), Required: false},
 		"disk_name":                           &hcldec.AttrSpec{Name: "disk_name", Type: cty.String, Required: false},
 		"disk_type":                           &hcldec.AttrSpec{Name: "disk_type", Type: cty.String, Required: false},
 		"disk_size":                           &hcldec.AttrSpec{Name: "disk_size", Type: cty.String, Required: false},

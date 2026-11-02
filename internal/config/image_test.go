@@ -29,6 +29,7 @@ func TestImageConfig(t *testing.T) {
 					"image_name":         "test-image-name",
 					"image_display_name": "Test image display name",
 					"image_description":  "Test image description.",
+					"image_regions":      []string{"ru-central1", "ru-siberia1"},
 				},
 			},
 			wantErr: false,

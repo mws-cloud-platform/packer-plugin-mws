@@ -20,6 +20,7 @@ type StepCreateImage struct {
 	ImageName        string
 	ImageDisplayName string
 	ImageDescription string
+	Regions          []string
 
 	GeneratedData *packerbuilderdata.GeneratedData
 }
@@ -43,6 +44,7 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 		ImageDisplayName: s.ImageDisplayName,
 		ImageDescription: s.ImageDescription,
 		DiskRef:          diskRef,
+		Regions:          s.Regions,
 	})
 	if err != nil {
 		return common.ActionHaltWithErrorf(state, "create image: %w", err)

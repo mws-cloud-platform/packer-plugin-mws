@@ -15,6 +15,7 @@
  "ImageName": "",
  "ImageDisplayName": "",
  "ImageDescription": "Image created by Packer",
+ "ImageRegions": null,
  "ServiceAccount": "test-service-account",
  "AccessKey": "",
  "SecretKey": "",

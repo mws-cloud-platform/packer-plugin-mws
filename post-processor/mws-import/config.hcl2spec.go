@@ -26,6 +26,7 @@ type FlatConfig struct {
 	ImageName                       *string           `mapstructure:"image_name" required:"false" cty:"image_name" hcl:"image_name"`
 	ImageDisplayName                *string           `mapstructure:"image_display_name" required:"false" cty:"image_display_name" hcl:"image_display_name"`
 	ImageDescription                *string           `mapstructure:"image_description" required:"false" cty:"image_description" hcl:"image_description"`
+	ImageRegions                    []string          `mapstructure:"image_regions" required:"false" cty:"image_regions" hcl:"image_regions"`
 	ServiceAccount                  *string           `mapstructure:"service_account" required:"false" cty:"service_account" hcl:"service_account"`
 	AccessKey                       *string           `mapstructure:"access_key" required:"false" cty:"access_key" hcl:"access_key"`
 	SecretKey                       *string           `mapstructure:"secret_key" required:"false" cty:"secret_key" hcl:"secret_key"`
@@ -63,6 +64,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"image_name":                          &hcldec.AttrSpec{Name: "image_name", Type: cty.String, Required: false},
 		"image_display_name":                  &hcldec.AttrSpec{Name: "image_display_name", Type: cty.String, Required: false},
 		"image_description":                   &hcldec.AttrSpec{Name: "image_description", Type: cty.String, Required: false},
+		"image_regions":                       &hcldec.AttrSpec{Name: "image_regions", Type: cty.List(cty.String), Required: false},
 		"service_account":                     &hcldec.AttrSpec{Name: "service_account", Type: cty.String, Required: false},
 		"access_key":                          &hcldec.AttrSpec{Name: "access_key", Type: cty.String, Required: false},
 		"secret_key":                          &hcldec.AttrSpec{Name: "secret_key", Type: cty.String, Required: false},

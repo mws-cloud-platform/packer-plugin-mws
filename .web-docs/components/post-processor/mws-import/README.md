@@ -104,6 +104,8 @@ optional.
 
 - `image_description` (string) - Description for the resulting image. (defaults to "Image created by Packer").
 
+- `image_regions` ([]string) - Regions to replicate the image to.
+
 <!-- End of code generated from the comments of the ImageConfig struct in internal/config/image.go; -->
 
 <!-- Code generated from the comments of the ObjectStorageConfig struct in internal/config/object_storage.go; DO NOT EDIT MANUALLY -->
