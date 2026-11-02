@@ -365,16 +365,9 @@ func (d *Driver) CreateImage(ctx context.Context, params CreateImageParams) (*co
 		displayName = new(params.ImageDisplayName)
 	}
 
-	var regions []rmref.RegionRef
-	if len(params.Regions) > 0 {
-		regions = make([]rmref.RegionRef, len(params.Regions))
-		for i, r := range params.Regions {
-			ref, err := rmref.NewRegionRef(r)
-			if err != nil {
-				return nil, fmt.Errorf("create region ref for %q: %w", r, err)
-			}
-			regions[i] = ref
-		}
+	regionRefs, err := d.newRegionRefs(params.Regions)
+	if err != nil {
+		return nil, err
 	}
 
 	image, err := d.images.CreateImage(ctx, computeclient.UpsertImageRequest{
@@ -388,7 +381,7 @@ func (d *Driver) CreateImage(ctx context.Context, params CreateImageParams) (*co
 				Source: computemodel.ImageSpecSourceRequest{
 					DiskId: params.DiskRef,
 				},
-				Regions: regions,
+				Regions: regionRefs,
 			},
 		},
 	}, computeclient.WithWait())
@@ -482,16 +475,9 @@ func (d *Driver) ImportImage(ctx context.Context, params ImportImageParams) (*co
 		displayName = new(params.ImageDisplayName)
 	}
 
-	var regions []rmref.RegionRef
-	if len(params.Regions) > 0 {
-		regions = make([]rmref.RegionRef, len(params.Regions))
-		for i, r := range params.Regions {
-			ref, err := rmref.NewRegionRef(r)
-			if err != nil {
-				return nil, fmt.Errorf("create region ref for %q: %w", r, err)
-			}
-			regions[i] = ref
-		}
+	regionRefs, err := d.newRegionRefs(params.Regions)
+	if err != nil {
+		return nil, err
 	}
 
 	image, err := d.images.CreateImage(ctx, computeclient.UpsertImageRequest{
@@ -505,7 +491,7 @@ func (d *Driver) ImportImage(ctx context.Context, params ImportImageParams) (*co
 				Source: computemodel.ImageSpecSourceRequest{
 					ExternalUrl: new(params.ExternalURL),
 				},
-				Regions: regions,
+				Regions: regionRefs,
 			},
 		},
 	}, computeclient.WithWait())
@@ -642,4 +628,19 @@ func (d *Driver) DeleteHMACKey(ctx context.Context, serviceAccount string, name 
 	}
 
 	return nil
+}
+
+func (d *Driver) newRegionRefs(regions []string) ([]rmref.RegionRef, error) {
+	var regionRefs []rmref.RegionRef
+	if len(regions) > 0 {
+		regionRefs = make([]rmref.RegionRef, len(regions))
+		for i, r := range regions {
+			ref, err := rmref.NewRegionRef(r)
+			if err != nil {
+				return nil, fmt.Errorf("create region ref for %q: %w", r, err)
+			}
+			regionRefs[i] = ref
+		}
+	}
+	return regionRefs, nil
 }

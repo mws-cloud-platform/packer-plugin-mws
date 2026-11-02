@@ -16,7 +16,7 @@ type ImageConfig struct {
 	ImageDisplayName string `mapstructure:"image_display_name" required:"false"`
 	// Description for the resulting image. (defaults to "Image created by Packer").
 	ImageDescription string `mapstructure:"image_description" required:"false"`
-	// Regions to replicate the image to.
+	// Regions in which a physical copy of the image will be created.
 	ImageRegions []string `mapstructure:"image_regions" required:"false"`
 }
 
