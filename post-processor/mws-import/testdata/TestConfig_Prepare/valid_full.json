@@ -16,8 +16,8 @@
  "ImageDisplayName": "Test image display name",
  "ImageDescription": "Test image description.",
  "ImageRegions": [
-  "ru-central1-a",
-  "ru-central1-b"
+  "ru-central1",
+  "ru-siberia1"
  ],
  "ServiceAccount": "test-service-account",
  "AccessKey": "",
