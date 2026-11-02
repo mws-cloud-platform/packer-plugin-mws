@@ -4,7 +4,7 @@
 packer {
   required_plugins {
     mws = {
-      version = ">= 0.9.0"
+      version = ">= 0.10.0"
       source  = "github.com/mws-cloud-platform/mws"
     }
   }
@@ -27,6 +27,7 @@ source "mws" "example" {
 
   use_external_address = true
 
+  image_regions = ["ru-central1"]
   image_name = var.image_name
 }
 

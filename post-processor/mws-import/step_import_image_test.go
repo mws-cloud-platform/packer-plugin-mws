@@ -54,6 +54,7 @@ func TestStepImportImage(t *testing.T) {
 		imageName        string
 		imageDisplayName string
 		imageDescription string
+		regions          []string
 		prepare          func(multistep.StateBag, *mockmws.MockDriver)
 		expectedError    bool
 		expectedImage    *computemodel.ImageOptionalResponse
@@ -64,6 +65,7 @@ func TestStepImportImage(t *testing.T) {
 			imageName:        testImageName,
 			imageDisplayName: testImageDisplayName,
 			imageDescription: testImageDescription,
+			regions:          []string{"ru-central1", "ru-siberia1"},
 			prepare: func(state multistep.StateBag, driver *mockmws.MockDriver) {
 				state.Put(common.ExternalURLKey, testExternalURL)
 
@@ -73,6 +75,7 @@ func TestStepImportImage(t *testing.T) {
 						ImageDisplayName: testImageDisplayName,
 						ImageDescription: testImageDescription,
 						ExternalURL:      testExternalURL,
+						Regions:          []string{"ru-central1", "ru-siberia1"},
 					}).
 					Return(image, nil).
 					Times(1)
@@ -85,6 +88,7 @@ func TestStepImportImage(t *testing.T) {
 			imageName:        testImageName,
 			imageDisplayName: testImageDisplayName,
 			imageDescription: testImageDescription,
+			regions:          []string{"ru-central1"},
 			prepare: func(state multistep.StateBag, driver *mockmws.MockDriver) {
 				state.Put(common.ExternalURLKey, testExternalURL)
 
@@ -94,6 +98,7 @@ func TestStepImportImage(t *testing.T) {
 						ImageDisplayName: testImageDisplayName,
 						ImageDescription: testImageDescription,
 						ExternalURL:      testExternalURL,
+						Regions:          []string{"ru-central1"},
 					}).
 					Return(nil, errInternal).
 					Times(1)
@@ -130,6 +135,7 @@ func TestStepImportImage(t *testing.T) {
 				ImageName:        tt.imageName,
 				ImageDisplayName: tt.imageDisplayName,
 				ImageDescription: tt.imageDescription,
+				Regions:          tt.regions,
 				GeneratedData:    &packerbuilderdata.GeneratedData{State: state},
 			}
 

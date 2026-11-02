@@ -74,6 +74,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, _ packer.
 			ImageName:        p.config.ImageName,
 			ImageDisplayName: p.config.ImageDisplayName,
 			ImageDescription: p.config.ImageDescription,
+			Regions:          p.config.ImageRegions,
 			GeneratedData:    generatedData,
 		},
 	}

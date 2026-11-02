@@ -54,6 +54,7 @@ type CreateImageParams struct {
 	ImageDisplayName string
 	ImageDescription string
 	DiskRef          *computeref.DiskRef
+	Regions          []string
 }
 
 type CreateFirewallRuleParams struct {
@@ -67,4 +68,5 @@ type ImportImageParams struct {
 	ImageDisplayName string
 	ImageDescription string
 	ExternalURL      string
+	Regions          []string
 }

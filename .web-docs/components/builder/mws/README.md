@@ -134,6 +134,8 @@ configured for this builder.
 
 - `image_description` (string) - Description for the resulting image. (defaults to "Image created by Packer").
 
+- `image_regions` ([]string) - Regions in which a physical copy of the image will be created.
+
 <!-- End of code generated from the comments of the ImageConfig struct in internal/config/image.go; -->
 
 

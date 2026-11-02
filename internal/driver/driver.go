@@ -26,6 +26,7 @@ import (
 	iammodel "go.mws.cloud/go-sdk/service/iam/model"
 	iamsdk "go.mws.cloud/go-sdk/service/iam/sdk"
 	computeref "go.mws.cloud/go-sdk/service/resources/references/compute"
+	rmref "go.mws.cloud/go-sdk/service/resources/references/rm"
 	serialconsoleclient "go.mws.cloud/go-sdk/service/serialconsole/client"
 	serialconsolemodel "go.mws.cloud/go-sdk/service/serialconsole/model"
 	serialconsolesdk "go.mws.cloud/go-sdk/service/serialconsole/sdk"
@@ -363,6 +364,12 @@ func (d *Driver) CreateImage(ctx context.Context, params CreateImageParams) (*co
 	if params.ImageDisplayName != "" {
 		displayName = new(params.ImageDisplayName)
 	}
+
+	regionRefs, err := d.newRegionRefs(params.Regions)
+	if err != nil {
+		return nil, err
+	}
+
 	image, err := d.images.CreateImage(ctx, computeclient.UpsertImageRequest{
 		Image: params.ImageName,
 		Body: computemodel.ImageRequest{
@@ -374,6 +381,7 @@ func (d *Driver) CreateImage(ctx context.Context, params CreateImageParams) (*co
 				Source: computemodel.ImageSpecSourceRequest{
 					DiskId: params.DiskRef,
 				},
+				Regions: regionRefs,
 			},
 		},
 	}, computeclient.WithWait())
@@ -466,6 +474,12 @@ func (d *Driver) ImportImage(ctx context.Context, params ImportImageParams) (*co
 	if params.ImageDisplayName != "" {
 		displayName = new(params.ImageDisplayName)
 	}
+
+	regionRefs, err := d.newRegionRefs(params.Regions)
+	if err != nil {
+		return nil, err
+	}
+
 	image, err := d.images.CreateImage(ctx, computeclient.UpsertImageRequest{
 		Image: params.ImageName,
 		Body: computemodel.ImageRequest{
@@ -477,6 +491,7 @@ func (d *Driver) ImportImage(ctx context.Context, params ImportImageParams) (*co
 				Source: computemodel.ImageSpecSourceRequest{
 					ExternalUrl: new(params.ExternalURL),
 				},
+				Regions: regionRefs,
 			},
 		},
 	}, computeclient.WithWait())
@@ -613,4 +628,19 @@ func (d *Driver) DeleteHMACKey(ctx context.Context, serviceAccount string, name 
 	}
 
 	return nil
+}
+
+func (d *Driver) newRegionRefs(regions []string) ([]rmref.RegionRef, error) {
+	var regionRefs []rmref.RegionRef
+	if len(regions) > 0 {
+		regionRefs = make([]rmref.RegionRef, len(regions))
+		for i, r := range regions {
+			ref, err := rmref.NewRegionRef(r)
+			if err != nil {
+				return nil, fmt.Errorf("create region ref for %q: %w", r, err)
+			}
+			regionRefs[i] = ref
+		}
+	}
+	return regionRefs, nil
 }
