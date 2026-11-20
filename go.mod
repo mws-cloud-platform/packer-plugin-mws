@@ -1,6 +1,6 @@
 module github.com/mws-cloud-platform/packer-plugin-mws
 
-go 1.26.10
+go 1.27
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.43.0
@@ -12,7 +12,7 @@ require (
 	github.com/hashicorp/packer-plugin-sdk v0.6.13
 	github.com/stretchr/testify v1.12.1
 	github.com/zclconf/go-cty v1.19.0
-	go.mws.cloud/go-sdk v0.29.0
+	go.mws.cloud/go-sdk v0.30.0
 	go.mws.cloud/util-toolset v0.15.1
 	go.uber.org/mock v0.6.0
 	gopkg.in/yaml.v3 v3.0.1

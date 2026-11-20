@@ -1,7 +1,7 @@
 // Copyright 2026 MTS Web Services, LLC.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:generate go run github.com/hashicorp/packer-plugin-sdk/cmd/packer-sdc@v0.6.9 struct-markdown
+//go:generate go run github.com/hashicorp/packer-plugin-sdk/cmd/packer-sdc@v0.6.13 struct-markdown
 
 package config
 
